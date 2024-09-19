@@ -2,6 +2,7 @@ package com.example.basketballproject.auth.service;
 
 import com.example.basketballproject.auth.dto.SignUpDto;
 import com.example.basketballproject.global.exception.CustomException;
+import com.example.basketballproject.user.dto.UserDto;
 import com.example.basketballproject.user.entity.UserEntity;
 import com.example.basketballproject.user.repository.UserRepository;
 import com.example.basketballproject.user.type.GenderType;
@@ -26,7 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
 
 
-    public SignUpDto signUp(SignUpDto request) {
+    public UserDto signUp(SignUpDto.Request request) {
 
         checkForDuplicateUser(request);
 
@@ -45,10 +46,10 @@ public class AuthService {
                         .build()
         );
 
-        return SignUpDto.toEntity(user);
+        return UserDto.fromEntity(user);
     }
 
-    private void checkForDuplicateUser(SignUpDto request) {
+    private void checkForDuplicateUser(SignUpDto.Request request) {
         if (userRepository.existsByEmailAndDeletedDateTimeNull(request.getEmail())) {
             throw new CustomException(ALREADY_EXIST_USER);
         }

@@ -5,6 +5,7 @@ import com.example.basketballproject.auth.service.AuthService;
 import com.example.basketballproject.global.dto.SendMailRequest;
 import com.example.basketballproject.global.dto.VerifyMailRequest;
 import com.example.basketballproject.global.service.MailService;
+import com.example.basketballproject.user.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,11 @@ public class AuthController {
 
 
     @PostMapping("/user")
-    public ResponseEntity<SignUpDto> signUpUser(@RequestBody @Validated SignUpDto request) {
+    public ResponseEntity<?> signUpUser(@RequestBody @Validated SignUpDto.Request request) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(request));
+        UserDto userDto = authService.signUp(request);
+
+        return ResponseEntity.ok(SignUpDto.Response.toEntity(userDto));
     }
 
     @PostMapping("/mail/certification")

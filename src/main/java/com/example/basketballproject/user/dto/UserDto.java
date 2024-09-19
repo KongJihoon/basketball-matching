@@ -23,6 +23,8 @@ public class UserDto {
 
     private String email;
 
+    private String name;
+
     private String nickname;
 
     private LocalDate birth;
@@ -46,6 +48,7 @@ public class UserDto {
                 .loginId(userEntity.getLoginId())
                 .password(userEntity.getPassword())
                 .email(userEntity.getEmail())
+                .name(userEntity.getName())
                 .nickname(userEntity.getNickname())
                 .birth(userEntity.getBirth())
                 .userType(String.valueOf(userEntity.getUserType()))
