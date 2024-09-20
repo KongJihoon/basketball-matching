@@ -1,4 +1,4 @@
-package com.example.basketballproject.auth;
+package com.example.basketballproject.auth.config;
 
 
 import org.springframework.context.annotation.Bean;
