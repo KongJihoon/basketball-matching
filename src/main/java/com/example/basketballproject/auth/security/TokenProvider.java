@@ -6,6 +6,7 @@ import com.example.basketballproject.user.service.UserService;
 import com.example.basketballproject.user.type.UserType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static com.example.basketballproject.global.exception.ErrorCode.*;
 
@@ -37,6 +40,10 @@ public class TokenProvider {
     private final RedisService redisService;
 
     private final UserService userService;
+
+    @Getter
+    private final Set<String> logOut =
+            new ConcurrentSkipListSet<>();
 
     public String createAccessToken(String loginId, String email, UserType userType) {
 
@@ -138,6 +145,22 @@ public class TokenProvider {
         return new UsernamePasswordAuthenticationToken(
                 userDetails, "", userDetails.getAuthorities()
         );
+    }
+
+    public boolean isLogOut(String token) {
+
+        return this.logOut.contains(token);
+
+    }
+
+    public void checkLogOut(String token) {
+        if (isLogOut(token)) {
+            throw new CustomException(ALREADY_LOGOUT);
+        }
+    }
+
+    public void addLogoutList(String token) {
+        this.logOut.add(token);
     }
 
 }

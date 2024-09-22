@@ -5,18 +5,24 @@ import com.example.basketballproject.auth.dto.SignUpDto;
 import com.example.basketballproject.auth.dto.TokenDto;
 import com.example.basketballproject.auth.security.TokenProvider;
 import com.example.basketballproject.global.exception.CustomException;
+import com.example.basketballproject.global.service.RedisService;
 import com.example.basketballproject.user.dto.UserDto;
 import com.example.basketballproject.user.entity.UserEntity;
 import com.example.basketballproject.user.repository.UserRepository;
 import com.example.basketballproject.user.type.GenderType;
 import com.example.basketballproject.user.type.Position;
 import com.example.basketballproject.user.type.UserType;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static com.example.basketballproject.global.exception.ErrorCode.*;
 
@@ -30,6 +36,8 @@ public class AuthService {
     private final UserRepository userRepository;
 
     private final TokenProvider tokenProvider;
+
+    private final RedisService redisService;
 
 
     public UserDto signUp(SignUpDto.Request request) {
@@ -81,6 +89,32 @@ public class AuthService {
         return new TokenDto(userDto.getLoginId(), accessToken, refreshToken);
     }
 
+    public void logOut(HttpServletRequest request, UserEntity userEntity) {
+
+        String accessToken = validateAccessToken(request);
+        String refreshToken = validateRefreshToken(request);
+
+        tokenProvider.checkLogOut(accessToken);
+
+        if (accessToken.isEmpty()) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        Claims claims = tokenProvider.parseClaims(accessToken);
+
+        String loginId = claims.getSubject();
+
+        if (tokenMatch(accessToken, refreshToken) && loginId.equals(userEntity.getLoginId())) {
+
+            redisService.deleteData(loginId);
+        } else {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        tokenProvider.addLogoutList(accessToken);
+
+    }
+
 
     private void checkForDuplicateUser(SignUpDto.Request request) {
         if (userRepository.existsByEmailAndDeletedDateTimeNull(request.getEmail())) {
@@ -95,5 +129,58 @@ public class AuthService {
             throw new CustomException(ALREADY_EXIST_LOGINID);
         }
     }
+
+    private String validateAccessToken(HttpServletRequest request) {
+
+        log.info("AccessToken 검증 시작");
+
+        String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (!ObjectUtils.isEmpty(token) && token.startsWith("Bearer ")) {
+
+            log.info("검증 완료");
+            return token.substring("Bearer ".length());
+        } else {
+            log.error("AccessToken이 없거나 유효하지 않습니다.");
+
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+    }
+
+    private String validateRefreshToken(HttpServletRequest request) {
+
+        log.info("RefreshToken 검증 시작");
+
+        String token = request.getHeader("refreshToken");
+
+        if (!ObjectUtils.isEmpty(token) && token.startsWith("Bearer ")) {
+
+            log.info("검증 완료");
+            return token.substring("Bearer ".length());
+
+        } else {
+            log.error("RefreshToken이 없거나 유효하지 않습니다.");
+
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+    }
+
+
+    private boolean tokenMatch(String accessToken, String refreshToken) {
+
+        Claims accessClaims = tokenProvider.parseClaims(accessToken);
+
+        Claims refreshClaims = tokenProvider.parseClaims(refreshToken);
+
+        String accessId = accessClaims.getSubject();
+        String refreshId = refreshClaims.getSubject();
+
+        return accessId.equals(refreshId);
+
+    }
+
+
 
 }

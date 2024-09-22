@@ -8,10 +8,13 @@ import com.example.basketballproject.global.dto.SendMailRequest;
 import com.example.basketballproject.global.dto.VerifyMailRequest;
 import com.example.basketballproject.global.service.MailService;
 import com.example.basketballproject.user.dto.UserDto;
+import com.example.basketballproject.user.entity.UserEntity;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -81,6 +84,14 @@ public class AuthController {
         return ResponseEntity.ok()
                 .headers(responseHeader)
                 .body(SignInDto.Response.fromDto(userDto, token.getRefreshToken()));
+    }
+
+    @PostMapping("/logOut")
+    public ResponseEntity<?> logOut(HttpServletRequest request, @AuthenticationPrincipal UserEntity userEntity) {
+
+        authService.logOut(request, userEntity);
+
+        return ResponseEntity.ok(HttpStatus.OK);
     }
 
 }
