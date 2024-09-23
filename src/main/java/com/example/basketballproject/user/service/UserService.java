@@ -4,6 +4,8 @@ package com.example.basketballproject.user.service;
 import com.example.basketballproject.global.exception.CustomException;
 import com.example.basketballproject.global.exception.ErrorCode;
 import com.example.basketballproject.global.service.MailService;
+import com.example.basketballproject.user.dto.UserDto;
+import com.example.basketballproject.user.entity.UserEntity;
 import com.example.basketballproject.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,5 +32,15 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String loginId) throws UsernameNotFoundException {
         return userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+
+    public UserDto getUserInfo(String loginId) {
+
+        UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(loginId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        return UserDto.fromEntity(userEntity);
+
     }
 }

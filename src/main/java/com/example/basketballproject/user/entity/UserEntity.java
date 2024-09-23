@@ -78,12 +78,12 @@ public class UserEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.userType.getDescription()));
+        return List.of(new SimpleGrantedAuthority(userType.getDescription()));
     }
 
     @Override
     public String getUsername() {
-        return this.loginId;
+        return loginId;
     }
 
     @Override

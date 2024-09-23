@@ -41,7 +41,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
         try {
 
-            if (StringUtils.hasText(accessToken)) {
+            if (StringUtils.hasText(accessToken) && tokenProvider.isLogOut(accessToken)) {
 
                 response.setStatus(HttpStatus.UNAUTHORIZED.value());
                 response.setContentType("application/json");
@@ -61,8 +61,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication = tokenProvider.getAuthentication(accessToken);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
                 log.info(String.format("[%s] -> %s", tokenProvider.getUsername(accessToken), request.getRequestURI()));
+
+
 
             }
 

@@ -30,4 +30,8 @@ public class RedisService {
     }
 
 
+    public void findByLoginId(String loginId) {
+        redisTemplate.opsForValue().get(loginId);
+    }
+
 }
