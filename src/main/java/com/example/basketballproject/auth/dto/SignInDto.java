@@ -11,6 +11,7 @@ public class SignInDto {
 
     @Getter
     @Setter
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Request {
