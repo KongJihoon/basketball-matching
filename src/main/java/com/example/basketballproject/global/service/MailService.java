@@ -34,6 +34,9 @@ public class MailService {
 
     private static final String EMAIL_PREFIX = "Email-Auth: ";
 
+    private static final String PASSWORD_SUBJECT = "임시 비밀번호 입니다.";
+
+
     public void sendAuthMail(String email) {
 
         String code = createRandomCode();
@@ -95,6 +98,32 @@ public class MailService {
 
     }
 
+    public boolean TemporaryPassword(String email, String newPassword) {
+
+
+        try {
+
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage);
+
+            String temporaryPassword = getTemporaryPassword(newPassword);
+
+            mimeMessageHelper.setTo(email);
+            mimeMessageHelper.setSubject(PASSWORD_SUBJECT);
+            mimeMessageHelper.setText(temporaryPassword, true);
+
+            javaMailSender.send(mimeMessage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+
+    }
+
     private String createRandomCode() {
 
         Random random = new Random();
@@ -118,6 +147,29 @@ public class MailService {
         }
 
         return data.equals(code);
+    }
+
+
+    private String getTemporaryPassword(String newPassword) {
+
+
+        String certificationMessage = "";
+
+        certificationMessage +=
+                "<h1 style='text-align: center;>'"
+                + "[HoopsMate] 임시 비밀번호 발송"
+                + "</h1>";
+
+        certificationMessage +=
+                "<h3 style='text-align: center;'>"
+                + "임시 비밀번호 : " + newPassword
+                + "</h3>"
+                + "<h4 style='text-align: center;'>"
+                + "임시 비밀번호로 로그인 후 비밀번호를 변경해주세요."
+                + "</h4>";
+
+
+        return certificationMessage;
     }
 
 

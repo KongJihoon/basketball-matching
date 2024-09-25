@@ -6,6 +6,8 @@ import com.example.basketballproject.auth.dto.TokenDto;
 import com.example.basketballproject.auth.security.TokenProvider;
 import com.example.basketballproject.global.exception.CustomException;
 import com.example.basketballproject.global.service.RedisService;
+import com.example.basketballproject.user.dto.DeleteUserDto;
+import com.example.basketballproject.user.dto.EditDto;
 import com.example.basketballproject.user.dto.UserDto;
 import com.example.basketballproject.user.entity.UserEntity;
 import com.example.basketballproject.user.repository.UserRepository;
@@ -40,6 +42,9 @@ public class AuthService {
     private final RedisService redisService;
 
 
+    /**
+     * 회원 가입
+     */
     public UserDto signUp(SignUpDto.Request request) {
 
         checkForDuplicateUser(request);
@@ -63,6 +68,9 @@ public class AuthService {
     }
 
 
+    /**
+     * 로그인
+     */
     public UserDto loginUser(SignInDto.Request request) {
 
         UserEntity userEntity = userRepository.findByLoginIdAndDeletedDateTimeNull(request.getLoginId())
@@ -89,6 +97,9 @@ public class AuthService {
         return new TokenDto(userDto.getLoginId(), accessToken, refreshToken);
     }
 
+    /**
+     * 로그 아웃
+     */
     public void logOut(HttpServletRequest request, UserEntity userEntity) {
 
         String accessToken = validateAccessToken(request);
@@ -113,6 +124,80 @@ public class AuthService {
 
         tokenProvider.addLogoutList(accessToken);
 
+    }
+
+    /**
+     * 사용자 정보 조회
+     */
+    public UserDto getUserInfo(HttpServletRequest request, UserEntity userEntity) {
+
+        isSameLoginId(request, userEntity);
+
+        return UserDto.fromEntity(userEntity);
+    }
+
+
+    public UserDto editUserInfo(HttpServletRequest request, EditDto.Request editDto
+            , UserEntity user) {
+
+        isSameLoginId(request, user);
+
+        if (editDto.getPassword() != null) {
+            String encode = passwordEncoder.encode(editDto.getPassword());
+
+            user.passwordEdit(encode);
+        }
+
+        user.editInfo(editDto);
+
+        user.setUpdatedDateTime(LocalDateTime.now());
+
+        userRepository.save(user);
+
+        return UserDto.fromEntity(user);
+
+    }
+
+    public void deleteUser(HttpServletRequest request, DeleteUserDto deleteUserDto, UserEntity user) {
+
+        isSameLoginId(request, user);
+
+
+        String accessToken = validateAccessToken(request);
+        String refreshToken = validateRefreshToken(request);
+
+        if (!tokenMatch(accessToken, refreshToken)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!user.getLoginId().equals(deleteUserDto.getLoginId())) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
+
+        if (!passwordEncoder.matches(deleteUserDto.getPassword(), user.getPassword())) {
+            throw new CustomException(PASSWORD_NOT_MATCH);
+        }
+
+        logOut(request, user);
+
+        user.setDeletedDateTime(now);
+
+        userRepository.save(user);
+
+    }
+
+    private void isSameLoginId(HttpServletRequest request, UserEntity userEntity) {
+        String accessToken = validateAccessToken(request);
+
+        Claims claims = tokenProvider.parseClaims(accessToken);
+
+        String loginId = claims.getSubject();
+
+        if (!userEntity.getLoginId().equals(loginId)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
     }
 
 
