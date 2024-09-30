@@ -7,6 +7,8 @@ import com.example.basketballproject.auth.service.AuthService;
 import com.example.basketballproject.global.dto.SendMailRequest;
 import com.example.basketballproject.global.dto.VerifyMailRequest;
 import com.example.basketballproject.global.service.MailService;
+import com.example.basketballproject.user.dto.DeleteUserDto;
+import com.example.basketballproject.user.dto.EditDto;
 import com.example.basketballproject.user.dto.UserDto;
 import com.example.basketballproject.user.entity.UserEntity;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +31,7 @@ public class AuthController {
 
 
     /**
-     * 고객 회원가입
+     * 유저 회원가입
      */
     @PostMapping("/user")
     public ResponseEntity<?> signUpUser(@RequestBody @Validated SignUpDto.Request request) {
@@ -86,10 +85,72 @@ public class AuthController {
                 .body(SignInDto.Response.fromDto(userDto, token.getRefreshToken()));
     }
 
+    /**
+     * 유저 로그아웃
+     */
     @PostMapping("/logOut")
     public ResponseEntity<?> logOut(HttpServletRequest request, @AuthenticationPrincipal UserEntity userEntity) {
 
         authService.logOut(request, userEntity);
+
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+
+    /**
+     * 유저 정보 조회
+     */
+    @GetMapping("/user/info")
+    public ResponseEntity<UserDto> getUserInfo(
+            HttpServletRequest request,
+            @AuthenticationPrincipal UserEntity user
+    ) {
+
+        UserDto userInfo = authService.getUserInfo(request, user);
+
+        return ResponseEntity.ok(userInfo);
+
+    }
+
+
+    /**
+     * 유저 정보 수정
+     */
+    @PatchMapping("/user/edit")
+    public ResponseEntity<EditDto.Response> editUserInfo(
+            HttpServletRequest request,
+            @RequestBody @Validated EditDto.Request editDto,
+            @AuthenticationPrincipal UserEntity user
+    ) {
+
+        UserDto userDto = authService.editUserInfo(request, editDto, user);
+
+        TokenDto token = authService.getToken(userDto);
+
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.set("Authorization", token.getAccessToken());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(EditDto.Response.fromDto(userDto));
+
+    }
+
+
+    /**
+     * 유저 회원 탈퇴
+     */
+    @PostMapping("/delete")
+    public ResponseEntity<HttpStatus> deleteUser(
+            HttpServletRequest request,
+            @RequestBody @Validated DeleteUserDto deleteUserDto,
+            @AuthenticationPrincipal UserEntity user
+    ) {
+
+
+        authService.deleteUser(request, deleteUserDto, user);
+
 
         return ResponseEntity.ok(HttpStatus.OK);
     }

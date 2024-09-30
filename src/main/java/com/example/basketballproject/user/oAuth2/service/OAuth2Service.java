@@ -62,6 +62,16 @@ public class OAuth2Service {
 
         log.info("카카오 유저 정보 등록");
 
+        validateKakaoInfo(kakaoAccount, loginId, properties);
+        log.info("카카오 유저 정보 등록 성공");
+        SignInDto.Request logInDto = kakoUserLogin(loginId);
+        log.info("카카오 로그인 성공");
+        return authService.loginUser(logInDto);
+
+
+    }
+
+    private void validateKakaoInfo(KakaoUserInfoDto.KakaoAccount kakaoAccount, String loginId, Properties properties) {
         if (kakaoAccount.getEmail() == null && kakaoAccount.getGender() == null && kakaoAccount.getPosition() == null
                 && !userRepository.existsByLoginIdAndDeletedDateTimeNull(loginId)) {
             KakaoDto.Request user = kakaoUserDto(
@@ -106,16 +116,10 @@ public class OAuth2Service {
                     "kakao_" + kakaoAccount.getEmail(),
                     properties.getNickname()
                     , kakaoAccount.getGender()
-                    ,kakaoAccount.getPosition());
+                    , kakaoAccount.getPosition());
 
             userRepository.save(KakaoDto.Request.toEntity(user));
         }
-        log.info("카카오 유저 정보 등록 성공");
-        SignInDto.Request logInDto = kakoUserLogin(loginId);
-        log.info("카카오 로그인 성공");
-        return authService.loginUser(logInDto);
-
-
     }
 
 

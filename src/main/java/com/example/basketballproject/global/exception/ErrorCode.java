@@ -25,6 +25,7 @@ public enum ErrorCode {
     CONFIRM_EMAIL_AUTH(HttpStatus.BAD_REQUEST.value(), "이메일 인증을 확인해주세요."),
     ALREADY_LOGOUT(HttpStatus.BAD_REQUEST.value(), "이미 로그아웃한 유저입니다."),
 
+
     //token
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않는 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED.value(), "액세스 토큰이 만료되었습니다. 재발급 받아주세요."),

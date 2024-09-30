@@ -1,6 +1,7 @@
 package com.example.basketballproject.user.entity;
 
 
+import com.example.basketballproject.user.dto.EditDto;
 import com.example.basketballproject.user.type.GenderType;
 import com.example.basketballproject.user.type.Position;
 import com.example.basketballproject.user.type.UserType;
@@ -73,6 +74,33 @@ public class UserEntity implements UserDetails {
 
     public void changeEmailAuth() {
         this.emailAuth = true;
+    }
+
+    public void editInfo(EditDto.Request request) {
+
+        if (this.name != null) {
+            this.name = request.getName();
+        }
+
+        if (this.nickname != null) {
+            this.nickname = request.getNickname();
+        }
+
+        if (this.genderType != null) {
+            this.genderType = GenderType.valueOf(request.getGender());
+        }
+
+        if (this.position != null) {
+            this.position = Position.valueOf(request.getPosition());
+        }
+
+
+    }
+
+    public void passwordEdit(String password) {
+        if (!password.isEmpty()) {
+            this.password = password;
+        }
     }
 
 
