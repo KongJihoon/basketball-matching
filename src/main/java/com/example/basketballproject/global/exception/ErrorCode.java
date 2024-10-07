@@ -41,7 +41,13 @@ public enum ErrorCode {
     NOT_AFTER_THIRTY_MINUTE(HttpStatus.BAD_REQUEST.value(), "경기 시작 시간이 현재 시간의 30분 이후 이면 "
             + "경기 생성 가능 합니다."),
     ALREADY_GAME_CREATED(HttpStatus.BAD_REQUEST.value(), "설정한 경기 시작 시간 30분전 ~ 30분후 사이에"
-            + "이미 열린 경기가 있습니다.");
+            + "이미 열린 경기가 있습니다."),
+    GAME_NOT_FOUND(HttpStatus.BAD_REQUEST.value(), "경기를 찾을 수 없습니다."),
+    NOT_GAME_CREATOR(HttpStatus.BAD_REQUEST.value(), "경기 생성자가 아닙니다."),
+    NOT_UPDATED_HEADCOUNT(HttpStatus.BAD_REQUEST.value(), "인원 수를 수정할 수 없습니다."),
+    NOT_UPDATE_MAN(HttpStatus.BAD_REQUEST.value(), "남자로 변경할 수 없습니다."),
+    NOT_UPDATE_FEMALE(HttpStatus.BAD_REQUEST.value(), "여자로 변경할 수 없습니다."),
+    NOT_DELETE_GAME(HttpStatus.BAD_REQUEST.value(), "경기를 삭제할 수 없습니다.");
 
 
 

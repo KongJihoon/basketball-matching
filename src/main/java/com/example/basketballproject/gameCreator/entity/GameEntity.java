@@ -44,6 +44,10 @@ public class GameEntity {
     @Column(nullable = false)
     private Gender gender;
 
+    private Double latitude;
+
+    private Double longitude;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private FieldState fieldState;
