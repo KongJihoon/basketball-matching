@@ -2,9 +2,7 @@ package com.example.basketballproject.user.service;
 
 
 import com.example.basketballproject.global.exception.CustomException;
-import com.example.basketballproject.global.exception.ErrorCode;
 import com.example.basketballproject.global.service.MailService;
-import com.example.basketballproject.user.dto.FindUserDto;
 import com.example.basketballproject.user.dto.UserDto;
 import com.example.basketballproject.user.entity.UserEntity;
 import com.example.basketballproject.user.repository.UserRepository;
