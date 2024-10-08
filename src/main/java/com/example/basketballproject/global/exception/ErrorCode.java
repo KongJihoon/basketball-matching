@@ -47,7 +47,13 @@ public enum ErrorCode {
     NOT_UPDATED_HEADCOUNT(HttpStatus.BAD_REQUEST.value(), "인원 수를 수정할 수 없습니다."),
     NOT_UPDATE_MAN(HttpStatus.BAD_REQUEST.value(), "남자로 변경할 수 없습니다."),
     NOT_UPDATE_FEMALE(HttpStatus.BAD_REQUEST.value(), "여자로 변경할 수 없습니다."),
-    NOT_DELETE_GAME(HttpStatus.BAD_REQUEST.value(), "경기를 삭제할 수 없습니다.");
+    NOT_DELETE_GAME(HttpStatus.BAD_REQUEST.value(), "경기를 삭제할 수 없습니다."),
+    ALREADY_PARTICIPANT_USER(HttpStatus.BAD_REQUEST.value(), "이미 참가신청한 유저입니다."),
+    FULL_PEOPLE_GAME(HttpStatus.BAD_REQUEST.value(), "정원이 초과된 경기입니다."),
+    OVER_TIME_GAME(HttpStatus.BAD_REQUEST.value(), "이미 지난 경기입니다."),
+    ONLY_MALE_GAME(HttpStatus.BAD_REQUEST.value(), "남자만 신청 가능한 경기입니다."),
+    ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST.value(), "여자만 신청 가능한 경기입니다."),
+    NOT_ALLOWED_CANCEL(HttpStatus.BAD_REQUEST.value(), "경기 시작 10분전에는 취소가 불가능합니다.");
 
 
 

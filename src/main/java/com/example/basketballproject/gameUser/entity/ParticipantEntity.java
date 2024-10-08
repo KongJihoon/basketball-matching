@@ -33,6 +33,8 @@ public class ParticipantEntity {
 
     private LocalDateTime acceptDateTime;
 
+    private LocalDateTime canceledDateTime;
+
     @ManyToOne
     private GameEntity gameEntity;
 

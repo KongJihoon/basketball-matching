@@ -33,6 +33,8 @@ public class GameEntity {
     @Column(nullable = false)
     private Long headCount;
 
+    private Long applicantNum;
+
     @Column(nullable = false)
     private String address;
 
@@ -68,6 +70,15 @@ public class GameEntity {
     @ManyToOne
     private UserEntity userEntity;
 
+
+    public void acceptNum() {
+
+        this.applicantNum++;
+    }
+
+    public void cancelNum() {
+        this.applicantNum--;
+    }
 
 
 }
