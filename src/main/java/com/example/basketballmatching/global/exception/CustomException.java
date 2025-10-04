@@ -1,9 +1,6 @@
 package com.example.basketballmatching.global.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 public class CustomException extends RuntimeException{
@@ -12,7 +9,7 @@ public class CustomException extends RuntimeException{
 
 
     public CustomException(ErrorCode errorCode) {
-        super(errorCode.getDescription());
+        super(errorCode.getErrorMessage());
         this.errorCode = errorCode;
 
     }
