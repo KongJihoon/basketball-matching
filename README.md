@@ -13,7 +13,7 @@
 
 ---
 ## 1️⃣ ERD
-![](주소란)
+![](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/erd01.png?raw=true)
 
 
 ## 🛠 기술 스택
