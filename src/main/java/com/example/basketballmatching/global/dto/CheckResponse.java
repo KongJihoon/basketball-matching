@@ -1,6 +1,5 @@
 package com.example.basketballmatching.global.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
