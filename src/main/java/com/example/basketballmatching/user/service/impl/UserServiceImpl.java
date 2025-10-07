@@ -3,7 +3,7 @@ package com.example.basketballmatching.user.service.impl;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
+import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.dto.SignUpDto;
 import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
@@ -26,6 +26,10 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private final RedisService redisService;
+
+
+
 
     @Override
     @Transactional
@@ -42,6 +46,17 @@ public class UserServiceImpl implements UserService {
         request.setPassword(passwordEncoder.encode(request.getPassword()));
 
         UserEntity userEntity = SignUpDto.Request.toEntity(request);
+
+        String data = redisService.getData("email:auth:verified:" + request.getEmail());
+
+        if (data == null) {
+            throw new CustomException(EMAIL_NOT_VERIFIED);
+        }
+
+        redisService.deleteData("email:auth:verified:" + request.getEmail());
+
+        userEntity.setEmailAuth();
+
 
         userRepository.save(userEntity);
 
@@ -60,6 +75,19 @@ public class UserServiceImpl implements UserService {
         }
 
         return CheckResponse.of(true, "사용가능한 이메일입니다.");
+    }
+
+    @Override
+    public CheckResponse checkNickname(String nickname) {
+
+        boolean exists = userRepository.existsByNickname(nickname);
+
+        if (exists) {
+            throw new CustomException(ALREADY_EXIST_NICKNAME);
+        }
+
+        return CheckResponse.of(true, "사용가능한 닉네임입니다.");
+
     }
 
 

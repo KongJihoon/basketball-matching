@@ -11,5 +11,6 @@ public interface UserService {
 
 
     CheckResponse checkEmail(String email);
+    CheckResponse checkNickname(String nickname);
 
 }
