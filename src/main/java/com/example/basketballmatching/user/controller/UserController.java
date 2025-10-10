@@ -54,7 +54,7 @@ public class UserController {
         return ResponseEntity.ok(checkResponse);
     }
 
-    @PostMapping("send-mail")
+    @PostMapping("/send-mail")
     public ResponseEntity<CheckResponse> sendMailAuth(
             @RequestParam String email
     ) {
@@ -63,7 +63,7 @@ public class UserController {
         return ResponseEntity.ok(checkResponse);
     }
 
-    @PostMapping("verify-mail")
+    @PostMapping("/verify-mail")
     public ResponseEntity<CheckResponse> verifyEmailAuth(
             @RequestBody VerifyEmailDto request
             ) {

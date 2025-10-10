@@ -19,6 +19,14 @@ public class RedisService {
         valueOperations.set(key, value, Duration.ofMinutes(expiredTime));
     }
 
+    public void setDataExpireMillis(String key, String value, Long expiredTime) {
+
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+
+        valueOperations.set(key, value, Duration.ofMillis(expiredTime));
+
+    }
+
     public String getData(String key) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
 

@@ -1,0 +1,54 @@
+package com.example.basketballmatching.global.security;
+
+import com.example.basketballmatching.user.entity.UserEntity;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
+
+@Getter
+@RequiredArgsConstructor
+public class UserInfoDetails implements UserDetails {
+
+    private final UserEntity userEntity;
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(this.userEntity.getUserType().getDescription()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.userEntity.getPassword();
+    }
+
+    @Override
+    public String getUsername() {
+        return this.userEntity.getEmail();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.userEntity.isEmailAuth();
+    }
+}
