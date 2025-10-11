@@ -168,5 +168,21 @@ public class TokenProvider {
                 .compact();
     }
 
+    public void validateRefreshToken(String refreshToken) {
+
+        if (refreshToken == null) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+        Claims claims = parseToken(refreshToken);
+
+        if (claims.getExpiration().before(new Date())) {
+            throw new CustomException(EXPIRED_TOKEN);
+        }
+
+    }
+
+
+
 
 }

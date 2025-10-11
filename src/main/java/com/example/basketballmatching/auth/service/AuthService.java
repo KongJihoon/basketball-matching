@@ -6,4 +6,6 @@ public interface AuthService {
 
     TokenDto loginUser(String email, String password);
 
+    TokenDto reissue(String email, String refreshToken);
+
 }

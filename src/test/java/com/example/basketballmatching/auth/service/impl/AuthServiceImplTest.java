@@ -4,11 +4,11 @@ import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
+import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,8 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
@@ -36,6 +37,9 @@ class AuthServiceImplTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RedisService redisService;
+
     @BeforeEach
     void setUp() {
         // given: 테스트용 유저 데이터 삽입
@@ -49,6 +53,8 @@ class AuthServiceImplTest {
                 .position(Position.GUARD)
                 .userType(UserType.USER)
                 .build();
+
+        user.setEmailAuth();
 
         userRepository.save(user);
     }
@@ -84,6 +90,57 @@ class AuthServiceImplTest {
 
         assertEquals(ErrorCode.PASSWORD_NOT_MATCH, exception.getErrorCode());
 
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 성공 테스트")
+    void reissueTokenTest() {
+        // given
+
+        authService.loginUser("test@example.com", "Test1234!");
+
+
+        // when
+        String email = "test@example.com";
+
+        TokenDto reissue = authService.reissue(email, redisService.getData("refreshToken:" + email));
+
+
+        // then
+
+        assertThat(reissue.getAccessToken()).isNotBlank();
+        assertThat(reissue.getRefreshToken()).isNotBlank();
+        assertEquals(email, reissue.getUserDto().getEmail());
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 테스트 - 토큰 불일치")
+    void reissueToken_Invalid_Token() {
+        // given
+
+        String email = "test@example.com";
+
+        authService.loginUser(email, "Test1234!");
+        // when
+
+        CustomException exception = assertThrows(CustomException.class, () -> authService.reissue(email, "awdwadwadwadwadwadwadasfdsgdfgfdgfd"));
+
+        // then
+
+        assertEquals(ErrorCode.INVALID_TOKEN, exception.getErrorCode());
+
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 테스트 - Redis에 토큰이 없는 경우")
+    void reissueToken_NOT_FOUND_TOKEN() {
+        // given
+        String email = "tes@example.com";
+        // when
+        CustomException exception = assertThrows(CustomException.class,
+                () -> authService.reissue(email, null));
+        // then
+        assertEquals(ErrorCode.NOT_FOUND_TOKEN, exception.getErrorCode());
     }
 
 

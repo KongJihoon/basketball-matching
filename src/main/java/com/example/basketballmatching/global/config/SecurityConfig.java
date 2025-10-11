@@ -33,7 +33,8 @@ public class SecurityConfig {
                                         "/api/v1/user/check-nickname",
                                         "/api/v1/user/send-mail",
                                         "/api/v1/user/verify-mail",
-                                        "/api/v1/user/login"
+                                        "/api/v1/user/login",
+                                        "/api/v1/user/reissue"
 
                                 ).permitAll()
                                 .anyRequest().authenticated()
