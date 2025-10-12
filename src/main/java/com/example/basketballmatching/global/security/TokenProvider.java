@@ -183,6 +183,12 @@ public class TokenProvider {
     }
 
 
+    public long getRemainingTime(String token) {
+
+        return parseToken(token).getExpiration().getTime() - System.currentTimeMillis();
+    }
+
+
 
 
 }

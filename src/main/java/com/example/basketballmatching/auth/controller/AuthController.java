@@ -6,15 +6,17 @@ import com.example.basketballmatching.auth.dto.ReIssueTokenDto;
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.security.UserInfoDetails;
 import com.example.basketballmatching.user.dto.UserDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1/user")
@@ -57,6 +59,24 @@ public class AuthController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(ApiResponse.of("토큰 재발급에 성공하였습니다.", reissueToken));
+
+    }
+
+    @PatchMapping("/logout")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<CheckResponse> logoutUser(
+            HttpServletRequest request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
+            ) {
+
+        String accessToken = request.getHeader("Authorization");
+
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+        }
+
+        CheckResponse checkResponse = authService.logoutUser(userInfoDetails.getUsername(), accessToken);
+
+        return ResponseEntity.ok(checkResponse);
 
     }
 
