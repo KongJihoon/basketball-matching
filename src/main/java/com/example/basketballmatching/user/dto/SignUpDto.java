@@ -53,6 +53,9 @@ public class SignUpDto {
         @Pattern(regexp = "^01[016789]-\\d{3,4}-\\d{4}$", message = "휴대폰 번호 형식이 올바르지 않습니다.")
         private String phone;
 
+        @NotBlank(message = "주소를 입력해주세요.")
+        private String address;
+
         @NotNull(message = "포지션을 입력해주세요.")
         private Position position;
 
@@ -65,6 +68,7 @@ public class SignUpDto {
                     .name(request.getName())
                     .birth(request.getBirth())
                     .phone(request.getPhone())
+                    .address(request.getAddress())
                     .position(request.getPosition())
                     .userType(UserType.USER)
                     .build();
@@ -89,6 +93,8 @@ public class SignUpDto {
         private LocalDate birth;
 
         private String phone;
+
+        private String address;
 
         private Position position;
 

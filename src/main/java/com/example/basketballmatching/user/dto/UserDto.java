@@ -29,6 +29,8 @@ public class UserDto {
 
     private String phone;
 
+    private String address;
+
     private Position position;
 
     private UserType userType;
@@ -48,6 +50,7 @@ public class UserDto {
                 .name(userEntity.getName())
                 .birth(userEntity.getBirth())
                 .phone(userEntity.getPhone())
+                .address(userEntity.getAddress())
                 .position(userEntity.getPosition())
                 .userType(userEntity.getUserType())
                 .createdAt(userEntity.getCreatedAt())
