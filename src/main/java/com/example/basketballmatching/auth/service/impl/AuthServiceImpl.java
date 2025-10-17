@@ -2,6 +2,7 @@ package com.example.basketballmatching.auth.service.impl;
 
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
+import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
@@ -34,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public TokenDto loginUser(String email, String password) {
 
-        log.info("유저 로그인 시작: {}", email);
+        log.info("[유저 로그인 시작]: {}", email);
 
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -59,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokenDto reissue(String email, String refreshToken) {
 
-        log.info("토큰 재발급 시작: {}", email);
+        log.info("[토큰 재발급 시작]: {}", email);
 
         String redisToken = redisService.getData("refreshToken:" + email);
 
@@ -90,6 +91,25 @@ public class AuthServiceImpl implements AuthService {
 
 
         return new TokenDto(reissuedAccessToken, redisToken, userDto);
+    }
+
+    @Override
+    public CheckResponse logoutUser(String email, String token) {
+
+        log.info("[유저 로그아웃 시작] : {}", email);
+
+        if (token == null) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+        redisService.setDataExpireMillis("logout:access:" + token, "LOGOUT",tokenProvider.getRemainingTime(token));
+
+        redisService.deleteData("refreshToken:" + email);
+
+
+        log.info("[유저 로그아웃 완료] : {}", email);
+
+        return CheckResponse.of(true, "로그아웃 완료되었습니다.");
     }
 
 

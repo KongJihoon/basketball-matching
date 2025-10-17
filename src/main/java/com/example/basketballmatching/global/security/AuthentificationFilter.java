@@ -21,6 +21,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Map;
 
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -29,22 +31,41 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
     public static final String TOKEN_HEADER = "Authorization";
     public static final String TOKEN_PREFIX = "Bearer ";
 
+
     private final TokenProvider tokenProvider;
 
+    private final RedisService redisService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String token = resolvedTokenRequest(request);
 
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String email = tokenProvider.parseToken(token).getSubject();
+
+
+
+
         try {
 
-            if (token == null) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+
 
             if (tokenProvider.validateToken(token)) {
+
+                String logoutToken = redisService.getData("logout:access:" + token);
+
+
+                if (logoutToken != null) {
+                    log.warn("[로그아웃 유저 접근]: {}", email );
+
+                    setErrorResponse(response, LOGOUT_USER);
+                    return;
+                }
 
                 Authentication authentication = tokenProvider.getAuthentication(token);
 
@@ -63,14 +84,13 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
             log.warn("JWT 검증 실패: {}", e.getErrorCode().getErrorMessage());
             setErrorResponse(response, e.getErrorCode());
             return;
-
         } catch (Exception e) {
             log.error("INTERNAL SERVER ERROR 발생: {}", e.getMessage());
-            setErrorResponse(response, ErrorCode.INTERNAL_SERVER_ERROR);
+            setErrorResponse(response, INTERNAL_SERVER_ERROR);
             return;
         }
 
-        filterChain.doFilter(request, response);
+
 
 
     }

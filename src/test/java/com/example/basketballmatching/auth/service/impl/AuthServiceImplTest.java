@@ -2,6 +2,7 @@ package com.example.basketballmatching.auth.service.impl;
 
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
+import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.service.RedisService;
@@ -141,6 +142,26 @@ class AuthServiceImplTest {
                 () -> authService.reissue(email, null));
         // then
         assertEquals(ErrorCode.NOT_FOUND_TOKEN, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공 테스트")
+    void logoutTest() {
+        // given
+
+        String email = "test@example.com";
+
+        TokenDto tokenDto = authService.loginUser(email, "Test1234!");
+
+        // when
+
+        CheckResponse checkResponse = authService.logoutUser(email, tokenDto.getAccessToken());
+
+        // then
+
+        assertEquals("로그아웃 완료되었습니다.", checkResponse.getMessage());
+
+
     }
 
 

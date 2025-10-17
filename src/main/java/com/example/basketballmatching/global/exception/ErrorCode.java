@@ -27,6 +27,7 @@ public enum ErrorCode {
     ALREADY_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "이미 인증된 이메일입니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증을 먼저 진행해주세요."),
     INVALID_CODE(HttpStatus.BAD_REQUEST, "유효하지 않은 인증번호입니다."),
+    LOGOUT_USER(HttpStatus.BAD_REQUEST, "로그아웃 유저입니다"),
     // validation
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
     INVALID_PATTERN(HttpStatus.BAD_REQUEST, "잘못된 패턴입니다."),
