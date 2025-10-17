@@ -2,6 +2,7 @@ package com.example.basketballmatching.auth.controller;
 
 
 import com.example.basketballmatching.auth.dto.LoginDto;
+import com.example.basketballmatching.auth.dto.ReIssueTokenDto;
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.dto.ApiResponse;
@@ -39,6 +40,23 @@ public class AuthController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(ApiResponse.of("로그인에 성공하였습니다.", token));
+
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<TokenDto>> reissue(
+            @RequestBody @Valid ReIssueTokenDto request
+            ) {
+
+        TokenDto reissueToken = authService.reissue(request.getEmail(), request.getRefreshToken());
+
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + reissueToken.getAccessToken());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(ApiResponse.of("토큰 재발급에 성공하였습니다.", reissueToken));
 
     }
 
