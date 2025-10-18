@@ -1,6 +1,7 @@
 package com.example.basketballmatching.user.entity;
 
 import com.example.basketballmatching.global.entity.BaseEntity;
+import com.example.basketballmatching.user.dto.EditUserDto;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import jakarta.persistence.*;
@@ -41,6 +42,9 @@ public class UserEntity extends BaseEntity {
     private String phone;
 
     @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Position position;
 
@@ -53,6 +57,33 @@ public class UserEntity extends BaseEntity {
 
     public void setEmailAuth() {
         this.emailAuth = true;
+    }
+
+
+    public void editUserInfo(EditUserDto editUserDto) {
+
+        if (editUserDto.getNickname() != null) {
+            this.nickname = editUserDto.getNickname();
+        }
+
+        if (editUserDto.getPhone() != null) {
+            this.phone = editUserDto.getPhone();
+        }
+
+        if (editUserDto.getAddress() != null) {
+            this.address = editUserDto.getAddress();
+        }
+
+        if (editUserDto.getPosition() != null) {
+            this.position = editUserDto.getPosition();
+        }
+
+    }
+
+    public void setPassword(String password) {
+
+        this.password = password;
+
     }
 
 
