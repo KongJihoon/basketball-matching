@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +36,9 @@ public class MailService {
     private static final String EMAIL_PREFIX = "email:auth:";
 
 
+    @Async
     @Transactional
-    public CheckResponse sendAuthMail(String email) {
+    public void sendAuthMail(String email) {
 
         String code = createRandomCode();
 
@@ -78,12 +80,13 @@ public class MailService {
             throw new CustomException(INTERNAL_SERVER_ERROR);
         }
 
-        return CheckResponse.of(true, "이메일 인증번호가 전송되었습니다.");
+
 
     }
 
+    @Async
     @Transactional
-    public CheckResponse sendPasswordAuthCode(String email) {
+    public void sendPasswordAuthCode(String email) {
 
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -128,7 +131,7 @@ public class MailService {
             throw new CustomException(INTERNAL_SERVER_ERROR);
         }
 
-        return CheckResponse.of(true, "인증번호가 전송되었습니다.");
+
 
     }
 
