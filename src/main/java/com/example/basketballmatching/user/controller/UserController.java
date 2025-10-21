@@ -60,9 +60,9 @@ public class UserController {
     public ResponseEntity<CheckResponse> sendMailAuth(
             @RequestParam String email
     ) {
-        CheckResponse checkResponse = mailService.sendAuthMail(email);
+        mailService.sendAuthMail(email);
 
-        return ResponseEntity.ok(checkResponse);
+        return ResponseEntity.ok(CheckResponse.of(true, "이메일 인증번호가 전송되었습니다."));
     }
 
     @PostMapping("/verify-mail")
@@ -103,9 +103,9 @@ public class UserController {
             @RequestParam String email
     ) {
 
-        CheckResponse checkResponse = mailService.sendPasswordAuthCode(email);
+        mailService.sendPasswordAuthCode(email);
 
-        return ResponseEntity.ok(checkResponse);
+        return ResponseEntity.ok(CheckResponse.of(true, "인증번호가 전송되었습니다."));
 
     }
 
