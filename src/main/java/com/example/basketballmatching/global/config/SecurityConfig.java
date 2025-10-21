@@ -36,7 +36,8 @@ public class SecurityConfig {
                                         "/api/v1/user/send-mail",
                                         "/api/v1/user/verify-mail",
                                         "/api/v1/user/login",
-                                        "/api/v1/user/reissue"
+                                        "/api/v1/user/reissue",
+                                        "/api/oauth2/**"
 
                                 ).permitAll()
                                 .anyRequest().authenticated()
