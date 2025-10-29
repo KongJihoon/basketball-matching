@@ -1,6 +1,8 @@
 package com.example.basketballmatching.user.dto;
 
 import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.type.GenderType;
+import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -59,6 +61,11 @@ public class SignUpDto {
         @NotNull(message = "포지션을 입력해주세요.")
         private Position position;
 
+        @NotNull(message = "성별을 입력해주세요.")
+        private GenderType genderType;
+
+        private LoginProvider loginProvider;
+
         public static UserEntity toEntity(SignUpDto.Request request) {
 
             return UserEntity.builder()
@@ -71,6 +78,8 @@ public class SignUpDto {
                     .address(request.getAddress())
                     .position(request.getPosition())
                     .userType(UserType.USER)
+                    .genderType(request.genderType)
+                    .loginProvider(LoginProvider.LOCAL)
                     .build();
         }
 
@@ -98,6 +107,8 @@ public class SignUpDto {
 
         private Position position;
 
+        private GenderType genderType;
+
         private UserType userType;
 
         private LocalDateTime createdAt;
@@ -112,6 +123,7 @@ public class SignUpDto {
                     .phone(userDto.getPhone())
                     .position(userDto.getPosition())
                     .userType(userDto.getUserType())
+                    .genderType(userDto.getGenderType())
                     .createdAt(userDto.getCreatedAt())
                     .build();
         }

@@ -3,6 +3,8 @@ package com.example.basketballmatching.user.oauth2.dto;
 import com.example.basketballmatching.user.dto.SignUpDto;
 import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.type.GenderType;
+import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import jakarta.validation.constraints.Email;
@@ -45,8 +47,11 @@ public class KakaoDto {
                     .birth(LocalDate.now())
                     .phone("010-0000-0000")
                     .address("DEFAULT_ADDRESS")
+                    .loginProvider(LoginProvider.KAKAO)
                     .position(Position.NONE)
                     .userType(UserType.USER)
+                    .genderType(GenderType.NONE)
+                    .emailAuth(true)
                     .build();
         }
 

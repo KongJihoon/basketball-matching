@@ -1,6 +1,7 @@
 package com.example.basketballmatching.user.dto;
 
 import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import lombok.AllArgsConstructor;
@@ -19,8 +20,6 @@ public class UserDto {
 
     private String email;
 
-    private String password;
-
     private String nickname;
 
     private String name;
@@ -32,6 +31,8 @@ public class UserDto {
     private String address;
 
     private Position position;
+
+    private GenderType genderType;
 
     private UserType userType;
 
@@ -45,7 +46,6 @@ public class UserDto {
         return UserDto.builder()
                 .userId(userEntity.getUserId())
                 .email(userEntity.getEmail())
-                .password(userEntity.getPassword())
                 .nickname(userEntity.getNickname())
                 .name(userEntity.getName())
                 .birth(userEntity.getBirth())
@@ -53,6 +53,7 @@ public class UserDto {
                 .address(userEntity.getAddress())
                 .position(userEntity.getPosition())
                 .userType(userEntity.getUserType())
+                .genderType(userEntity.getGenderType())
                 .createdAt(userEntity.getCreatedAt())
                 .updatedAt(userEntity.getUpdatedAt())
                 .build();

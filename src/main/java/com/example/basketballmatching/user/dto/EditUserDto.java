@@ -1,5 +1,6 @@
 package com.example.basketballmatching.user.dto;
 
+import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,8 @@ public class EditUserDto {
     private String phone;
 
     private String address;
+
+    private GenderType genderType;
 
     private Position position;
 }
