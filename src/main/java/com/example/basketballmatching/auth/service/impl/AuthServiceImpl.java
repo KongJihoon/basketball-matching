@@ -9,6 +9,7 @@ import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
+import com.example.basketballmatching.user.type.LoginProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
+import static com.example.basketballmatching.user.type.LoginProvider.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,9 +42,16 @@ public class AuthServiceImpl implements AuthService {
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        if (!passwordEncoder.matches(password, userEntity.getPassword())) {
-            throw new CustomException(PASSWORD_NOT_MATCH);
+        if (userEntity.getLoginProvider().equals(KAKAO)) {
+            throw new CustomException(PROVIDER_NOT_MATCH);
         }
+
+        if (!passwordEncoder.matches(password, userEntity.getPassword()) || password == null) {
+                throw new CustomException(PASSWORD_NOT_MATCH);
+        }
+
+
+
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
@@ -53,6 +62,32 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = tokenProvider.createRefreshToken(userDto.getEmail());
         log.info("refreshToken 생성 완료");
 
+        log.info("[유저 로그인 완료] email : {}", userDto.getEmail());
+
+        return new TokenDto(accessToken, refreshToken, userDto);
+    }
+
+    @Override
+    @Transactional
+    public TokenDto kakaoLogin(String email) {
+
+        log.info("[카카오 로그인 검증 시작] email : {}", email);
+
+        UserEntity userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        if (userEntity.getLoginProvider().equals(LOCAL)) {
+            throw new CustomException(PROVIDER_NOT_MATCH);
+        }
+
+        UserDto userDto = UserDto.fromEntity(userEntity);
+
+        String accessToken = tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+
+        String refreshToken = tokenProvider.createRefreshToken(userDto.getEmail());
+
+
+        log.info("[카카오 로그인 완료] email : {}", userDto.getEmail());
 
         return new TokenDto(accessToken, refreshToken, userDto);
     }

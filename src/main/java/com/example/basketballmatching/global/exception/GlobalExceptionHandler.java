@@ -25,7 +25,8 @@ public class GlobalExceptionHandler {
             "NotNull", INVALID_INPUT,
             "Pattern", INVALID_PATTERN,
             "Email", INVALID_PATTERN,
-            "Past", PAST_BIRTHDAY
+            "Past", PAST_BIRTHDAY,
+            "Future", FUTURE_DATE
     );
 
 

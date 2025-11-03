@@ -7,6 +7,8 @@ public interface AuthService {
 
     TokenDto loginUser(String email, String password);
 
+    TokenDto kakaoLogin(String email);
+
     TokenDto reissue(String email, String refreshToken);
 
     CheckResponse logoutUser(String email, String token);

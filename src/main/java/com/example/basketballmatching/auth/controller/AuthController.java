@@ -8,7 +8,6 @@ import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
-import com.example.basketballmatching.user.dto.UserDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
