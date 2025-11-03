@@ -99,6 +99,8 @@ public class CreateGameDto {
 
         private int headCount;
 
+        private int participantCount;
+
         private FieldStatus fieldStatus;
 
         private MatchFormat matchFormat;
@@ -130,6 +132,7 @@ public class CreateGameDto {
                     .title(gameDto.getTitle())
                     .content(gameDto.getContent())
                     .headCount(gameDto.getHeadCount())
+                    .participantCount(gameDto.getParticipantCount())
                     .fieldStatus(gameDto.getFieldStatus())
                     .matchFormat(gameDto.getMatchFormat())
                     .gameStatus(gameDto.getGameStatus())

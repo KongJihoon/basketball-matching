@@ -1,17 +1,15 @@
 package com.example.basketballmatching.gameCreator.entity;
 
 
-import com.example.basketballmatching.gameCreator.dto.GameDto;
+import com.example.basketballmatching.gameCreator.dto.EditGameDto;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.global.entity.BaseEntity;
-import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -34,6 +32,10 @@ public class GameEntity extends BaseEntity {
 
     @Column(nullable = false)
     private int headCount;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private int participantCount = 1;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -79,6 +81,30 @@ public class GameEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
+
+    public void editGameInfo(EditGameDto editGameDto) {
+
+        if (editGameDto.getTitle() != null) {
+            this.title = editGameDto.getTitle();
+        }
+
+        if (editGameDto.getContent() != null) {
+            this.content = editGameDto.getContent();
+        }
+
+        if (editGameDto.getHeadCount() > 0) {
+            this.headCount = editGameDto.getHeadCount();
+        }
+
+        if (editGameDto.getMatchFormat() != null) {
+            this.matchFormat = editGameDto.getMatchFormat();
+        }
+
+
+
+
+
+    }
 
 
 

@@ -37,7 +37,9 @@ public class SecurityConfig {
                                         "/api/v1/user/verify-mail",
                                         "/api/v1/user/login",
                                         "/api/v1/user/reissue",
-                                        "/api/oauth2/**"
+                                        "/api/oauth2/**",
+                                        "/api/v1/game/details",
+                                        "api/v1/game/search"
 
                                 ).permitAll()
                                 .anyRequest().authenticated()

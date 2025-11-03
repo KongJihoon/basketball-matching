@@ -47,7 +47,10 @@ public enum ErrorCode {
     INVALID_GAME_TIME(HttpStatus.BAD_REQUEST, "시작/종료 시간이 유효하지 않습니다."),
     GAME_TIME_OUT_OF_RANGE(HttpStatus.BAD_REQUEST, "경기시간은 1시간 이상 2시간 이하입니다."),
     PLACE_SCHEDULE_OVERLAP(HttpStatus.BAD_REQUEST, "해당 장소에 겹치는 경기가 존재합니다."),
-    INVALID_HEADCOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 인원수입니다.")
+    INVALID_HEADCOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 인원수입니다."),
+    GAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "경기를 찾을 수 없습니다."),
+    NOT_GAME_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자가 아닙니다."),
+
 
     ;
 
