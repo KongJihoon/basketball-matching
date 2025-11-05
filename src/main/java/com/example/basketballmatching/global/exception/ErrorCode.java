@@ -50,6 +50,7 @@ public enum ErrorCode {
     INVALID_HEADCOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 인원수입니다."),
     GAME_NOT_FOUND(HttpStatus.BAD_REQUEST, "경기를 찾을 수 없습니다."),
     NOT_GAME_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자가 아닙니다."),
+    UPDATE_GAME_HEAD_COUNT(HttpStatus.BAD_REQUEST, "경기 인원 수를 변경해주세요.")
 
 
     ;

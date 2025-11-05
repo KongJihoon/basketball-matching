@@ -101,6 +101,10 @@ public class GameServiceImpl implements GameService {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
+        if(request.getMatchFormat() != null && request.getHeadCount() == 0) {
+            throw new CustomException(UPDATE_GAME_HEAD_COUNT);
+        }
+
 
 
         if (request.getHeadCount() > 0) {
