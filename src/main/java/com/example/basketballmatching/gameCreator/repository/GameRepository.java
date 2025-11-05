@@ -27,4 +27,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
     Optional<GameEntity> findByGameIdAndDeletedDateTimeIsNull(Long gameId);
 
+
+    Optional<GameEntity> findByTitle(String title);
+
 }

@@ -106,6 +106,11 @@ public class GameEntity extends BaseEntity {
 
     }
 
+    // 테스트용
+    public void setDeletedDateTime(LocalDateTime deletedDateTime) {
+        this.deletedDateTime = deletedDateTime;
+    }
+
 
 
 
