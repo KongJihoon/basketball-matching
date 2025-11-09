@@ -60,6 +60,10 @@ public class ParticipantGameEntity extends BaseEntity {
                 .build();
     }
 
+    public void setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime acceptDateTime) {
+        this.participantGameStatus = participantGameStatus;
+        this.acceptDateTime = acceptDateTime;
+    }
 
 
 
