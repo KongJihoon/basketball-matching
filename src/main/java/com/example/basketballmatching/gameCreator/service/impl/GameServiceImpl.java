@@ -12,6 +12,8 @@ import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
+import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class GameServiceImpl implements GameService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final GameQueryRepository gameQueryRepository;
+    private final ParticipantGameRepository participantGameRepository;
 
     @Override
     @Transactional
@@ -50,6 +53,11 @@ public class GameServiceImpl implements GameService {
         GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
 
         gameRepository.save(gameEntity);
+
+        ParticipantGameEntity participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, userEntity);
+
+        participantGameRepository.save(participantGameEntity);
+
 
         log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
 
