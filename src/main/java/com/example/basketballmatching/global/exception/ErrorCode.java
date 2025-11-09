@@ -57,7 +57,11 @@ public enum ErrorCode {
     FULL_HEADCOUNT_GAME(HttpStatus.BAD_REQUEST, "남은 신청 자리가 없습니다."),
     NOT_ALLOWED_TO_JOIN(HttpStatus.BAD_REQUEST, "경기 참가를 요청할 수 없습니다."),
     ONLY_FEMALE_GAME(HttpStatus.BAD_REQUEST, "여성 유저만 신청가능합니다."),
-    ONLY_MALE_GAME(HttpStatus.BAD_REQUEST, "남성 유저만 신청가능합니다.")
+    ONLY_MALE_GAME(HttpStatus.BAD_REQUEST, "남성 유저만 신청가능합니다."),
+    NOT_APPLY_USER(HttpStatus.BAD_REQUEST, "경기 참가 신청을 한 유저가 아닙니다."),
+    ALREADY_START_GAME(HttpStatus.BAD_REQUEST, "이미 시작한 경기입니다."),
+    PARTICIPANT_NOT_FOUND(HttpStatus.BAD_REQUEST, "경기 참가자를 찾을 수 없습니다."),
+    ALREADY_ACCEPT_USER(HttpStatus.BAD_REQUEST, "이미 수락된 참가자입니다.")
     ;
 
 
