@@ -106,6 +106,10 @@ public class GameEntity extends BaseEntity {
 
     }
 
+    public void increaseParticipantCount() {
+        this.participantCount++;
+    }
+
     // 테스트용
     public void setDeletedDateTime(LocalDateTime deletedDateTime) {
         this.deletedDateTime = deletedDateTime;
