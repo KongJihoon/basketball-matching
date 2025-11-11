@@ -6,6 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface ParticipantGameRepository extends JpaRepository<ParticipantGameEntity, Long> {
 
     boolean existsByUserEntity_UserIdAndGameEntity_GameId(Long gameId, Long UserId);
@@ -15,6 +18,10 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
     );
 
     Page<ParticipantGameEntity> findByParticipantGameStatusAndGameEntity_GameId(ParticipantGameStatus status, Long gameId, Pageable pageable);
+
+    List<ParticipantGameEntity> findByParticipantGameStatusInAndGameEntity_GameId(List<ParticipantGameStatus> statuses, Long gameId);
+
+    Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
 
 
 

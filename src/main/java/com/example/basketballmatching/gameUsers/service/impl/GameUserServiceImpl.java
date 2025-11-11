@@ -4,6 +4,7 @@ import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
@@ -19,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -48,7 +51,7 @@ public class GameUserServiceImpl implements GameUserService {
         validateParticipantInfo(userEntity, gameEntity);
 
         ParticipantGameEntity entity = ParticipantGameEntity.builder()
-                .participantGameStatus(ParticipantGameStatus.APPLY)
+                .participantGameStatus(APPLY)
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
                 .build();
@@ -63,6 +66,46 @@ public class GameUserServiceImpl implements GameUserService {
         return ApiResponse.of("경기 신청이 완료되었습니다.", participantDto);
     }
 
+    @Override
+    @Transactional
+    public CheckResponse cancelGame(Long userId, Long gameId) {
+
+        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+
+
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isAfter(gameEntity.getStartDateTime().minusMinutes(30))) {
+            throw new CustomException(NOT_ALLOWED_CANCEL);
+        }
+
+        if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {
+            throw new CustomException(ALREADY_CANCELED_USER);
+        }
+
+        if (!participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
+            throw new CustomException(NOT_ACCEPT_USER);
+        }
+
+
+
+        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
+        participantGameRepository.save(participantGameEntity);
+
+        gameEntity.decreaseParticipantCount();
+        gameRepository.save(gameEntity);
+
+
+
+
+        return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
+    }
+
     private void validateParticipantInfo(UserEntity userEntity, GameEntity gameEntity) {
 
         LocalDateTime now = LocalDateTime.now();
@@ -72,7 +115,7 @@ public class GameUserServiceImpl implements GameUserService {
         }
 
         if (participantGameRepository.countByParticipantGameStatusAndGameEntity_GameId(
-                ParticipantGameStatus.APPLY, gameEntity.getGameId()
+                APPLY, gameEntity.getGameId()
         ) >= gameEntity.getHeadCount()) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
         }

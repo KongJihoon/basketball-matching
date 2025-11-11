@@ -39,6 +39,9 @@ public class GameServiceImpl implements GameService {
     private final GameQueryRepository gameQueryRepository;
     private final ParticipantGameRepository participantGameRepository;
 
+    /**
+     * 경기 생성
+     */
     @Override
     @Transactional
     public ApiResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
@@ -65,9 +68,14 @@ public class GameServiceImpl implements GameService {
         return ApiResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
     }
 
+    /**
+     * 경기 상세조회
+     */
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<GameDto> detailGame(Long gameId) {
+
+        log.info("[경기 상세 조회 시작] gameId : {}", gameId);
 
         GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
@@ -75,12 +83,19 @@ public class GameServiceImpl implements GameService {
 
         GameDto gameDto = GameDto.fromEntity(gameEntity);
 
+        log.info("[경기 상세조회 완료] gameId : {}", gameId);
+
         return ApiResponse.of("경기 상세조회에 성공하였습니다.", gameDto);
     }
 
+    /**
+     * 경기 검색 정렬
+     */
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<Page<SearchGameDto>> searchGame(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, Pageable pageable) {
+
+        log.info("[경기 검색 정렬 시작] date : {}", date);
 
         Page<SearchGameDto> responses = gameQueryRepository.searchByKeyword(date, cityName, matchFormat, fieldStatus,matchGenderType, gameStatus, pageable);
 
@@ -89,9 +104,14 @@ public class GameServiceImpl implements GameService {
             return ApiResponse.of("경기 검색결과가 없습니다.", responses);
         }
 
+        log.info("[경기 검색 정렬 완료] date : {}", date);
+
         return ApiResponse.of("경기 검색이 완료되었습니다.", responses);
     }
 
+    /**
+     * 경기 수정
+     */
     @Override
     @Transactional
     public ApiResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
