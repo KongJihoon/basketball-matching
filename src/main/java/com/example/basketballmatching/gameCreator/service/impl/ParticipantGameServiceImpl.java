@@ -132,7 +132,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
-        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(participantId, gameId);
+        boolean exists = participantGameRepository.existsByParticipantGameIdAndGameEntity_GameId(participantId, gameId);
 
         if (!exists) {
             throw new CustomException(NOT_APPLY_USER);
@@ -191,7 +191,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         }
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndParticipantGameId(gameId, participantId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
 
@@ -242,7 +242,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         }
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndParticipantGameId(gameId, participantId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
         if (Objects.equals(participantGameEntity.getUserEntity().getUserId(), gameEntity.getUserEntity().getUserId())) {

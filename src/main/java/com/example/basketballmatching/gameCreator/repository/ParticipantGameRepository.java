@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface ParticipantGameRepository extends JpaRepository<ParticipantGameEntity, Long> {
 
-    boolean existsByUserEntity_UserIdAndGameEntity_GameId(Long gameId, Long UserId);
+    boolean existsByParticipantGameIdAndGameEntity_GameId(Long gameId, Long UserId);
 
     int countByParticipantGameStatusAndGameEntity_GameId(
             ParticipantGameStatus participantGameStatus, Long gameId
@@ -21,8 +21,12 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
     List<ParticipantGameEntity> findByParticipantGameStatusInAndGameEntity_GameId(List<ParticipantGameStatus> statuses, Long gameId);
 
-    Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
+    Optional<ParticipantGameEntity> findByGameEntity_GameIdAndParticipantGameId(Long gameId, Long userId);
 
 
+    Page<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses, Pageable pageable);
+
+
+    Page<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus, Pageable pageable);
 
 }
