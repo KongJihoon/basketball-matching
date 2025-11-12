@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public enum ParticipantGameStatus {
 
-    APPLY, ACCEPT, REJECT, CANCEL, WITHDRAW, KICKOUT, DELETE
+    APPLY, ACCEPT, REJECT, CANCEL, KICKOUT, DELETE
 
 }

@@ -4,6 +4,7 @@ import com.example.basketballmatching.gameCreator.dto.SearchGameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.QGameEntity;
 import com.example.basketballmatching.gameCreator.type.*;
+import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -60,11 +61,15 @@ public class GameQueryRepository {
         return new PageImpl<>(searchGames, pageable, total);
     }
 
+
+
     private static void validationSearch(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, BooleanBuilder builder, QGameEntity qGameEntity) {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
 
         builder.and(qGameEntity.startDateTime.between(startOfDay, endOfDay));
+
+        builder.and(qGameEntity.deletedDateTime.isNull());
 
         if (cityName != null) {
             builder.and(qGameEntity.cityName.eq(cityName));
