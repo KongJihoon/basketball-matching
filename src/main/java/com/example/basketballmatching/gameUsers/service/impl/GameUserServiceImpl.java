@@ -24,12 +24,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Optionals;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -49,6 +52,9 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final GameRepository gameRepository;
 
+    /**
+     * 경기 참가 신청
+     */
     @Override
     @Transactional
     public ApiResponse<ApplyGameUserDto> applyGame(Long gameId, Long userId) {
@@ -79,6 +85,9 @@ public class GameUserServiceImpl implements GameUserService {
         return ApiResponse.of("경기 신청이 완료되었습니다.", participantDto);
     }
 
+    /**
+     * 경기 참가 취소
+     */
     @Override
     @Transactional
     public CheckResponse cancelGame(Long userId, Long gameId) {
@@ -86,7 +95,7 @@ public class GameUserServiceImpl implements GameUserService {
         GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndParticipantGameId(gameId, userId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
 
@@ -119,6 +128,9 @@ public class GameUserServiceImpl implements GameUserService {
         return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
     }
 
+    /**
+     * 현재 예정 경기 조회
+     */
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
@@ -132,6 +144,9 @@ public class GameUserServiceImpl implements GameUserService {
         return ApiResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
     }
 
+    /**
+     * 지난 경기 조회
+     */
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
@@ -147,6 +162,102 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
+    /**
+     * 경기 참가자 평가
+     */
+    @Override
+    @Transactional
+    public CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request) {
+
+        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+        if (gameEntity.getEndDateTime().isAfter(LocalDateTime.now())) {
+            throw new CustomException(NOT_GAME_ENDED);
+        }
+
+        ParticipantGameEntity evaluator = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), evaluatorId)
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+
+        ParticipantGameEntity receiver = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, request.getReceiverId())
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+
+        if (evaluator.getParticipantGameId().equals(receiver.getParticipantGameId())) {
+            throw new CustomException(CANNOT_EVALUATE_SELF);
+        }
+
+        boolean exists = levelRepository.existsByGameEntity_GameIdAndEvaluator_UserIdAndReceiver_UserId(gameId, evaluator.getUserEntity().getUserId(), receiver.getUserEntity().getUserId());
+
+        if (exists) {
+            throw new CustomException(ALREADY_EVALUATED);
+        }
+
+        if (request.getScore()< 1 || request.getScore() > 5) {
+            throw new CustomException(INVALID_LEVEL_SCORE);
+        }
+
+        LevelEntity levelEntity = EvaluatePlayerDto.toEntity(evaluator.getUserEntity(), receiver.getUserEntity(), gameEntity, request.getScore());
+
+
+        levelRepository.save(levelEntity);
+
+        updatePlayerLevel(receiver.getUserEntity());
+
+        userRepository.save(receiver.getUserEntity());
+
+        return CheckResponse.of(true, "경기 참가자 평가를 완료하였습니다.");
+    }
+
+    // 최근 10경기 평균으로 Level측정
+    private void updatePlayerLevel(UserEntity receiver) {
+
+        List<GameEntity> recent10GamesByUser = gameQueryRepository.findRecent10GamesByUser(receiver);
+
+        if (recent10GamesByUser.size() < 10) {
+            receiver.updateLevel(GameUserLevel.NONE);
+            return;
+        }
+
+        List<Double> gameAverages = new ArrayList<>();
+
+        for (GameEntity gameEntity : recent10GamesByUser) {
+
+            List<LevelEntity> evaluations = levelRepository.findByReceiverAndGameEntity(receiver, gameEntity);
+
+            if (evaluations.isEmpty()) {
+                continue;
+            }
+
+            double gameAverage = evaluations.stream()
+                    .mapToInt(LevelEntity::getScore)
+                    .average()
+                    .orElse(0.0);
+
+
+            gameAverages.add(gameAverage);
+        }
+
+        // 10경기 이상의 경기 후 평가를 받은 경기가 5개 미만일시 Level -> NONE
+        if (gameAverages.size() < 5) {
+            receiver.updateLevel(GameUserLevel.NONE);
+            return;
+        }
+
+        double average = gameAverages.stream()
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+
+
+        GameUserLevel newLevel = GameUserLevel.fromScore(average);
+
+
+        receiver.updateLevel(newLevel);
+
+    }
+
+
+
 
 
 
@@ -154,6 +265,11 @@ public class GameUserServiceImpl implements GameUserService {
     private void validateParticipantInfo(UserEntity userEntity, GameEntity gameEntity) {
 
         LocalDateTime now = LocalDateTime.now();
+
+        if (Objects.equals(userEntity.getUserId(), gameEntity.getUserEntity().getUserId())) {
+            throw new CustomException(NOT_APPLY_GAME_CREATOR);
+
+        }
 
         if (participantGameRepository.existsByParticipantGameIdAndGameEntity_GameId(userEntity.getUserId(), gameEntity.getGameId())) {
             throw new CustomException(ALREADY_APPLY_GAME_USER);

@@ -119,7 +119,14 @@ public class GameEntity extends BaseEntity {
         this.deletedDateTime = deletedDateTime;
     }
 
+    public void setStartDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+    }
 
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
 
 
 }

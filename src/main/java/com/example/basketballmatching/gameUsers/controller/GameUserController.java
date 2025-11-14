@@ -3,11 +3,13 @@ package com.example.basketballmatching.gameUsers.controller;
 
 import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
+import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -81,4 +83,19 @@ public class GameUserController {
 
         return ResponseEntity.ok(myCurrentGameList);
     }
+
+    @PostMapping("/user/evaluate/{gameId}")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<CheckResponse> evaluatePlayer(
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @PathVariable Long gameId,
+            @RequestBody @Valid EvaluatePlayerDto request
+            ) {
+
+        CheckResponse checkResponse = gameUserService.evaluatePlayer(gameId, userInfoDetails.getUserEntity().getUserId(), request);
+
+
+        return ResponseEntity.ok(checkResponse);
+    }
+
 }
