@@ -21,6 +21,6 @@ public interface GameUserService {
 
     ApiResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable);
 
-//    CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request);
+    CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request);
 
 }
