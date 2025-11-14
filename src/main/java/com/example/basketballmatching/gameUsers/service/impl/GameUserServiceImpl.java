@@ -1,10 +1,15 @@
 package com.example.basketballmatching.gameUsers.service.impl;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
+import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
+import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
+import com.example.basketballmatching.gameUsers.entity.LevelEntity;
+import com.example.basketballmatching.gameUsers.repository.LevelRepository;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -23,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
@@ -34,6 +40,10 @@ import static com.example.basketballmatching.global.exception.ErrorCode.*;
 public class GameUserServiceImpl implements GameUserService {
 
     private final ParticipantGameRepository participantGameRepository;
+
+    private final GameQueryRepository gameQueryRepository;
+
+    private final LevelRepository levelRepository;
 
     private final UserRepository userRepository;
 
@@ -113,41 +123,31 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional(readOnly = true)
     public ApiResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
 
-        UserEntity userEntity = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
 
-        Page<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(userEntity.getUserId(), List.of(ACCEPT, APPLY), pageable);
+        List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userId, pageable);
 
-        List<CurrentGameListDto> gameListDtos = participantGameEntities.stream()
-                .filter(p -> p.getGameEntity().getStartDateTime().isAfter(now))
-                .map(CurrentGameListDto::fromEntity)
-                .toList();
-
-
-        return ApiResponse.of("현재 예정된 게임 조회가 완료되었습니다.", gameListDtos);
+        return ApiResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ApiResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
 
-        UserEntity userEntity = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
 
-        Page<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatus(userEntity.getUserId(), ACCEPT, pageable);
-
-        List<LastGameListDto> gameListDtos = participantGameEntities.stream()
-                .filter(p -> p.getGameEntity().getStartDateTime().isBefore(now))
-                .map(LastGameListDto::fromEntity)
-                .toList();
+        List<LastGameListDto> lastGameList = gameQueryRepository.getLastGameList(userId, pageable);
 
 
-        return ApiResponse.of("지난 게임 조회가 완료되었습니다.", gameListDtos);
+        return ApiResponse.of("지난 게임 조회가 완료되었습니다.", lastGameList);
     }
+
+
+
 
 
 
@@ -160,7 +160,7 @@ public class GameUserServiceImpl implements GameUserService {
         }
 
         if (participantGameRepository.countByParticipantGameStatusAndGameEntity_GameId(
-                APPLY, gameEntity.getGameId()
+                ACCEPT, gameEntity.getGameId()
         ) >= gameEntity.getHeadCount()) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
         }

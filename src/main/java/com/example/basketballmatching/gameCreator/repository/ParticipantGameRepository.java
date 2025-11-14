@@ -1,5 +1,6 @@
 package com.example.basketballmatching.gameCreator.repository;
 
+import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import org.springframework.data.domain.Page;
@@ -28,5 +29,14 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
 
     Page<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus, Pageable pageable);
+
+
+    Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
+
+    List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus);
+
+
+
+
 
 }

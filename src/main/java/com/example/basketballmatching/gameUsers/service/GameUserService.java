@@ -2,6 +2,7 @@ package com.example.basketballmatching.gameUsers.service;
 
 import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
+import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -19,4 +20,7 @@ public interface GameUserService {
     ApiResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable);
 
     ApiResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable);
+
+//    CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request);
+
 }
