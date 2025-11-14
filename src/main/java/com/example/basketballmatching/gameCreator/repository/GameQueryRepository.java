@@ -2,9 +2,13 @@ package com.example.basketballmatching.gameCreator.repository;
 
 import com.example.basketballmatching.gameCreator.dto.SearchGameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
+import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.entity.QGameEntity;
+import com.example.basketballmatching.gameCreator.entity.QParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
+import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
+import com.example.basketballmatching.user.entity.UserEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +22,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -60,6 +66,84 @@ public class GameQueryRepository {
 
         return new PageImpl<>(searchGames, pageable, total);
     }
+
+    public List<GameEntity> findRecent10GamesByUser(UserEntity userEntity) {
+
+        QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
+
+        QGameEntity gameEntity = QGameEntity.gameEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(participantGameEntity.userEntity.eq(userEntity));
+        builder.and(gameEntity.endDateTime.before(LocalDateTime.now()));
+
+        return jpaQueryFactory
+                .select(participantGameEntity.gameEntity)
+                .from(participantGameEntity)
+                .join(participantGameEntity.gameEntity, gameEntity)
+                .where(builder)
+                .orderBy(gameEntity.endDateTime.desc())
+                .limit(10)
+                .fetch();
+
+    }
+
+    public List<CurrentGameListDto> getCurrentGameList(Long userId, Pageable pageable) {
+
+        QParticipantGameEntity participantGame = QParticipantGameEntity.participantGameEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        builder.and(participantGame.userEntity.userId.eq(userId));
+        builder.and(participantGame.participantGameStatus.in(ACCEPT, APPLY));
+        builder.and(participantGame.gameEntity.startDateTime.after(now));
+
+
+        List<ParticipantGameEntity> gameEntities = jpaQueryFactory
+                .select(participantGame)
+                .from(participantGame)
+                .where(builder)
+                .orderBy(participantGame.gameEntity.startDateTime.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        return gameEntities.stream()
+                .map(CurrentGameListDto::fromEntity)
+                .toList();
+
+    }
+
+    public List<LastGameListDto> getLastGameList(Long userId, Pageable pageable) {
+
+        QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        builder.and(participantGameEntity.userEntity.userId.eq(userId));
+        builder.and(participantGameEntity.participantGameStatus.eq(ACCEPT));
+        builder.and(participantGameEntity.gameEntity.endDateTime.before(now));
+
+        List<ParticipantGameEntity> lastGameList = jpaQueryFactory
+                .select(participantGameEntity)
+                .from(participantGameEntity)
+                .where(builder)
+                .orderBy(participantGameEntity.gameEntity.endDateTime.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+
+        return lastGameList.stream()
+                .map(LastGameListDto::fromEntity)
+                .toList();
+    }
+
 
 
 
