@@ -1,9 +1,6 @@
 package com.example.basketballmatching.gameUsers.service;
 
-import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
-import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
-import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
-import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
+import com.example.basketballmatching.gameUsers.dto.*;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +20,5 @@ public interface GameUserService {
 
     CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request);
 
+    ApiResponse<GameUserLevelDto> getMyGameUserLevel(Long userId);
 }

@@ -129,4 +129,7 @@ public class GameEntity extends BaseEntity {
     }
 
 
+    public void setParticipantCount(int participantCount) {
+        this.participantCount = participantCount;
+    }
 }

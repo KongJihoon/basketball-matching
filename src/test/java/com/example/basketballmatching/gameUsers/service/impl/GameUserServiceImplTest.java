@@ -23,6 +23,8 @@ import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
+import jakarta.persistence.EntityManager;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,19 +32,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@Rollback(value = false)
 @ActiveProfiles("test")
-@Transactional
 class GameUserServiceImplTest {
 
     @Autowired
@@ -60,6 +70,9 @@ class GameUserServiceImplTest {
     @Autowired
     private ParticipantGameRepository participantGameRepository;
 
+    @Autowired
+    private EntityManager em;
+
     @BeforeEach
     void setUp() {
         // given: 테스트용 유저 데이터 삽입
@@ -72,7 +85,7 @@ class GameUserServiceImplTest {
                 .address("테스트용주소")
                 .phone("010-1111-1111")
                 .position(Position.GUARD)
-                .genderType(GenderType.MALE)
+                .genderType(GenderType.NONE)
                 .loginProvider(LoginProvider.LOCAL)
                 .userType(UserType.USER)
                 .build();
@@ -101,7 +114,7 @@ class GameUserServiceImplTest {
         CreateGameDto.Request request = CreateGameDto.Request.builder()
                 .title("테스트 게임")
                 .content("테스트 게임 본문")
-                .headCount(9)
+                .headCount(6)
                 .fieldStatus(FieldStatus.OUTDOOR)
                 .matchGenderType(MatchGenderType.FEMALE_ONLY)
                 .startDateTime(LocalDateTime.now().plusHours(1L))
@@ -374,5 +387,115 @@ class GameUserServiceImplTest {
         assertEquals("지난 게임 조회가 완료되었습니다.", myLastGameList.getMessage());
 
     }
+
+
+    @Test
+    @DisplayName("경기 참가 신청 - 동시성 이슈 테스트")
+    void applyGameTest_Concurrency_Issue() throws Exception {
+        // given
+
+        for (int i = 0; i < 4; i++) {
+            UserEntity gameUser = UserEntity.builder()
+                    .email("testa@"+ i + "example.com")
+                    .password(passwordEncoder.encode("Test@1234"))
+                    .name("namea" + i)
+                    .nickname("namea" + i)
+                    .birth(LocalDate.of(1997,7,24))
+                    .address("테스트용주소a" + i)
+                    .phone("010-1111-1112")
+                    .position(Position.GUARD)
+                    .genderType(GenderType.FEMALE)
+                    .loginProvider(LoginProvider.LOCAL)
+                    .userType(UserType.USER)
+                    .build();
+
+            userRepository.save(gameUser);
+
+            gameUserService.applyGame(1L, gameUser.getUserId());
+
+
+        }
+
+        // when
+
+        int threadCount = 5;
+
+        List<Long> userIds = new ArrayList<>();
+
+        for (int i = 0; i < threadCount; i++) {
+
+            UserEntity gameUser = UserEntity.builder()
+                    .email("tests@"+ i + "example.com")
+                    .password(passwordEncoder.encode("Test@1234"))
+                    .name("names" + i)
+                    .nickname("names" + i)
+                    .birth(LocalDate.of(1997,7,24))
+                    .address("테스트용주소s" + i)
+                    .phone("010-1111-1112")
+                    .position(Position.GUARD)
+                    .genderType(GenderType.FEMALE)
+                    .loginProvider(LoginProvider.LOCAL)
+                    .userType(UserType.USER)
+                    .build();
+
+            userRepository.save(gameUser);
+            userIds.add(gameUser.getUserId());
+
+        }
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger fullHeadCountErrorCount = new AtomicInteger(0);
+
+        // then
+        for (Long userId : userIds) {
+
+            executorService.submit(() -> {
+
+                try {
+                    startLatch.await();
+                    gameUserService.applyGame(1L, userId);
+                    successCount.incrementAndGet();
+                } catch (CustomException e) {
+                    if (e.getErrorCode() == FULL_HEADCOUNT_GAME) {
+                        fullHeadCountErrorCount.incrementAndGet();
+                    } else {
+                        e.printStackTrace();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    doneLatch.countDown();
+                }
+
+            });
+
+        }
+        GameEntity before = gameRepository.findById(1L).orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+        System.out.println("Before concurrency - headCount=" + before.getHeadCount()
+                + ", participantCount=" + before.getParticipantCount()
+                + ", startDateTime=" + before.getStartDateTime());
+
+        startLatch.countDown();
+
+        doneLatch.await();
+
+        executorService.shutdown();
+
+        GameEntity gameEntity = gameRepository.findById(1L)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+
+
+        assertEquals(6, gameEntity.getParticipantCount());
+
+
+    }
+
 
 }

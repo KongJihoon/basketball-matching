@@ -1,10 +1,7 @@
 package com.example.basketballmatching.gameUsers.controller;
 
 
-import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
-import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
-import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
-import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
+import com.example.basketballmatching.gameUsers.dto.*;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -96,6 +93,17 @@ public class GameUserController {
 
 
         return ResponseEntity.ok(checkResponse);
+    }
+
+    @GetMapping("/user/rank")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<ApiResponse<GameUserLevelDto>> getMyGameUserLevel(
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
+    ) {
+
+        ApiResponse<GameUserLevelDto> myGameUserLevel = gameUserService.getMyGameUserLevel(userInfoDetails.getUserEntity().getUserId());
+
+        return ResponseEntity.ok(myGameUserLevel);
     }
 
 }

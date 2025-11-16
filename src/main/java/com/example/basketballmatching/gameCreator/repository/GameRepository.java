@@ -2,7 +2,10 @@ package com.example.basketballmatching.gameCreator.repository;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,17 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
                                         @Param("address") String address,
                                         @Param("startDateTime") LocalDateTime startDateTime,
                                         @Param("endDateTime") LocalDateTime endDateTime);
+    @Modifying
+    @Query("update GameEntity g " +
+            "set g.participantCount = g.participantCount + 1 " +
+            "where g.gameId = :gameId")
+    int increaseParticipantCount(@Param("gameId") Long gameId);
+
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select g from GameEntity g where g.gameId = :gameId and g.deletedDateTime is NULL ")
+    Optional<GameEntity> findByGameIdWithLock(@Param("gameId") Long gameId);
+
 
     Optional<GameEntity> findByGameIdAndDeletedDateTimeIsNull(Long gameId);
 
