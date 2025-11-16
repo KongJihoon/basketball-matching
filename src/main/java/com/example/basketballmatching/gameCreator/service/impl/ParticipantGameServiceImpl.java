@@ -158,9 +158,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, now);
 
-        gameEntity.increaseParticipantCount();
-
-        gameRepository.save(gameEntity);
         participantGameRepository.save(participantGameEntity);
 
 
