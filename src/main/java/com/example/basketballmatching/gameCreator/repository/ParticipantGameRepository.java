@@ -3,16 +3,20 @@ package com.example.basketballmatching.gameCreator.repository;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface ParticipantGameRepository extends JpaRepository<ParticipantGameEntity, Long> {
 
-    boolean existsByParticipantGameIdAndGameEntity_GameId(Long gameId, Long UserId);
+    boolean existsByUserEntity_UserIdAndGameEntity_GameId(Long userId, Long gameId);
 
     int countByParticipantGameStatusAndGameEntity_GameId(
             ParticipantGameStatus participantGameStatus, Long gameId
@@ -32,6 +36,8 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
 
     Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
+
+
 
     List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus);
 
