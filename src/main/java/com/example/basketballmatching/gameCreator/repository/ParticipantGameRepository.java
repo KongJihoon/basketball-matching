@@ -18,28 +18,14 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
     boolean existsByUserEntity_UserIdAndGameEntity_GameId(Long userId, Long gameId);
 
-    int countByParticipantGameStatusAndGameEntity_GameId(
-            ParticipantGameStatus participantGameStatus, Long gameId
-    );
 
     Page<ParticipantGameEntity> findByParticipantGameStatusAndGameEntity_GameId(ParticipantGameStatus status, Long gameId, Pageable pageable);
 
     List<ParticipantGameEntity> findByParticipantGameStatusInAndGameEntity_GameId(List<ParticipantGameStatus> statuses, Long gameId);
 
-    Optional<ParticipantGameEntity> findByGameEntity_GameIdAndParticipantGameId(Long gameId, Long userId);
-
-
-    Page<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses, Pageable pageable);
-
-
-    Page<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus, Pageable pageable);
 
 
     Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
-
-
-
-    List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatus(Long userId, ParticipantGameStatus participantGameStatus);
 
 
 
