@@ -98,7 +98,7 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional
     public CheckResponse cancelGame(Long userId, Long gameId) {
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+        GameEntity gameEntity = gameRepository.findByGameIdWithLock(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
         ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
@@ -290,7 +290,7 @@ public class GameUserServiceImpl implements GameUserService {
 
         }
 
-        if (participantGameRepository.existsByParticipantGameIdAndGameEntity_GameId(userEntity.getUserId(), gameEntity.getGameId())) {
+        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(gameEntity.getGameId(),userEntity.getUserId())) {
             throw new CustomException(ALREADY_APPLY_GAME_USER);
         }
 

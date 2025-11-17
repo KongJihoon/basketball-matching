@@ -11,6 +11,8 @@ import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.notifications.service.NotificationService;
+import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
     private final GameRepository gameRepository;
 
     private final UserRepository userRepository;
+
+    private final NotificationService notificationService;
 
 
     /**
@@ -132,7 +136,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
-        boolean exists = participantGameRepository.existsByParticipantGameIdAndGameEntity_GameId(participantId, gameId);
+        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(participantId, gameId);
 
         if (!exists) {
             throw new CustomException(NOT_APPLY_USER);
@@ -149,7 +153,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findById(participantId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participantId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
         if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
@@ -159,6 +163,10 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, now);
 
         participantGameRepository.save(participantGameEntity);
+
+
+        notificationService.send(NotificationType.ACCEPT_GAME, participantGameEntity.getUserEntity(),
+                participantGameEntity.getGameEntity().getTitle() + "에 참가가 수락되었습니다.");
 
 
 
@@ -188,7 +196,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         }
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndParticipantGameId(gameId, participantId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
 
@@ -212,6 +220,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         participantGameEntity.setParticipantGameStatusAndRejectDateTime(REJECT, LocalDateTime.now());
 
         participantGameRepository.save(participantGameEntity);
+
+        notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
 
         log.info("[경기 참가자 거절 완료] participantId : {}, gameId : {}", participantId, gameId);
 
@@ -239,7 +249,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         }
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndParticipantGameId(gameId, participantId)
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
         if (Objects.equals(participantGameEntity.getUserEntity().getUserId(), gameEntity.getUserEntity().getUserId())) {
@@ -265,6 +275,10 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         gameEntity.decreaseParticipantCount();
         gameRepository.save(gameEntity);
+
+        notificationService.send(NotificationType.KICKED_OUT, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에서 강퇴당하였습니다.");
+
+
 
         log.info("[경기 강퇴 완료] participantId : {}, gameId : {}", participantId, gameId);
 
@@ -303,6 +317,16 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         participantGameEntityList.forEach(participantGame ->
                 participantGame.setParticipantGameStatusAndDeletedDateTime(DELETE, now));
+
+        participantGameEntityList
+                .stream()
+                .filter(participantGameEntity -> !Objects.equals(participantGameEntity.getUserEntity().getUserId(), userEntity.getUserId()))
+                .forEach(
+
+                participantGame ->
+                    notificationService.send(NotificationType.DELETE_GAME, participantGame.getUserEntity(), participantGame.getGameEntity().getTitle() + "의 게임이 삭제되었습니다.")
+
+        );
 
         participantGameRepository.saveAll(participantGameEntityList);
 
