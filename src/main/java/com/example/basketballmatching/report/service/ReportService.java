@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 public interface ReportService {
 
 
-    CheckResponse createReport(Long reportId, Long reportedId, Long gameId, CreateReportDto createReportDto);
+    CheckResponse createReport(Long reportId, Long targetUserId, Long gameId, CreateReportDto createReportDto);
 
     ApiResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable);
 

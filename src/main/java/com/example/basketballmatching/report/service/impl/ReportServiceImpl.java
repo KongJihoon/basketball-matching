@@ -40,7 +40,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional
-    public CheckResponse createReport(Long reportUserId, Long reportedUserId, Long gameId, CreateReportDto createReportDto) {
+    public CheckResponse createReport(Long reportUserId, Long targetUserId, Long gameId, CreateReportDto createReportDto) {
 
         GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
@@ -58,23 +58,23 @@ public class ReportServiceImpl implements ReportService {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
-        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(reportedUserId, gameEntity.getGameId());
+        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(targetUserId, gameEntity.getGameId());
 
         if (!exists) {
             throw new CustomException(PARTICIPANT_NOT_FOUND);
         }
 
-        UserEntity reportedUser = userRepository.findById(reportedUserId)
+        UserEntity targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
 
-        boolean existsByReport = reportRepository.existsByReportedUser_UserIdAndGameEntity_GameId(reportedUser.getUserId(), gameEntity.getGameId());
+        boolean existsByReport = reportRepository.existsByTargetUser_UserIdAndGameEntity_GameId(targetUser.getUserId(), gameEntity.getGameId());
 
         if (existsByReport) {
             throw new CustomException(ALREADY_REPORTED_USER);
         }
 
-        ReportEntity reportEntity = ReportEntity.create(reportUser, reportedUser, gameEntity, createReportDto);
+        ReportEntity reportEntity = ReportEntity.create(reportUser, targetUser, gameEntity, createReportDto);
 
         reportRepository.save(reportEntity);
 
@@ -89,10 +89,11 @@ public class ReportServiceImpl implements ReportService {
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
 
-        Page<ReportEntity> reportEntities = reportRepository.findAllByOrderByReportedDateTimeDesc(pageable);
+        Page<ReportEntity> reportEntities = reportRepository.findAllByIsBannedFalseOrderByReportedDateTimeDesc(pageable);
 
 
-        Page<ReportListDto> reportListDtos = reportEntities.map(ReportListDto::fromEntity);
+        Page<ReportListDto> reportListDtos = reportEntities
+                .map(ReportListDto::fromEntity);
 
         return ApiResponse.of("신고목록 조회를 완료하였습니다.", reportListDtos);
     }

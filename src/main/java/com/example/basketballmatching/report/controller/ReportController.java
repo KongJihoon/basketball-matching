@@ -26,11 +26,11 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> createReport(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @RequestParam Long reportedUserId,
+            @RequestParam Long targetUserId,
             @RequestParam Long gameId,
             @RequestBody CreateReportDto request) {
 
-        CheckResponse checkResponse = reportService.createReport(userInfoDetails.getUserEntity().getUserId(), reportedUserId, gameId, request);
+        CheckResponse checkResponse = reportService.createReport(userInfoDetails.getUserEntity().getUserId(), targetUserId, gameId, request);
 
 
         return ResponseEntity.ok(checkResponse);

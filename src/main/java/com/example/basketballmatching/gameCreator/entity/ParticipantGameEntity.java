@@ -86,5 +86,19 @@ public class ParticipantGameEntity extends BaseEntity {
         this.deletedDateTime = deletedDateTime;
     }
 
+    public void setBlackUserStatus(ParticipantGameStatus participantGameStatus, LocalDateTime localDateTime) {
+
+        if (participantGameStatus.equals(ParticipantGameStatus.ACCEPT)) {
+            this.participantGameStatus = ParticipantGameStatus.KICKOUT;
+            this.kickoutDateTime = localDateTime;
+        }
+
+        if (participantGameStatus.equals(ParticipantGameStatus.APPLY)) {
+            this.participantGameStatus = ParticipantGameStatus.CANCEL;
+            this.canceledDateTime = localDateTime;
+        }
+
+    }
+
 
 }

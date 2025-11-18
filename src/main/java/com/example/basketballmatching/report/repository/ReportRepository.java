@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
 
-    boolean existsByReportedUser_UserIdAndGameEntity_GameId(Long reportedUserId, Long gameId);
+    boolean existsByTargetUser_UserIdAndGameEntity_GameId(Long reportedUserId, Long gameId);
 
-    Page<ReportEntity> findAllByOrderByReportedDateTimeDesc(Pageable pageable);
+    Page<ReportEntity> findAllByIsBannedFalseOrderByReportedDateTimeDesc(Pageable pageable);
 
 }
 
