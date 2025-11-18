@@ -77,7 +77,11 @@ public enum ErrorCode {
     NOT_GAME_ENDED(HttpStatus.BAD_REQUEST, "아직 경기가 종료되지 않았습니다."),
     CANNOT_EVALUATE_SELF(HttpStatus.BAD_REQUEST, "자기 자신은 평가할 수 없습니다."),
     ALREADY_EVALUATED(HttpStatus.BAD_REQUEST, "이미 평가한 참가자입니다."),
-    INVALID_LEVEL_SCORE(HttpStatus.BAD_REQUEST, "평가점수는 1 ~ 5점만 입력가능합니다.")
+    INVALID_LEVEL_SCORE(HttpStatus.BAD_REQUEST, "평가점수는 1 ~ 5점만 입력가능합니다."),
+
+
+    // report
+    ALREADY_REPORTED_USER(HttpStatus.BAD_REQUEST, "이미 신고받은 유저입니다.")
     ;
 
 

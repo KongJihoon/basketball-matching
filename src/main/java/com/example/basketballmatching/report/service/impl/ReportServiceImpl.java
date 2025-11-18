@@ -1,0 +1,99 @@
+package com.example.basketballmatching.report.service.impl;
+
+import com.example.basketballmatching.gameCreator.entity.GameEntity;
+import com.example.basketballmatching.gameCreator.repository.GameRepository;
+import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.report.dto.CreateReportDto;
+import com.example.basketballmatching.report.dto.ReportListDto;
+import com.example.basketballmatching.report.entity.ReportEntity;
+import com.example.basketballmatching.report.repository.ReportRepository;
+import com.example.basketballmatching.report.service.ReportService;
+import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
+
+@Service
+@RequiredArgsConstructor
+public class ReportServiceImpl implements ReportService {
+
+    private final GameRepository gameRepository;
+
+    private final ParticipantGameRepository participantGameRepository;
+
+    private final UserRepository userRepository;
+
+    private final ReportRepository reportRepository;
+
+
+    @Override
+    @Transactional
+    public CheckResponse createReport(Long reportUserId, Long reportedUserId, Long gameId, CreateReportDto createReportDto) {
+
+        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (gameEntity.getEndDateTime().isAfter(now)) {
+            throw new CustomException(NOT_GAME_ENDED);
+        }
+
+        UserEntity reportUser = userRepository.findById(reportUserId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), reportUser.getUserId())) {
+            throw new CustomException(NOT_GAME_CREATOR);
+        }
+
+        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(reportedUserId, gameEntity.getGameId());
+
+        if (!exists) {
+            throw new CustomException(PARTICIPANT_NOT_FOUND);
+        }
+
+        UserEntity reportedUser = userRepository.findById(reportedUserId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+
+        boolean existsByReport = reportRepository.existsByReportedUser_UserIdAndGameEntity_GameId(reportedUser.getUserId(), gameEntity.getGameId());
+
+        if (existsByReport) {
+            throw new CustomException(ALREADY_REPORTED_USER);
+        }
+
+        ReportEntity reportEntity = ReportEntity.create(reportUser, reportedUser, gameEntity, createReportDto);
+
+        reportRepository.save(reportEntity);
+
+        return CheckResponse.of(true, "해당 유저 신고를 완료하였습니다.");
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable) {
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+
+        Page<ReportEntity> reportEntities = reportRepository.findAllByOrderByReportedDateTimeDesc(pageable);
+
+
+        Page<ReportListDto> reportListDtos = reportEntities.map(ReportListDto::fromEntity);
+
+        return ApiResponse.of("신고목록 조회를 완료하였습니다.", reportListDtos);
+    }
+}
