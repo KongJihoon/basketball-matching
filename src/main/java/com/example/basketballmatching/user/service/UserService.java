@@ -26,4 +26,5 @@ public interface UserService {
 
     CheckResponse changePassword(Long userId, ChangePasswordDto request);
 
+    CheckResponse deleteUser(Long userId, String token);
 }

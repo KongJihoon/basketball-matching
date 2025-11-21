@@ -1,8 +1,12 @@
 package com.example.basketballmatching.user.service.impl;
 
+import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
+import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.dto.ChangePasswordDto;
 import com.example.basketballmatching.user.dto.EditUserDto;
@@ -17,6 +21,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -29,6 +37,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     private final RedisService redisService;
+
+    private final TokenProvider tokenProvider;
+
+    private final ParticipantGameRepository participantGameRepository;
+
 
 
     /**
@@ -230,6 +243,50 @@ public class UserServiceImpl implements UserService {
 
 
         return CheckResponse.of(true, "비밀번호 변경을 완료하였습니다.");
+    }
+
+    @Override
+    @Transactional
+    public CheckResponse deleteUser(Long userId, String token) {
+
+        UserEntity userEntity = userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        if (token == null) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+        redisService.setDataExpireMillis("logout:access:" + token, "LOGOUT", tokenProvider.getRemainingTime(token));
+
+        redisService.deleteData("refreshToken:" + userEntity.getEmail());
+
+        List<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(userEntity.getUserId(), List.of(ACCEPT, APPLY));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        participantGameEntities.forEach(
+                participantGameEntity -> {
+                    if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
+                        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
+                        participantGameEntity.getGameEntity().decreaseParticipantCount();
+                    }
+
+                    if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
+                        participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
+                        participantGameEntity.getGameEntity().decreaseParticipantCount();
+
+                    }
+                }
+        );
+
+        participantGameRepository.saveAll(participantGameEntities);
+
+        userEntity.setDeletedDateTime(now);
+
+        userRepository.save(userEntity);
+
+
+        return CheckResponse.of(true, "회원탈퇴에 성공하였습니다.");
     }
 
 

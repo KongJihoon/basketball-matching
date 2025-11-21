@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -70,10 +71,15 @@ public class UserEntity extends BaseEntity {
     @Builder.Default
     private boolean emailAuth = false;
 
+    private LocalDateTime deletedDateTime;
+
     public void setEmailAuth() {
         this.emailAuth = true;
     }
 
+    public void setDeletedDateTime(LocalDateTime deletedDateTime) {
+        this.deletedDateTime = deletedDateTime;
+    }
 
     public void editUserInfo(EditUserDto editUserDto) {
 
