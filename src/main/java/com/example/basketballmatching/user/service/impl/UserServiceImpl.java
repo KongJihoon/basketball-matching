@@ -1,6 +1,9 @@
 package com.example.basketballmatching.user.service.impl;
 
+import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
+import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
+import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.ApiResponse;
@@ -8,6 +11,8 @@ import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
+import com.example.basketballmatching.notifications.service.NotificationService;
+import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.dto.ChangePasswordDto;
 import com.example.basketballmatching.user.dto.EditUserDto;
 import com.example.basketballmatching.user.dto.SignUpDto;
@@ -22,10 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
+import static com.example.basketballmatching.notifications.type.NotificationType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +49,9 @@ public class UserServiceImpl implements UserService {
     private final TokenProvider tokenProvider;
 
     private final ParticipantGameRepository participantGameRepository;
-
+    private final GameRepository gameRepository;
+    private final NotificationService notificationService;
+    private final GameQueryRepository gameQueryRepository;
 
 
     /**
@@ -260,26 +270,16 @@ public class UserServiceImpl implements UserService {
 
         redisService.deleteData("refreshToken:" + userEntity.getEmail());
 
-        List<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(userEntity.getUserId(), List.of(ACCEPT, APPLY));
-
         LocalDateTime now = LocalDateTime.now();
 
-        participantGameEntities.forEach(
-                participantGameEntity -> {
-                    if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
-                        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
-                        participantGameEntity.getGameEntity().decreaseParticipantCount();
-                    }
 
-                    if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-                        participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
-                        participantGameEntity.getGameEntity().decreaseParticipantCount();
+        List<GameEntity> gameEntities = deleteCreatorGameAndParticipantUsers(userEntity, now);
 
-                    }
-                }
-        );
+        List<ParticipantGameEntity> participantGameEntities = deleteParticipantByDeleteUser(userEntity, now);
 
         participantGameRepository.saveAll(participantGameEntities);
+
+        gameRepository.saveAll(gameEntities);
 
         userEntity.setDeletedDateTime(now);
 
@@ -287,6 +287,56 @@ public class UserServiceImpl implements UserService {
 
 
         return CheckResponse.of(true, "회원탈퇴에 성공하였습니다.");
+    }
+
+    private List<ParticipantGameEntity> deleteParticipantByDeleteUser(UserEntity userEntity, LocalDateTime now) {
+        List<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(userEntity.getUserId(), List.of(ACCEPT, APPLY))
+                .stream().filter(participantGameEntity -> participantGameEntity.getGameEntity().getStartDateTime().isAfter(now)).toList();
+
+
+        participantGameEntities.forEach(
+                participantGameEntity -> {
+                    if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
+                        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
+
+                    }
+
+                    if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
+                        participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
+
+
+                    }
+                }
+        );
+        return participantGameEntities;
+    }
+
+
+    private List<GameEntity> deleteCreatorGameAndParticipantUsers(UserEntity userEntity, LocalDateTime now) {
+        List<GameEntity> gameEntities = gameRepository.findByUserEntity_UserIdAndDeletedDateTimeIsNull(userEntity.getUserId())
+                .stream().filter(gameEntity -> gameEntity.getStartDateTime().isAfter(now))
+                .toList();
+
+        List<ParticipantGameEntity> deleteGameParticipants = new ArrayList<>();
+
+        gameEntities.forEach(gameEntity -> {
+
+            List<ParticipantGameEntity> participantUsers = gameQueryRepository.getParticipantUsers(gameEntity.getGameId(), now);
+
+
+            deleteGameParticipants.addAll(participantUsers);
+
+            participantUsers.stream()
+                    .filter(participantGameEntity -> !Objects.equals(participantGameEntity.getUserEntity().getUserId(), userEntity.getUserId()))
+                    .forEach(
+                            participantGameEntity -> notificationService.send(DELETE_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "의 게임이 삭제되었습니다."));
+            gameEntity.setDeletedDateTime(now);
+
+
+        });
+
+        participantGameRepository.saveAll(deleteGameParticipants);
+        return gameEntities;
     }
 
 

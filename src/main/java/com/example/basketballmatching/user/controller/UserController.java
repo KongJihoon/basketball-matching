@@ -8,6 +8,7 @@ import com.example.basketballmatching.global.security.UserInfoDetails;
 import com.example.basketballmatching.global.service.MailService;
 import com.example.basketballmatching.user.dto.*;
 import com.example.basketballmatching.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -138,6 +139,27 @@ public class UserController {
             ) {
 
         CheckResponse checkResponse = userService.changePassword(userInfoDetails.getUserEntity().getUserId(), request);
+
+        return ResponseEntity.ok(checkResponse);
+
+    }
+
+    @PreAuthorize("hasAnyRole('USER')")
+    @PatchMapping("/delete")
+    public ResponseEntity<CheckResponse> deleteUser(
+            HttpServletRequest request,
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
+
+    ) {
+
+        String accessToken = request.getHeader("Authorization");
+
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+
+        }
+
+        CheckResponse checkResponse = userService.deleteUser(userInfoDetails.getUserEntity().getUserId(), accessToken);
 
         return ResponseEntity.ok(checkResponse);
 
