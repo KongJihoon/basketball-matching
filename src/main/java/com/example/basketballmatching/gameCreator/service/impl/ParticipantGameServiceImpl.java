@@ -273,8 +273,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
         participantGameRepository.save(participantGameEntity);
 
-        gameEntity.decreaseParticipantCount();
-        gameRepository.save(gameEntity);
+        gameRepository.save(participantGameEntity.getGameEntity());
 
         notificationService.send(NotificationType.KICKED_OUT, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에서 강퇴당하였습니다.");
 

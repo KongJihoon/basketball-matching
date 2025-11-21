@@ -144,6 +144,27 @@ public class GameQueryRepository {
                 .toList();
     }
 
+    public List<ParticipantGameEntity> getParticipantUsers(Long gameId, LocalDateTime now) {
+
+        QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
+
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(participantGameEntity.gameEntity.gameId.eq(gameId));
+        builder.and(participantGameEntity.participantGameStatus.in(ACCEPT, APPLY));
+        builder.and(participantGameEntity.gameEntity.startDateTime.after(now));
+
+
+        List<ParticipantGameEntity> gameEntities = jpaQueryFactory.
+                select(participantGameEntity)
+                .from(participantGameEntity)
+                .where(builder)
+                .fetch();
+
+        return gameEntities;
+    }
+
 
 
 

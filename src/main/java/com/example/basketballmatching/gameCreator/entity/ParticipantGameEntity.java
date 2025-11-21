@@ -69,21 +69,28 @@ public class ParticipantGameEntity extends BaseEntity {
     public void setParticipantGameStatusAndRejectDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime rejectDateTime) {
         this.participantGameStatus = participantGameStatus;
         this.rejectDateTime = rejectDateTime;
+        this.getGameEntity().decreaseParticipantCount();
     }
 
     public void setParticipantGameStatusAndCanceledDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime canceledDateTime) {
         this.participantGameStatus = participantGameStatus;
         this.canceledDateTime = canceledDateTime;
+        this.getGameEntity().decreaseParticipantCount();
+
     }
 
     public void setParticipantGameStatusAndKickoutDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime kickoutDateTime) {
         this.participantGameStatus = participantGameStatus;
         this.kickoutDateTime = kickoutDateTime;
+        this.getGameEntity().decreaseParticipantCount();
+
     }
 
     public void setParticipantGameStatusAndDeletedDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime deletedDateTime) {
         this.participantGameStatus = participantGameStatus;
         this.deletedDateTime = deletedDateTime;
+        this.getGameEntity().decreaseParticipantCount();
+
     }
 
     public void setBlackUserStatus(ParticipantGameStatus participantGameStatus, LocalDateTime localDateTime) {

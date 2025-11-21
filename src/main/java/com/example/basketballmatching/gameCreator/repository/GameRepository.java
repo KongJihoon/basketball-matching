@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface GameRepository extends JpaRepository<GameEntity, Long> {
@@ -27,11 +28,6 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
                                         @Param("address") String address,
                                         @Param("startDateTime") LocalDateTime startDateTime,
                                         @Param("endDateTime") LocalDateTime endDateTime);
-    @Modifying
-    @Query("update GameEntity g " +
-            "set g.participantCount = g.participantCount + 1 " +
-            "where g.gameId = :gameId")
-    int increaseParticipantCount(@Param("gameId") Long gameId);
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -40,6 +36,9 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
 
     Optional<GameEntity> findByGameIdAndDeletedDateTimeIsNull(Long gameId);
+
+    List<GameEntity> findByUserEntity_UserIdAndDeletedDateTimeIsNull(Long userId);
+
 
 
     Optional<GameEntity> findByTitle(String title);
