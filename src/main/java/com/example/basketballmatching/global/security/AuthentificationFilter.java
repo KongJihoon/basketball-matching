@@ -59,6 +59,7 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
 
                 String logoutToken = redisService.getData("logout:access:" + token);
 
+                String blackList = redisService.getData("blackList:" + email);
 
                 if (logoutToken != null) {
                     log.warn("[로그아웃 유저 접근]: {}", email );
@@ -66,6 +67,15 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
                     setErrorResponse(response, LOGOUT_USER);
                     return;
                 }
+
+                if (blackList != null) {
+                    log.warn("[블랙리스트 유저 접근]: {}", email);
+
+                    setErrorResponse(response, BLACKLIST_USER);
+                    return;
+                }
+
+
 
                 Authentication authentication = tokenProvider.getAuthentication(token);
 

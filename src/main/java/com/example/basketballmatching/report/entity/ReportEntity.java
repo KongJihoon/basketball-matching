@@ -29,8 +29,8 @@ public class ReportEntity {
     private UserEntity reportUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_user_id", nullable = false)
-    private UserEntity reportedUser;
+    @JoinColumn(name = "target_user_id", nullable = false)
+    private UserEntity targetUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -46,16 +46,23 @@ public class ReportEntity {
     @Column(nullable = false)
     private LocalDateTime reportedDateTime;
 
+    @Builder.Default
+    private boolean isBanned = false;
 
-    public static ReportEntity create(UserEntity reportUser, UserEntity reportedUser, GameEntity gameEntity, CreateReportDto createReportDto) {
+
+    public static ReportEntity create(UserEntity reportUser, UserEntity targetUser, GameEntity gameEntity, CreateReportDto createReportDto) {
         return ReportEntity.builder()
                 .reportUser(reportUser)
-                .reportedUser(reportedUser)
+                .targetUser(targetUser)
                 .gameEntity(gameEntity)
                 .reportType(createReportDto.getReportType())
                 .content(createReportDto.getContent())
                 .reportedDateTime(LocalDateTime.now())
                 .build();
+    }
+
+    public void setBanned() {
+        this.isBanned = true;
     }
 
 

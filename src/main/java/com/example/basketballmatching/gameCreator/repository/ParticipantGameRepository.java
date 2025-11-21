@@ -28,7 +28,7 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
     Optional<ParticipantGameEntity> findByGameEntity_GameIdAndUserEntity_UserId(Long gameId, Long userId);
 
 
-
+    List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses);
 
 
 }

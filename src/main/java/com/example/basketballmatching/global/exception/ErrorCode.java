@@ -81,7 +81,14 @@ public enum ErrorCode {
 
 
     // report
-    ALREADY_REPORTED_USER(HttpStatus.BAD_REQUEST, "이미 신고받은 유저입니다.")
+    ALREADY_REPORTED_USER(HttpStatus.BAD_REQUEST, "이미 신고받은 유저입니다."),
+    NOT_FOUND_REPORT(HttpStatus.BAD_REQUEST, "신고내역을 찾을 수 없습니다."),
+    ALREADY_CHECK_REPORT(HttpStatus.BAD_REQUEST, "이미 처리된 신고내역입니다."),
+
+
+    // blackList
+    ALREADY_BLACK_USER(HttpStatus.BAD_REQUEST, "이미 블랙리스트 등록된 유저입니다."),
+    BLACKLIST_USER(HttpStatus.BAD_REQUEST, "블랙리스트 유저입니다.")
     ;
 
 
