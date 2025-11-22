@@ -290,7 +290,7 @@ public class GameUserServiceImpl implements GameUserService {
 
         }
 
-        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(gameEntity.getGameId(),userEntity.getUserId())) {
+        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(userEntity.getUserId(),gameEntity.getGameId())) {
             throw new CustomException(ALREADY_APPLY_GAME_USER);
         }
 

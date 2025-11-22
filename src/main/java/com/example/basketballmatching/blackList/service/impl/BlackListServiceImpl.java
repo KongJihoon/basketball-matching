@@ -138,7 +138,7 @@ public class BlackListServiceImpl implements BlackListService {
 
         list.forEach(participantGameEntity -> {
 
-            participantGameEntity.getGameEntity().decreaseParticipantCount();
+
             participantGameEntity.setBlackUserStatus(participantGameEntity.getParticipantGameStatus(), LocalDateTime.now());
 
         });
