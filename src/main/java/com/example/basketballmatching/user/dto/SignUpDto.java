@@ -78,11 +78,11 @@ public class SignUpDto {
         @Schema(description = "로그인 타입", example = "LOCAL", defaultValue = "LOCAL")
         private LoginProvider loginProvider;
 
-        public static UserEntity toEntity(SignUpDto.Request request) {
+        public static UserEntity toEntity(SignUpDto.Request request, String encodedPassword) {
 
             return UserEntity.builder()
                     .email(request.getEmail())
-                    .password(request.getPassword())
+                    .password(encodedPassword)
                     .nickname(request.getNickname())
                     .name(request.getName())
                     .birth(request.getBirth())
