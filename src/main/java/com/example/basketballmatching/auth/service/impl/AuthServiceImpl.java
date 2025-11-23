@@ -39,9 +39,7 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("[유저 로그인 시작]: {}", email);
 
-
-
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
+        UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         if (userEntity.getLoginProvider().equals(KAKAO)) {
@@ -50,11 +48,6 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordEncoder.matches(password, userEntity.getPassword()) || password == null) {
                 throw new CustomException(PASSWORD_NOT_MATCH);
-        }
-        String data = redisService.getData("blackList:" + userEntity.getEmail());
-
-        if (data != null) {
-            throw new CustomException(BLACKLIST_USER);
         }
 
 
@@ -80,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("[카카오 로그인 검증 시작] email : {}", email);
 
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
+        UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         if (userEntity.getLoginProvider().equals(LOCAL)) {
@@ -121,7 +114,7 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomException(INVALID_TOKEN);
         }
 
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
+        UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         // refreshToken 검증

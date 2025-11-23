@@ -13,7 +13,7 @@ import com.example.basketballmatching.gameCreator.type.CityName;
 import com.example.basketballmatching.gameCreator.type.FieldStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.entity.UserEntity;
@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -127,7 +128,7 @@ class GameServiceImplTest {
 
         // when
 
-        CommonResponse<CreateGameDto.Response> game = gameService.createGame(userEntity.getUserId(), request);
+        ApiResponse<CreateGameDto.Response> game = gameService.createGame(userEntity.getUserId(), request);
 
 
         // then
@@ -213,7 +214,7 @@ class GameServiceImplTest {
 
         // when
 
-        CommonResponse<GameDto> detailGame = gameService.detailGame(gameEntity.getGameId());
+        ApiResponse<GameDto> detailGame = gameService.detailGame(gameEntity.getGameId());
 
         // then
 
@@ -253,11 +254,11 @@ class GameServiceImplTest {
 
         // when
 
-        CommonResponse<Page<SearchGameDto>> searchedGame1 = gameService.searchGame(LocalDate.now(), CityName.INCHEON, null, null, null, null, PageRequest.of(0, 10));
+        ApiResponse<Page<SearchGameDto>> searchedGame1 = gameService.searchGame(LocalDate.now(), CityName.INCHEON, null, null, null, null, PageRequest.of(0, 10));
 
 
         // 검색 결과 존재하지 않을 시
-        CommonResponse<Page<SearchGameDto>> searchedGame2 = gameService.searchGame(LocalDate.now().plusDays(2), CityName.INCHEON, null, null, null, null, PageRequest.of(0, 10));
+        ApiResponse<Page<SearchGameDto>> searchedGame2 = gameService.searchGame(LocalDate.now().plusDays(2), CityName.INCHEON, null, null, null, null, PageRequest.of(0, 10));
 
 
         // then
@@ -289,7 +290,7 @@ class GameServiceImplTest {
                 .headCount(10)
                 .build();
 
-        CommonResponse<GameDto> editedGame = gameService.editGame(request, gameEntity.getGameId(), tokenDto.getUserDto().getUserId());
+        ApiResponse<GameDto> editedGame = gameService.editGame(request, gameEntity.getGameId(), tokenDto.getUserDto().getUserId());
 
 
         // then

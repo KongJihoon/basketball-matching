@@ -1,6 +1,6 @@
 package com.example.basketballmatching.notifications.service;
 
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.notifications.dto.NotificationDto;
 import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.entity.UserEntity;
@@ -17,7 +17,7 @@ public interface NotificationService {
     void send(NotificationType notificationType, UserEntity userEntity, String content);
 
 
-    CommonResponse<List<NotificationDto>> getUnReadNotifications(Long userId, Pageable pageable);
+    ApiResponse<List<NotificationDto>> getUnReadNotifications(Long userId, Pageable pageable);
 
 
 

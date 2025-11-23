@@ -2,7 +2,7 @@ package com.example.basketballmatching.user.service.impl;
 
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
@@ -27,9 +27,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.longThat;
+import static org.mockito.BDDMockito.given;
 
 
 @SpringBootTest
@@ -93,7 +97,7 @@ class UserServiceImplTest {
                 .build();
         // when
 
-        CommonResponse<SignUpDto.Response> response = userService.signUp(request);
+        ApiResponse<SignUpDto.Response> response = userService.signUp(request);
         // then
 
         assertEquals("회원가입에 성공하였습니다.", response.getMessage());
@@ -216,7 +220,7 @@ class UserServiceImplTest {
 
         // when
 
-        CommonResponse<UserDto> userInfo = userService.getUserInfo(tokenDto.getUserDto().getUserId());
+        ApiResponse<UserDto> userInfo = userService.getUserInfo(tokenDto.getUserDto().getUserId());
 
         // then
 
@@ -254,7 +258,7 @@ class UserServiceImplTest {
 
         // when
 
-        CommonResponse<UserDto> response = userService.editUserInfo(tokenDto.getUserDto().getUserId()
+        ApiResponse<UserDto> response = userService.editUserInfo(tokenDto.getUserDto().getUserId()
                 , EditUserDto.builder()
                         .nickname("테스트 닉네임2")
                         .position(Position.CENTER)

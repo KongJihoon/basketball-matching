@@ -5,12 +5,14 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.notifications.service.NotificationService;
+import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.dto.ChangePasswordDto;
 import com.example.basketballmatching.user.dto.EditUserDto;
 import com.example.basketballmatching.user.dto.SignUpDto;
@@ -57,7 +59,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public CommonResponse<SignUpDto.Response> signUp(SignUpDto.Request request) {
+    public ApiResponse<SignUpDto.Response> signUp(SignUpDto.Request request) {
 
         log.info("유저 회원가입 시작 : {}", request.getEmail());
 
@@ -86,7 +88,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("유저 회원가입 완료");
 
-        return CommonResponse.of("회원가입에 성공하였습니다.", SignUpDto.Response.fromDto(UserDto.fromEntity(userEntity)));
+        return ApiResponse.of("회원가입에 성공하였습니다.", SignUpDto.Response.fromDto(UserDto.fromEntity(userEntity)));
     }
 
     /**
@@ -126,7 +128,7 @@ public class UserServiceImpl implements UserService {
      * 회원 정보 조회
      */
     @Override
-    public CommonResponse<UserDto> getUserInfo(Long userId) {
+    public ApiResponse<UserDto> getUserInfo(Long userId) {
 
         UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -134,7 +136,7 @@ public class UserServiceImpl implements UserService {
         UserDto userDto = UserDto.fromEntity(userEntity);
 
 
-        return CommonResponse.of("회원정보 조회에 성공하였습니다.", userDto);
+        return ApiResponse.of("회원정보 조회에 성공하였습니다.", userDto);
     }
 
 
@@ -143,7 +145,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public CommonResponse<UserDto> editUserInfo(Long userId, EditUserDto editUserDto) {
+    public ApiResponse<UserDto> editUserInfo(Long userId, EditUserDto editUserDto) {
 
         log.info("[유저 회원정보 수정 시작 : {}]", userId);
 
@@ -163,7 +165,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("[유저 회원정보 수정 완료 : {}]", true);
 
-        return CommonResponse.of("회원정보 수정이 완료되었습니다.", userDto);
+        return ApiResponse.of("회원정보 수정이 완료되었습니다.", userDto);
     }
 
 

@@ -48,29 +48,9 @@ dependencies {
     // oAuth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-    //queryDsl
-    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
-    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
-    annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-def querydslDir = "$buildDir/generated/querydsl"
-
-sourceSets {
-    main.java.srcDirs += [ querydslDir ]
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
-}
-

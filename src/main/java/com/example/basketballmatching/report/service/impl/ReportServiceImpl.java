@@ -3,7 +3,7 @@ package com.example.basketballmatching.report.service.impl;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.report.dto.CreateReportDto;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -82,7 +83,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Transactional
-    public CommonResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable) {
+    public ApiResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -94,6 +95,6 @@ public class ReportServiceImpl implements ReportService {
         Page<ReportListDto> reportListDtos = reportEntities
                 .map(ReportListDto::fromEntity);
 
-        return CommonResponse.of("신고목록 조회를 완료하였습니다.", reportListDtos);
+        return ApiResponse.of("신고목록 조회를 완료하였습니다.", reportListDtos);
     }
 }

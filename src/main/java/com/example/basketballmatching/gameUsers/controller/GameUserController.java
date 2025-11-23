@@ -3,16 +3,9 @@ package com.example.basketballmatching.gameUsers.controller;
 
 import com.example.basketballmatching.gameUsers.dto.*;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
-import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -27,119 +20,71 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/game")
-@Tag(name = "GAME_USER")
 public class GameUserController {
 
     private final GameUserService gameUserService;
 
-    /**
-     * 경기 참가
-     */
-    @Operation(summary = "경기 참가")
-    @ApiResponse(responseCode = "200", description = "경기 참가 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/apply")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<ApplyGameUserDto>> applyGame(
-            @Parameter(name = "경기 아이디", example = "1")
+    public ResponseEntity<ApiResponse<ApplyGameUserDto>> applyGame(
             @RequestParam Long gameId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
 
-        CommonResponse<ApplyGameUserDto> applyGame = gameUserService.applyGame(gameId, userInfoDetails.getUserEntity().getUserId());
+        ApiResponse<ApplyGameUserDto> applyGame = gameUserService.applyGame(gameId, userInfoDetails.getUserEntity().getUserId());
 
         return ResponseEntity.ok(applyGame);
 
     }
-    /**
-     * 참가 경기 취소
-     */
-    @Operation(summary = "참가 경기 취소")
-    @ApiResponse(responseCode = "200", description = "참가 경기 취소 성공",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = CheckResponse.class))})
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
+
     @PostMapping("/cancel")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> cancelGame(
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @AuthenticationPrincipal Long userId,
             @RequestParam Long gameId
     ) {
 
-        CheckResponse checkResponse = gameUserService.cancelGame(userInfoDetails.getUserEntity().getUserId(), gameId);
+        CheckResponse checkResponse = gameUserService.cancelGame(userId, gameId);
 
 
         return ResponseEntity.ok(checkResponse);
     }
 
-    /**
-     * 현재 예정 경기 조회
-     */
-    @Operation(summary = "현재 예정 경기 조회")
-    @ApiResponse(responseCode = "200", description = "현재 예정 경기 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/user/current-game")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<List<CurrentGameListDto>>> getMyCurrentGameList (
+    public ResponseEntity<ApiResponse<List<CurrentGameListDto>>> getMyCurrentGameList (
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.ASC,"gameEntity_startDateTime");
 
-        CommonResponse<List<CurrentGameListDto>> myCurrentGameList = gameUserService.getMyCurrentGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
+        ApiResponse<List<CurrentGameListDto>> myCurrentGameList = gameUserService.getMyCurrentGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
 
         return ResponseEntity.ok(myCurrentGameList);
     }
 
 
-    /**
-     * 지난 경기 조회
-     */
-    @Operation(summary = "지난 경기 조회")
-    @ApiResponse(responseCode = "200", description = "지난 경기 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/user/last-game")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<List<LastGameListDto>>> getMyLastGameList (
+    public ResponseEntity<ApiResponse<List<LastGameListDto>>> getMyLastGameList (
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.ASC,"gameEntity_startDateTime");
 
-        CommonResponse<List<LastGameListDto>> myCurrentGameList = gameUserService.getMyLastGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
+        ApiResponse<List<LastGameListDto>> myCurrentGameList = gameUserService.getMyLastGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
 
         return ResponseEntity.ok(myCurrentGameList);
     }
 
-    /**
-     * 참가자 경기 실력 평가
-     */
-    @Operation(summary = "참가자 경기 실력 평가")
-    @ApiResponse(responseCode = "200", description = "참가자 경기 실력 평가 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/user/evaluate/{gameId}")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> evaluatePlayer(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "평가 경기 아이디", example = "1")
             @PathVariable Long gameId,
             @RequestBody @Valid EvaluatePlayerDto request
             ) {
@@ -150,21 +95,13 @@ public class GameUserController {
         return ResponseEntity.ok(checkResponse);
     }
 
-    /**
-     * 유저 랭크 조회
-     */
-    @Operation(summary = "유저 랭크 조회")
-    @ApiResponse(responseCode = "200", description = "유저 랭크 조회")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/user/rank")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<GameUserLevelDto>> getMyGameUserLevel(
+    public ResponseEntity<ApiResponse<GameUserLevelDto>> getMyGameUserLevel(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
 
-        CommonResponse<GameUserLevelDto> myGameUserLevel = gameUserService.getMyGameUserLevel(userInfoDetails.getUserEntity().getUserId());
+        ApiResponse<GameUserLevelDto> myGameUserLevel = gameUserService.getMyGameUserLevel(userInfoDetails.getUserEntity().getUserId());
 
         return ResponseEntity.ok(myGameUserLevel);
     }

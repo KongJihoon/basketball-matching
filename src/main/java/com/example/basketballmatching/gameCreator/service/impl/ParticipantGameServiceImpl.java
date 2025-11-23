@@ -8,7 +8,7 @@ import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.notifications.service.NotificationService;
@@ -48,7 +48,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CommonResponse<List<ApplyGameUserListDto>> getApplyParticipantList(Long gameId, Long userId, Pageable pageable) {
+    public ApiResponse<List<ApplyGameUserListDto>> getApplyParticipantList(Long gameId, Long userId, Pageable pageable) {
 
         log.info("[경기 참가 신청자 조회 시작] gameId : {}, userId : {}", gameId, userId);
 
@@ -72,7 +72,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[경기 참가 신청자 조회 완료] gameId : {}, userId : {}", gameId, userId);
 
-        return CommonResponse.of("경기 신청자 조회가 완료되었습니다.", participantGameList);
+        return ApiResponse.of("경기 신청자 조회가 완료되었습니다.", participantGameList);
     }
 
 
@@ -81,7 +81,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CommonResponse<List<AcceptGameUserListDto>> getAcceptParticipantList(Long gameId, Long userId, Pageable pageable) {
+    public ApiResponse<List<AcceptGameUserListDto>> getAcceptParticipantList(Long gameId, Long userId, Pageable pageable) {
 
         log.info("[경기 참가 수락자 조회 시작] gameId : {}, userId : {}", gameId, userId);
 
@@ -107,7 +107,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         log.info("[경기 참가 수락자 조회 완료] gameId : {}, userId : {}", gameId, userId);
 
 
-        return CommonResponse.of("경기 참가자 조회가 완료되었습니다.", participantGameList);
+        return ApiResponse.of("경기 참가자 조회가 완료되었습니다.", participantGameList);
     }
 
     private Page<ParticipantGameEntity> getParticipantGameList(Pageable pageable, GameEntity gameEntity, ParticipantGameStatus participantGameStatus) {

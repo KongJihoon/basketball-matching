@@ -11,7 +11,7 @@ import com.example.basketballmatching.gameUsers.entity.LevelEntity;
 import com.example.basketballmatching.gameUsers.repository.LevelRepository;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.dto.ApiResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.entity.UserEntity;
@@ -52,7 +52,7 @@ public class GameUserServiceImpl implements GameUserService {
      */
     @Override
     @Transactional
-    public CommonResponse<ApplyGameUserDto> applyGame(Long gameId, Long userId) {
+    public ApiResponse<ApplyGameUserDto> applyGame(Long gameId, Long userId) {
         log.info("[경기 참가 신청 시작] gameId : {} userId : {}", gameId, userId);
 
 
@@ -88,7 +88,7 @@ public class GameUserServiceImpl implements GameUserService {
 
         log.info("[경기 참가 신청 완료] gameId : {}, participantId : {}", gameId, entity.getParticipantGameId());
 
-        return CommonResponse.of("경기 신청이 완료되었습니다.", participantDto);
+        return ApiResponse.of("경기 신청이 완료되었습니다.", participantDto);
     }
 
     /**
@@ -139,7 +139,7 @@ public class GameUserServiceImpl implements GameUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CommonResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
+    public ApiResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -147,7 +147,7 @@ public class GameUserServiceImpl implements GameUserService {
 
         List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userId, pageable);
 
-        return CommonResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
+        return ApiResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
     }
 
     /**
@@ -155,7 +155,7 @@ public class GameUserServiceImpl implements GameUserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public CommonResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
+    public ApiResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -164,7 +164,7 @@ public class GameUserServiceImpl implements GameUserService {
         List<LastGameListDto> lastGameList = gameQueryRepository.getLastGameList(userId, pageable);
 
 
-        return CommonResponse.of("지난 게임 조회가 완료되었습니다.", lastGameList);
+        return ApiResponse.of("지난 게임 조회가 완료되었습니다.", lastGameList);
     }
 
 
@@ -216,7 +216,7 @@ public class GameUserServiceImpl implements GameUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public CommonResponse<GameUserLevelDto> getMyGameUserLevel(Long userId) {
+    public ApiResponse<GameUserLevelDto> getMyGameUserLevel(Long userId) {
 
         UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -224,7 +224,7 @@ public class GameUserServiceImpl implements GameUserService {
         GameUserLevelDto gameUserLevelDto = GameUserLevelDto.fromEntity(userEntity);
 
 
-        return CommonResponse.of("유저 랭크 조회를 완료하였습니다.", gameUserLevelDto);
+        return ApiResponse.of("유저 랭크 조회를 완료하였습니다.", gameUserLevelDto);
     }
 
     // 최근 10경기 평균으로 Level측정
@@ -290,7 +290,7 @@ public class GameUserServiceImpl implements GameUserService {
 
         }
 
-        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(userEntity.getUserId(),gameEntity.getGameId())) {
+        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(gameEntity.getGameId(),userEntity.getUserId())) {
             throw new CustomException(ALREADY_APPLY_GAME_USER);
         }
 
