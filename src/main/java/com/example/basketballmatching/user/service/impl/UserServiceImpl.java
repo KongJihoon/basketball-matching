@@ -61,23 +61,17 @@ public class UserServiceImpl implements UserService {
 
         log.info("유저 회원가입 시작 : {}", request.getEmail());
 
-        boolean existsByEmail = userRepository.existsByEmail(request.getEmail());
 
-        boolean existsByNickname = userRepository.existsByNickname(request.getNickname());
+        // 유저 유효성 검사
+        validationByUser(request);
 
-        validationByUser(request, existsByEmail, existsByNickname);
+        // 이메일 인증 여부 확인(Redis)
+        confirmEmailAuth(request);
 
-        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        UserEntity userEntity = SignUpDto.Request.toEntity(request);
+        UserEntity userEntity = SignUpDto.Request.toEntity(request, encodedPassword);
 
-        String data = redisService.getData("email:auth:verified:" + request.getEmail());
-
-        if (data == null) {
-            throw new CustomException(EMAIL_NOT_VERIFIED);
-        }
-
-        redisService.deleteData("email:auth:verified:" + request.getEmail());
 
         userEntity.setEmailAuth();
 
@@ -88,6 +82,7 @@ public class UserServiceImpl implements UserService {
 
         return CommonResponse.of("회원가입에 성공하였습니다.", SignUpDto.Response.fromDto(UserDto.fromEntity(userEntity)));
     }
+
 
     /**
      * 이메일 중복 확인
@@ -122,20 +117,21 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
     /**
      * 회원 정보 조회
      */
     @Override
     public CommonResponse<UserDto> getUserInfo(Long userId) {
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
 
         return CommonResponse.of("회원정보 조회에 성공하였습니다.", userDto);
     }
+
 
 
     /**
@@ -147,8 +143,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("[유저 회원정보 수정 시작 : {}]", userId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
         boolean exists = userRepository.existsByNickname(editUserDto.getNickname());
 
@@ -157,7 +152,6 @@ public class UserServiceImpl implements UserService {
         }
 
         userEntity.editUserInfo(editUserDto);
-
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
@@ -202,8 +196,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("[검증 후 비밀번호 변경 시작] email : {}", email);
 
-        UserEntity userEntity = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(email);
 
         String data = redisService.getData("password:change:" + email);
 
@@ -215,8 +208,9 @@ public class UserServiceImpl implements UserService {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
 
+        String encodedPassword = passwordEncoder.encode(newPassword);
 
-        userEntity.setPassword(passwordEncoder.encode(newPassword));
+        userEntity.setPassword(encodedPassword);
 
         userRepository.save(userEntity);
 
@@ -225,14 +219,15 @@ public class UserServiceImpl implements UserService {
         return CheckResponse.of(true, "비밀번호 변경을 완료하였습니다.");
     }
 
+
+
     @Override
     @Transactional
     public CheckResponse changePassword(Long userId, ChangePasswordDto request) {
 
         log.info("[비밀번호 변경 시작] userId : {}", userId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), userEntity.getPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
@@ -241,9 +236,9 @@ public class UserServiceImpl implements UserService {
         if (!request.getNewPassword().equals(request.getNewCheckPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
 
-
-        userEntity.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userEntity.setPassword(encodedPassword);
 
         userRepository.save(userEntity);
 
@@ -257,27 +252,22 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public CheckResponse deleteUser(Long userId, String token) {
 
-        UserEntity userEntity = userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (token == null) {
-            throw new CustomException(NOT_FOUND_TOKEN);
-        }
-
-        redisService.setDataExpireMillis("logout:access:" + token, "LOGOUT", tokenProvider.getRemainingTime(token));
-
-        redisService.deleteData("refreshToken:" + userEntity.getEmail());
+        // 토큰 유효성 검사 및 토큰 로그아웃 처리
+        deleteTokenByUser(token, userEntity);
 
         LocalDateTime now = LocalDateTime.now();
 
 
-        List<GameEntity> gameEntities = deleteCreatorGameAndParticipantUsers(userEntity, now);
+        // 삭제 유저 게임 삭제 및 참가 유저 강퇴 처리
+        deleteCreatorGameAndParticipantUsers(userEntity, now);
 
-        List<ParticipantGameEntity> participantGameEntities = deleteParticipantByDeleteUser(userEntity, now);
 
-        participantGameRepository.saveAll(participantGameEntities);
+        // 삭제 유저 참가 게임 강퇴 및 취소 처리
+        deleteParticipantByDeleteUser(userEntity, now);
 
-        gameRepository.saveAll(gameEntities);
+
 
         userEntity.setDeletedDateTime(now);
 
@@ -287,7 +277,17 @@ public class UserServiceImpl implements UserService {
         return CheckResponse.of(true, "회원탈퇴에 성공하였습니다.");
     }
 
-    private List<ParticipantGameEntity> deleteParticipantByDeleteUser(UserEntity userEntity, LocalDateTime now) {
+    private void deleteTokenByUser(String token, UserEntity userEntity) {
+        if (token == null) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+        redisService.setDataExpireMillis("logout:access:" + token, "LOGOUT", tokenProvider.getRemainingTime(token));
+
+        redisService.deleteData("refreshToken:" + userEntity.getEmail());
+    }
+
+    private void deleteParticipantByDeleteUser(UserEntity userEntity, LocalDateTime now) {
         List<ParticipantGameEntity> participantGameEntities = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(userEntity.getUserId(), List.of(ACCEPT, APPLY))
                 .stream().filter(participantGameEntity -> participantGameEntity.getGameEntity().getStartDateTime().isAfter(now)).toList();
 
@@ -306,11 +306,14 @@ public class UserServiceImpl implements UserService {
                     }
                 }
         );
-        return participantGameEntities;
+
+        participantGameRepository.saveAll(participantGameEntities);
+
+
     }
 
 
-    private List<GameEntity> deleteCreatorGameAndParticipantUsers(UserEntity userEntity, LocalDateTime now) {
+    private void deleteCreatorGameAndParticipantUsers(UserEntity userEntity, LocalDateTime now) {
         List<GameEntity> gameEntities = gameRepository.findByUserEntity_UserIdAndDeletedDateTimeIsNull(userEntity.getUserId())
                 .stream().filter(gameEntity -> gameEntity.getStartDateTime().isAfter(now))
                 .toList();
@@ -334,11 +337,27 @@ public class UserServiceImpl implements UserService {
         });
 
         participantGameRepository.saveAll(deleteGameParticipants);
-        return gameEntities;
+
+        gameRepository.saveAll(gameEntities);
+
+    }
+
+    private UserEntity getUser(Long userId) {
+        return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
 
-    private static void validationByUser(SignUpDto.Request request, boolean existsByEmail, boolean existsByNickname) {
+    private UserEntity getUser(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    private void validationByUser(SignUpDto.Request request) {
+        boolean existsByEmail = userRepository.existsByEmail(request.getEmail());
+
+        boolean existsByNickname = userRepository.existsByNickname(request.getNickname());
+
         if (existsByEmail) {
             throw new CustomException(ALREADY_EXIST_EMAIL);
         }
@@ -350,5 +369,15 @@ public class UserServiceImpl implements UserService {
         if (!request.getPassword().equals(request.getCheckPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
+    }
+
+    private void confirmEmailAuth(SignUpDto.Request request) {
+        String data = redisService.getData("email:auth:verified:" + request.getEmail());
+
+        if (data == null) {
+            throw new CustomException(EMAIL_NOT_VERIFIED);
+        }
+
+        redisService.deleteData("email:auth:verified:" + request.getEmail());
     }
 }

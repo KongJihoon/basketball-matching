@@ -73,6 +73,8 @@ public class UserEntity extends BaseEntity {
 
     private LocalDateTime deletedDateTime;
 
+
+
     public void setEmailAuth() {
         this.emailAuth = true;
     }
