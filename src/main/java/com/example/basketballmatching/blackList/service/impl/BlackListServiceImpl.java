@@ -8,7 +8,7 @@ import com.example.basketballmatching.blackList.service.BlackListService;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
@@ -19,14 +19,12 @@ import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -89,7 +87,7 @@ public class BlackListServiceImpl implements BlackListService {
 
     @Override
     @Transactional(readOnly = true)
-    public ApiResponse<Page<BlackListDto>> getBlackLists(Long userId, Pageable pageable) {
+    public CommonResponse<Page<BlackListDto>> getBlackLists(Long userId, Pageable pageable) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -110,7 +108,7 @@ public class BlackListServiceImpl implements BlackListService {
         Page<BlackListDto> listDtoPage = new PageImpl<>(blackListDtos, pageable, blackListDtos.size());
 
 
-        return ApiResponse.of("블랙리스트 유저 조회에 성공하였습니다.", listDtoPage);
+        return CommonResponse.of("블랙리스트 유저 조회에 성공하였습니다.", listDtoPage);
     }
 
     private void validateBlackUser(UserEntity targetUser) {
@@ -138,7 +136,7 @@ public class BlackListServiceImpl implements BlackListService {
 
         list.forEach(participantGameEntity -> {
 
-            participantGameEntity.getGameEntity().decreaseParticipantCount();
+
             participantGameEntity.setBlackUserStatus(participantGameEntity.getParticipantGameStatus(), LocalDateTime.now());
 
         });

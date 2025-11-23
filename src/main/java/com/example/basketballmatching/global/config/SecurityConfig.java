@@ -39,7 +39,11 @@ public class SecurityConfig {
                                         "/api/v1/user/reissue",
                                         "/api/oauth2/**",
                                         "/api/v1/game/details",
-                                        "api/v1/game/search"
+                                        "/api/v1/game/search",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/swagger"
 
                                 ).permitAll()
                                 .anyRequest().authenticated()

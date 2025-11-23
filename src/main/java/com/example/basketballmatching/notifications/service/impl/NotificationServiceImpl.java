@@ -1,6 +1,6 @@
 package com.example.basketballmatching.notifications.service.impl;
 
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.notifications.dto.NotificationDto;
 import com.example.basketballmatching.notifications.entity.NotificationEntity;
@@ -103,14 +103,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public ApiResponse<List<NotificationDto>> getUnReadNotifications(Long userId, Pageable pageable) {
+    public CommonResponse<List<NotificationDto>> getUnReadNotifications(Long userId, Pageable pageable) {
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         List<NotificationDto> notificationDtoList = notificationQueryRepository.getUnReadNotification(userId, pageable);
 
-        return ApiResponse.of("현재 읽지 않은 알림 조회에 성공하였습니다.", notificationDtoList);
+        return CommonResponse.of("현재 읽지 않은 알림 조회에 성공하였습니다.", notificationDtoList);
     }
 
     private void sendToClient(SseEmitter sseEmitter, String emitterId, Object data) {

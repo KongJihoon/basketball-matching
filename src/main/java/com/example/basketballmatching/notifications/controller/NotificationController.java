@@ -1,11 +1,17 @@
 package com.example.basketballmatching.notifications.controller;
 
 
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
 import com.example.basketballmatching.notifications.dto.NotificationDto;
 import com.example.basketballmatching.notifications.service.NotificationService;
-import io.lettuce.core.dynamic.annotation.Param;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
@@ -20,14 +26,24 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notification")
+@Tag(name = "NOTIFICATION")
 public class NotificationController {
 
     private final NotificationService notificationService;
 
+    /**
+     * 알림 구독 (SSE)
+     */
+    @Operation(summary = "알림 구독(SSE)")
+    @ApiResponse(responseCode = "200", description = "SSE 구독 연결 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+            content = {@Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<SseEmitter> subscribe(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @Parameter(name = "Last-Event-ID", description = "유실된 이벤트 복구를 위한 마지막 이벤트 ID")
             @RequestHeader(value = "lastEventId", required = false, defaultValue = "")
             String lastEventId) {
 
@@ -37,17 +53,26 @@ public class NotificationController {
 
         return ResponseEntity.ok(sseEmitter);
     }
-
+    /**
+     * 읽지 않은 알림 조회
+     */
+    @Operation(summary = "읽지 않은 알림 조회")
+    @ApiResponse(responseCode = "200", description = "읽지 않은 알림 조회 성공")
+    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+            content = {@Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/unread-notification")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<ApiResponse<List<NotificationDto>>> getUnreadNotifications(
+    public ResponseEntity<CommonResponse<List<NotificationDto>>> getUnreadNotifications(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @Parameter(name = "페이지", example = "0")
             @RequestParam(defaultValue = "0") int page,
+            @Parameter(name = "페이지 사이즈", example = "10")
             @RequestParam(defaultValue = "10") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        ApiResponse<List<NotificationDto>> unReadNotifications = notificationService.getUnReadNotifications(userInfoDetails.getUserEntity().getUserId(), pageRequest);
+        CommonResponse<List<NotificationDto>> unReadNotifications = notificationService.getUnReadNotifications(userInfoDetails.getUserEntity().getUserId(), pageRequest);
 
         return ResponseEntity.ok(unReadNotifications);
     }
