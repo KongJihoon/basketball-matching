@@ -13,7 +13,7 @@ import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
@@ -24,7 +24,6 @@ import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -142,7 +139,7 @@ class GameUserServiceImplTest {
 
         // when
 
-        ApiResponse<ApplyGameUserDto> applyGame = gameUserService.applyGame(gameEntity.getGameId(), userEntity.getUserId());
+        CommonResponse<ApplyGameUserDto> applyGame = gameUserService.applyGame(gameEntity.getGameId(), userEntity.getUserId());
 
 
         // then
@@ -345,7 +342,7 @@ class GameUserServiceImplTest {
         gameUserService.applyGame(gameEntity.getGameId(), userEntity.getUserId());
 
         // when
-        ApiResponse<List<CurrentGameListDto>> myCurrentGameList = gameUserService.getMyCurrentGameList(userEntity.getUserId(), PageRequest.of(0, 10));
+        CommonResponse<List<CurrentGameListDto>> myCurrentGameList = gameUserService.getMyCurrentGameList(userEntity.getUserId(), PageRequest.of(0, 10));
 
         // then
 
@@ -379,7 +376,7 @@ class GameUserServiceImplTest {
         gameRepository.save(gameEntity);
         // when
 
-        ApiResponse<List<LastGameListDto>> myLastGameList = gameUserService.getMyLastGameList(userEntity.getUserId(), PageRequest.of(0, 10));
+        CommonResponse<List<LastGameListDto>> myLastGameList = gameUserService.getMyLastGameList(userEntity.getUserId(), PageRequest.of(0, 10));
 
         // then
 

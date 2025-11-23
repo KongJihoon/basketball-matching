@@ -1,6 +1,6 @@
 package com.example.basketballmatching.report.service;
 
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.report.dto.CreateReportDto;
 import com.example.basketballmatching.report.dto.ReportListDto;
@@ -12,7 +12,7 @@ public interface ReportService {
 
     CheckResponse createReport(Long reportId, Long targetUserId, Long gameId, CreateReportDto createReportDto);
 
-    ApiResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable);
+    CommonResponse<Page<ReportListDto>> getReportedUserList(Long userId, Pageable pageable);
 
 
 }

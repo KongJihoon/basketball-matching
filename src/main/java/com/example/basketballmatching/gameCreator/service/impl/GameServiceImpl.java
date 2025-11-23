@@ -10,7 +10,7 @@ import com.example.basketballmatching.gameCreator.repository.GameQueryRepository
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
-import com.example.basketballmatching.global.dto.ApiResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
@@ -44,7 +44,7 @@ public class GameServiceImpl implements GameService {
      */
     @Override
     @Transactional
-    public ApiResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
+    public CommonResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
 
         log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
@@ -65,7 +65,7 @@ public class GameServiceImpl implements GameService {
         log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
 
 
-        return ApiResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
+        return CommonResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
     }
 
     /**
@@ -73,7 +73,7 @@ public class GameServiceImpl implements GameService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ApiResponse<GameDto> detailGame(Long gameId) {
+    public CommonResponse<GameDto> detailGame(Long gameId) {
 
         log.info("[경기 상세 조회 시작] gameId : {}", gameId);
 
@@ -85,7 +85,7 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 상세조회 완료] gameId : {}", gameId);
 
-        return ApiResponse.of("경기 상세조회에 성공하였습니다.", gameDto);
+        return CommonResponse.of("경기 상세조회에 성공하였습니다.", gameDto);
     }
 
     /**
@@ -93,7 +93,7 @@ public class GameServiceImpl implements GameService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ApiResponse<Page<SearchGameDto>> searchGame(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, Pageable pageable) {
+    public CommonResponse<Page<SearchGameDto>> searchGame(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, Pageable pageable) {
 
         log.info("[경기 검색 정렬 시작] date : {}", date);
 
@@ -101,12 +101,12 @@ public class GameServiceImpl implements GameService {
 
 
         if (responses.isEmpty()) {
-            return ApiResponse.of("경기 검색결과가 없습니다.", responses);
+            return CommonResponse.of("경기 검색결과가 없습니다.", responses);
         }
 
         log.info("[경기 검색 정렬 완료] date : {}", date);
 
-        return ApiResponse.of("경기 검색이 완료되었습니다.", responses);
+        return CommonResponse.of("경기 검색이 완료되었습니다.", responses);
     }
 
     /**
@@ -114,7 +114,7 @@ public class GameServiceImpl implements GameService {
      */
     @Override
     @Transactional
-    public ApiResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
+    public CommonResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
 
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);
 
@@ -169,7 +169,7 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 
-        return ApiResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
+        return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
     }
 
 
