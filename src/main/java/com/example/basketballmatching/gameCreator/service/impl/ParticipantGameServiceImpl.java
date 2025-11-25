@@ -7,6 +7,7 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
+import com.example.basketballmatching.gameCreator.type.GameStatus;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -52,16 +53,12 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[경기 참가 신청자 조회 시작] gameId : {}, userId : {}", gameId, userId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            log.error("[CustomException 발생] errorCode : {}", NOT_GAME_CREATOR);
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
+        // 경기 개설자인지 조회
+        validateGameCreator(gameEntity, userEntity);
 
         // 지원자 목록 조회 (엔티티 기준)
         Page<ParticipantGameEntity> pages = getParticipantGameList(pageable, gameEntity, APPLY);
@@ -76,6 +73,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
     }
 
 
+
+
     /**
      * 경기 참가 수락자 조회
      */
@@ -86,16 +85,12 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         log.info("[경기 참가 수락자 조회 시작] gameId : {}, userId : {}", gameId, userId);
 
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            log.error("[CustomException 발생] errorCode : {}", NOT_GAME_CREATOR);
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
+        // 경기 개설자인지 조회
+        validateGameCreator(gameEntity, userEntity);
 
         // 지원자 목록 조회 (엔티티 기준)
         Page<ParticipantGameEntity> pages = getParticipantGameList(pageable, gameEntity, ACCEPT);
@@ -110,11 +105,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         return CommonResponse.of("경기 참가자 조회가 완료되었습니다.", participantGameList);
     }
 
-    private Page<ParticipantGameEntity> getParticipantGameList(Pageable pageable, GameEntity gameEntity, ParticipantGameStatus participantGameStatus) {
-        Page<ParticipantGameEntity> pages = participantGameRepository.
-                findByParticipantGameStatusAndGameEntity_GameId(participantGameStatus, gameEntity.getGameId(), pageable);
-        return pages;
-    }
+
 
     /**
      * 경기 수락
@@ -125,44 +116,31 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[참가자 경기 수락 시작] participantId : {}, gameId : {}", participantId, gameId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            log.error("[CustomException 발생] errorCode : {}", NOT_GAME_CREATOR);
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
+        // 경기 개설자인지 조회
+        validateGameCreator(gameEntity, userEntity);
 
-        boolean exists = participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(participantId, gameId);
 
-        if (!exists) {
-            throw new CustomException(NOT_APPLY_USER);
-        }
-        LocalDateTime now = LocalDateTime.now();
-        if (gameEntity.getStartDateTime().isBefore(now)) {
-            throw new CustomException(ALREADY_START_GAME);
-        }
 
         if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
         }
 
+        LocalDateTime now = validateStartDateTime(gameEntity);
 
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participantId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
-        if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-            throw new CustomException(ALREADY_ACCEPT_USER);
-        }
+        ParticipantGameEntity participantGameEntity = getParticipantGame(gameEntity, participantId);
+
+        // 경기 참가자 상태 유효성 검사
+        validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
 
         participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, now);
 
-        participantGameRepository.save(participantGameEntity);
 
 
         notificationService.send(NotificationType.ACCEPT_GAME, participantGameEntity.getUserEntity(),
@@ -176,6 +154,9 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
     }
 
 
+
+
+
     /**
      * 경기 거절
      */
@@ -185,19 +166,19 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[경기 참가자 거절 시작] participantId : {}, gameId : {}", participantId, gameId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
         if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+        ParticipantGameEntity participantGameEntity = getParticipantGame(gameEntity, participantId);
+
+        // 경기 참가자 상태 유효성 검사
+        validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
 
 
         // 경기 생성자는 거절할 수 없음.
@@ -205,21 +186,12 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
             throw new CustomException(NOT_REJECT_CREATOR);
         }
 
-        if (participantGameEntity.getParticipantGameStatus().equals(REJECT)) {
-            throw new CustomException(ALREADY_REJECT_USER);
-        }
+        LocalDateTime now = validateStartDateTime(gameEntity);
 
-        if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-            throw new CustomException(ALREADY_ACCEPT_USER);
-        }
 
-        if (gameEntity.getStartDateTime().isBefore(LocalDateTime.now())) {
-            throw new CustomException(ALREADY_START_GAME);
-        }
+        participantGameEntity.setParticipantGameStatusAndRejectDateTime(REJECT, now);
 
-        participantGameEntity.setParticipantGameStatusAndRejectDateTime(REJECT, LocalDateTime.now());
 
-        participantGameRepository.save(participantGameEntity);
 
         notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
 
@@ -227,6 +199,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         return CheckResponse.of(true, "경기 거절을 완료하였습니다.");
     }
+
+
 
 
     /**
@@ -238,40 +212,27 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[경기 강퇴 시작] : participantId : {}, gameId : {}", participantId, gameId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
+        validateGameCreator(gameEntity, userEntity);
 
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, participantId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+        ParticipantGameEntity participantGameEntity = getParticipantGame(gameEntity, participantId);
 
         if (Objects.equals(participantGameEntity.getUserEntity().getUserId(), gameEntity.getUserEntity().getUserId())) {
             throw new CustomException(NOT_KICKOUT_CREATOR);
         }
 
-        if (participantGameEntity.getParticipantGameStatus().equals(KICKOUT)) {
-            throw new CustomException(ALREADY_KICKOUT_USER);
-        }
+        // 경기 참가자 상태 유효성 검사
+        validateGameStatusInKickOut(participantGameEntity.getParticipantGameStatus());
 
-        if (!participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-            throw new CustomException(NOT_ACCEPT_USER);
-        }
 
-        LocalDateTime now = LocalDateTime.now();
-
-        if (gameEntity.getStartDateTime().isBefore(now)) {
-            throw new CustomException(ALREADY_START_GAME);
-        }
+        LocalDateTime now = validateStartDateTime(gameEntity);
 
         participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
-        participantGameRepository.save(participantGameEntity);
+
 
         gameRepository.save(participantGameEntity.getGameEntity());
 
@@ -286,6 +247,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
     }
 
+
+
     /**
      * 경기 삭제
      */
@@ -295,15 +258,11 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         log.info("[경기 삭제 시작] userId : {}, gameId : {}", userId, gameId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
+        validateGameCreator(gameEntity, userEntity);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -311,21 +270,25 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
             throw new CustomException(NOT_DELETE_GAME);
         }
 
+
+        // ACCEPT/ APPLY 유저 리스트
         List<ParticipantGameEntity> participantGameEntityList = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(List.of(ACCEPT, APPLY), gameId);
 
 
+        // 조회 유저 상태 DELETE로 변경
         participantGameEntityList.forEach(participantGame ->
                 participantGame.setParticipantGameStatusAndDeletedDateTime(DELETE, now));
 
+        // 삭제 알림 전송
         participantGameEntityList
                 .stream()
                 .filter(participantGameEntity -> !Objects.equals(participantGameEntity.getUserEntity().getUserId(), userEntity.getUserId()))
                 .forEach(
 
-                participantGame ->
-                    notificationService.send(NotificationType.DELETE_GAME, participantGame.getUserEntity(), participantGame.getGameEntity().getTitle() + "의 게임이 삭제되었습니다.")
+                        participantGame ->
+                                notificationService.send(NotificationType.DELETE_GAME, participantGame.getUserEntity(), participantGame.getGameEntity().getTitle() + "의 게임이 삭제되었습니다.")
 
-        );
+                );
 
         participantGameRepository.saveAll(participantGameEntityList);
 
@@ -339,5 +302,59 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         return CheckResponse.of(true, "경기 삭제가 완료되었습니다.");
     }
 
+    public void validateGameStatusInAcceptAndReject(ParticipantGameStatus status) {
 
+        switch (status) {
+
+            case ACCEPT -> throw new CustomException(ALREADY_ACCEPT_USER);
+            case REJECT -> throw new CustomException(ALREADY_REJECT_USER);
+
+        }
+
+    }
+
+    private void validateGameStatusInKickOut(ParticipantGameStatus status) {
+
+        switch (status) {
+            case APPLY -> throw new CustomException(NOT_ACCEPT_USER);
+            case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
+        }
+    }
+
+
+
+    private void validateGameCreator(GameEntity gameEntity, UserEntity userEntity) {
+        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
+            log.error("[CustomException 발생] errorCode : {}", NOT_GAME_CREATOR);
+            throw new CustomException(NOT_GAME_CREATOR);
+        }
+    }
+
+    private UserEntity getUser(Long userId) {
+        return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    private GameEntity getGame(Long gameId) {
+        return gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+    }
+
+    private Page<ParticipantGameEntity> getParticipantGameList(Pageable pageable, GameEntity gameEntity, ParticipantGameStatus participantGameStatus) {
+        return participantGameRepository.
+                findByParticipantGameStatusAndGameEntity_GameId(participantGameStatus, gameEntity.getGameId(), pageable);
+    }
+
+    private ParticipantGameEntity getParticipantGame(GameEntity gameEntity, Long participantId) {
+        return participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participantId)
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+    }
+
+    private static LocalDateTime validateStartDateTime(GameEntity gameEntity) {
+        LocalDateTime now = LocalDateTime.now();
+        if (gameEntity.getStartDateTime().isBefore(now)) {
+            throw new CustomException(ALREADY_START_GAME);
+        }
+        return now;
+    }
 }

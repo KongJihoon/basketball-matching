@@ -48,9 +48,9 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
+        // 경기 생성 유효성 검사
         validateCreateGame(request);
 
         GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
@@ -68,6 +68,7 @@ public class GameServiceImpl implements GameService {
         return CommonResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
     }
 
+
     /**
      * 경기 상세조회
      */
@@ -77,8 +78,7 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 상세 조회 시작] gameId : {}", gameId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
 
         GameDto gameDto = GameDto.fromEntity(gameEntity);
@@ -87,6 +87,8 @@ public class GameServiceImpl implements GameService {
 
         return CommonResponse.of("경기 상세조회에 성공하였습니다.", gameDto);
     }
+
+
 
     /**
      * 경기 검색 정렬
@@ -119,12 +121,24 @@ public class GameServiceImpl implements GameService {
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);
 
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
+        // 경기 수정 사항 유효성 검사
+        validateEditGame(request, gameEntity, userEntity);
+
+
+        gameEntity.editGameInfo(request);
+
+
+
+        log.info("[경기 수정 완료] gameId : {}", gameId);
+
+        return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
+    }
+
+    private void validateEditGame(EditGameDto request, GameEntity gameEntity, UserEntity userEntity) {
         if (!gameEntity.getUserEntity().getUserId().equals(userEntity.getUserId())) {
             throw new CustomException(NOT_GAME_CREATOR);
         }
@@ -132,7 +146,6 @@ public class GameServiceImpl implements GameService {
         if(request.getMatchFormat() != null && request.getHeadCount() == 0) {
             throw new CustomException(UPDATE_GAME_HEAD_COUNT);
         }
-
 
 
         if (request.getHeadCount() > 0) {
@@ -160,16 +173,6 @@ public class GameServiceImpl implements GameService {
 
             }
         }
-
-
-
-        gameEntity.editGameInfo(request);
-
-        gameRepository.save(gameEntity);
-
-        log.info("[경기 수정 완료] gameId : {}", gameId);
-
-        return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
     }
 
 
@@ -216,5 +219,15 @@ public class GameServiceImpl implements GameService {
             throw new CustomException(PLACE_SCHEDULE_OVERLAP);
         }
 
+    }
+
+    private UserEntity getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    private GameEntity getGame(Long gameId) {
+        return gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
     }
 }

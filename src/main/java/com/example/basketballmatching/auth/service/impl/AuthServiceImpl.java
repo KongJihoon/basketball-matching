@@ -9,7 +9,6 @@ import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
-import com.example.basketballmatching.user.type.LoginProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,39 +33,34 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public TokenDto loginUser(String email, String password) {
 
         log.info("[유저 로그인 시작]: {}", email);
 
 
 
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-
-        if (userEntity.getLoginProvider().equals(KAKAO)) {
-            throw new CustomException(PROVIDER_NOT_MATCH);
-        }
-
-        if (!passwordEncoder.matches(password, userEntity.getPassword()) || password == null) {
-                throw new CustomException(PASSWORD_NOT_MATCH);
-        }
-        String data = redisService.getData("blackList:" + userEntity.getEmail());
-
-        if (data != null) {
-            throw new CustomException(BLACKLIST_USER);
-        }
+        UserEntity userEntity = getUser(email);
 
 
+
+        // 로그인 형식 검사
+        validateLocalLogin(userEntity);
+
+        // 비밀번호 유효성 검사
+        validatePassword(password, userEntity);
+
+        // 블랙리스트 유저 검사
+        validateNotBlackList(userEntity.getEmail());
 
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
 
-        String accessToken = tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+        String accessToken = issueAccessToken(userDto);
         log.info("accessToken 생성 완료.");
 
-        String refreshToken = tokenProvider.createRefreshToken(userDto.getEmail());
+        String refreshToken = issueRefreshToken(userDto);
         log.info("refreshToken 생성 완료");
 
         log.info("[유저 로그인 완료] email : {}", userDto.getEmail());
@@ -74,32 +68,34 @@ public class AuthServiceImpl implements AuthService {
         return new TokenDto(accessToken, refreshToken, userDto);
     }
 
+
+
+
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public TokenDto kakaoLogin(String email) {
 
         log.info("[카카오 로그인 검증 시작] email : {}", email);
 
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(email);
 
-        if (userEntity.getLoginProvider().equals(LOCAL)) {
-            throw new CustomException(PROVIDER_NOT_MATCH);
-        }
+        // 로그인 형식 검사
+        validateKakaoLogin(userEntity);
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
-        String accessToken = tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+        String accessToken = issueAccessToken(userDto);
 
-        String refreshToken = tokenProvider.createRefreshToken(userDto.getEmail());
-
+        String refreshToken = issueRefreshToken(userDto);
 
         log.info("[카카오 로그인 완료] email : {}", userDto.getEmail());
 
         return new TokenDto(accessToken, refreshToken, userDto);
     }
 
+
     @Override
+    @Transactional(readOnly = true)
     public TokenDto reissue(String email, String refreshToken) {
 
         log.info("[토큰 재발급 시작]: {}", email);
@@ -107,35 +103,26 @@ public class AuthServiceImpl implements AuthService {
         String redisToken = redisService.getData("refreshToken:" + email);
 
 
-        if (redisToken == null) {
-            throw new CustomException(NOT_FOUND_TOKEN);
-        }
+        // 재발금 유효성 검사
+        validateReissue(email, refreshToken, redisToken);
 
-        if (!redisToken.equals(refreshToken)) {
-            throw new CustomException(INVALID_TOKEN);
-        }
-
-        String userEmail = tokenProvider.parseToken(refreshToken).getSubject();
-
-        if (!userEmail.equals(email)) {
-            throw new CustomException(INVALID_TOKEN);
-        }
-
-        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(email);
 
         // refreshToken 검증
         tokenProvider.validateRefreshToken(refreshToken);
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
-        String reissuedAccessToken = tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+        String reissuedAccessToken = issueAccessToken(userDto);
 
 
         return new TokenDto(reissuedAccessToken, redisToken, userDto);
     }
 
+
+
     @Override
+    @Transactional(readOnly = true)
     public CheckResponse logoutUser(String email, String token) {
 
         log.info("[유저 로그아웃 시작] : {}", email);
@@ -154,5 +141,64 @@ public class AuthServiceImpl implements AuthService {
         return CheckResponse.of(true, "로그아웃 완료되었습니다.");
     }
 
+    private void validateKakaoLogin(UserEntity userEntity) {
+        if (userEntity.getLoginProvider().equals(LOCAL)) {
+            throw new CustomException(PROVIDER_NOT_MATCH);
+        }
+    }
+
+    private void validateLocalLogin(UserEntity userEntity) {
+        if (userEntity.getLoginProvider().equals(KAKAO)) {
+            throw new CustomException(PROVIDER_NOT_MATCH);
+        }
+    }
+
+    private void validateNotBlackList(String email) {
+
+        String data = redisService.getData("blackList:" + email);
+
+        if (data != null) {
+            throw new CustomException(BLACKLIST_USER);
+        }
+
+    }
+
+    private void validatePassword(String password, UserEntity user) {
+        if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new CustomException(PASSWORD_NOT_MATCH);
+        }
+    }
+
+    private String issueAccessToken(UserDto userDto) {
+
+        return tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+
+    }
+
+    private String issueRefreshToken(UserDto userDto) {
+        return tokenProvider.createRefreshToken(userDto.getEmail());
+    }
+
+
+    private UserEntity getUser(String email) {
+        return userRepository.findByEmailAndDeletedDateTimeIsNull(email)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    private void validateReissue(String email, String refreshToken, String redisToken) {
+        if (redisToken == null) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
+
+        if (!redisToken.equals(refreshToken)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
+        String userEmail = tokenProvider.parseToken(refreshToken).getSubject();
+
+        if (!userEmail.equals(email)) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+    }
 
 }
