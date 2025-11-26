@@ -15,6 +15,8 @@ import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.service.UserService;
+import com.example.basketballmatching.user.type.GenderType;
+import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +69,9 @@ class UserServiceImplTest {
                 .address("테스트용주소")
                 .phone("010-1111-1111")
                 .position(Position.GUARD)
+                .genderType(GenderType.MALE)
                 .userType(UserType.USER)
+                .loginProvider(LoginProvider.LOCAL)
                 .build();
 
         user.setEmailAuth();
@@ -87,11 +91,19 @@ class UserServiceImplTest {
                 .checkPassword("Test@123")
                 .nickname("JI")
                 .name("test")
+                .address("테스트용주소")
                 .phone("010-1111-1111")
                 .birth(LocalDate.now())
                 .position(Position.GUARD)
+                .genderType(GenderType.MALE)
+                .loginProvider(LoginProvider.LOCAL)
+
                 .build();
         // when
+
+        mailService.sendAuthMail(request.getEmail());
+
+        mailService.verifyEmailAuth(request.getEmail(), redisService.getData("email:auth:" + "test@test.com"));
 
         CommonResponse<SignUpDto.Response> response = userService.signUp(request);
         // then
@@ -105,35 +117,13 @@ class UserServiceImplTest {
     @DisplayName("중복 이메일 확인")
     void NotValidEmail() {
         // given
-        SignUpDto.Request request1 = SignUpDto.Request.builder()
-                .email("test2@naver.com")
-                .password("Test@123")
-                .checkPassword("Test@123")
-                .nickname("JI")
-                .name("test")
-                .phone("010-1111-1111")
-                .birth(LocalDate.now())
-                .position(Position.GUARD)
-                .build();
 
-        SignUpDto.Request request2 = SignUpDto.Request.builder()
-                .email("test@naver.com")
-                .password("Test@123")
-                .checkPassword("Test@123")
-                .nickname("JI1234")
-                .name("test4")
-                .phone("010-1111-2222")
-                .birth(LocalDate.now())
-                .position(Position.GUARD)
-                .build();
-
-        userService.signUp(request1);
 
 
         // when
 
         CustomException exception = assertThrows(CustomException.class, () -> {
-            userService.signUp(request2);
+            userService.checkEmail("test2@example.com");
         });
 
 
@@ -164,7 +154,10 @@ class UserServiceImplTest {
                 .nickname("JI")
                 .name("test")
                 .phone("010-1111-1111")
+                .loginProvider(LoginProvider.LOCAL)
+                .address("테스트 주소")
                 .birth(LocalDate.now())
+                .genderType(GenderType.MALE)
                 .position(Position.GUARD)
                 .build();
 
@@ -190,7 +183,9 @@ class UserServiceImplTest {
                 .nickname("JI")
                 .name("test")
                 .phone("010-1111-1111")
+                .loginProvider(LoginProvider.LOCAL)
                 .birth(LocalDate.now())
+                .genderType(GenderType.MALE)
                 .position(Position.GUARD)
                 .build();
 
@@ -209,7 +204,7 @@ class UserServiceImplTest {
     void getUserInfoTest() {
         // given
 
-        TokenDto tokenDto = authService.loginUser("test@example.com", "Test1234!");
+        TokenDto tokenDto = authService.loginUser("test2@example.com", "Test1234!");
 
 
 
