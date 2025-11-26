@@ -1,0 +1,46 @@
+spring:
+  profiles:
+    active: local-test
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  data:
+    redis:
+      host: localhost
+      port: 0   # redis 비활성화
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: dummy-test-client-id
+            client-secret: dummy-test-client-secret
+            redirect-uri: http://localhost/test
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - profile_nickname
+              - account_email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+jwt:
+  secret: dummy-test-secret
+  access-token-expiration: 3600000
+  refresh-token-expiration: 1209600000
