@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local-test
+    active: test
 
   datasource:
     driver-class-name: org.h2.Driver
