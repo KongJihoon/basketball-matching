@@ -8,6 +8,7 @@ import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepo
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.gameUsers.dto.*;
 import com.example.basketballmatching.gameUsers.entity.LevelEntity;
+import com.example.basketballmatching.gameUsers.repository.LevelQueryRepository;
 import com.example.basketballmatching.gameUsers.repository.LevelRepository;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
@@ -45,6 +46,7 @@ public class GameUserServiceImpl implements GameUserService {
     private final UserRepository userRepository;
 
     private final GameRepository gameRepository;
+    private final LevelQueryRepository levelQueryRepository;
 
 
     /**
@@ -56,11 +58,9 @@ public class GameUserServiceImpl implements GameUserService {
         log.info("[경기 참가 신청 시작] gameId : {} userId : {}", gameId, userId);
 
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
-        GameEntity gameEntity = gameRepository.findByGameIdWithLock(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGameWithLock(gameId);
 
         validateParticipantInfo(userEntity, gameEntity);
 
@@ -77,7 +77,7 @@ public class GameUserServiceImpl implements GameUserService {
 
 
         gameEntity.increaseParticipantCount();
-        gameRepository.save(gameEntity);
+
 
 
 
@@ -91,6 +91,7 @@ public class GameUserServiceImpl implements GameUserService {
         return CommonResponse.of("경기 신청이 완료되었습니다.", participantDto);
     }
 
+
     /**
      * 경기 참가 취소
      */
@@ -98,11 +99,9 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional
     public CheckResponse cancelGame(Long userId, Long gameId) {
 
-        GameEntity gameEntity = gameRepository.findByGameIdWithLock(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGameWithLock(gameId);
 
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+        ParticipantGameEntity participantGameEntity = getParticipantGame(userId, gameId);
 
 
 
@@ -123,7 +122,6 @@ public class GameUserServiceImpl implements GameUserService {
 
 
         participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
-        participantGameRepository.save(participantGameEntity);
 
         gameEntity.decreaseParticipantCount();
         gameRepository.save(gameEntity);
@@ -134,6 +132,8 @@ public class GameUserServiceImpl implements GameUserService {
         return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
     }
 
+
+
     /**
      * 현재 예정 경기 조회
      */
@@ -141,8 +141,7 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional(readOnly = true)
     public CommonResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        getUser(userId);
 
 
         List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userId, pageable);
@@ -157,8 +156,7 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional(readOnly = true)
     public CommonResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        getUser(userId);
 
 
         List<LastGameListDto> lastGameList = gameQueryRepository.getLastGameList(userId, pageable);
@@ -175,18 +173,15 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional
     public CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request) {
 
-        GameEntity gameEntity = gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+        GameEntity gameEntity = getGame(gameId);
 
         if (gameEntity.getEndDateTime().isAfter(LocalDateTime.now())) {
             throw new CustomException(NOT_GAME_ENDED);
         }
 
-        ParticipantGameEntity evaluator = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), evaluatorId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+        ParticipantGameEntity evaluator = getParticipantGame(evaluatorId, gameEntity.getGameId());
 
-        ParticipantGameEntity receiver = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, request.getReceiverId())
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+        ParticipantGameEntity receiver = getParticipantGame(request.getReceiverId(), gameId);
 
         if (evaluator.getParticipantGameId().equals(receiver.getParticipantGameId())) {
             throw new CustomException(CANNOT_EVALUATE_SELF);
@@ -214,12 +209,13 @@ public class GameUserServiceImpl implements GameUserService {
         return CheckResponse.of(true, "경기 참가자 평가를 완료하였습니다.");
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
     public CommonResponse<GameUserLevelDto> getMyGameUserLevel(Long userId) {
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        UserEntity userEntity = getUser(userId);
 
         GameUserLevelDto gameUserLevelDto = GameUserLevelDto.fromEntity(userEntity);
 
@@ -227,42 +223,53 @@ public class GameUserServiceImpl implements GameUserService {
         return CommonResponse.of("유저 랭크 조회를 완료하였습니다.", gameUserLevelDto);
     }
 
+
+
+    private UserEntity getUser(Long userId) {
+        return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    private ParticipantGameEntity getParticipantGame(Long userId, Long gameId) {
+        return participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+    }
+
+    private GameEntity getGame(Long gameId) {
+        return gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+    }
+
+
+    private GameEntity getGameWithLock(Long gameId) {
+        return gameRepository.findByGameIdWithLock(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+    }
+
     // 최근 10경기 평균으로 Level측정
     private void updatePlayerLevel(UserEntity receiver) {
 
-        List<GameEntity> recent10GamesByUser = gameQueryRepository.findRecent10GamesByUser(receiver);
+        List<Long> recent10GamesIds = gameQueryRepository.findRecent10GamesByUser(receiver);
 
-        if (recent10GamesByUser.size() < 10) {
+        if (recent10GamesIds.size() < 10) {
             receiver.updateLevel(GameUserLevel.NONE);
             return;
         }
 
-        List<Double> gameAverages = new ArrayList<>();
+        List<GameAvgScoreDto> avgScoreByGames = levelQueryRepository.findAvgScoreByGames(
+                receiver.getUserId(),
+                recent10GamesIds
+        );
 
-        for (GameEntity gameEntity : recent10GamesByUser) {
-
-            List<LevelEntity> evaluations = levelRepository.findByReceiverAndGameEntity(receiver, gameEntity);
-
-            if (evaluations.isEmpty()) {
-                continue;
-            }
-
-            double gameAverage = evaluations.stream()
-                    .mapToInt(LevelEntity::getScore)
-                    .average()
-                    .orElse(0.0);
-
-
-            gameAverages.add(gameAverage);
-        }
-
-        // 10경기 이상의 경기 후 평가를 받은 경기가 5개 미만일시 Level -> NONE
-        if (gameAverages.size() < 5) {
+        if (avgScoreByGames.size() < 5) {
             receiver.updateLevel(GameUserLevel.NONE);
             return;
         }
 
-        double average = gameAverages.stream()
+
+        double average = avgScoreByGames.stream()
+                .map(GameAvgScoreDto::getAvgScore)
+                .filter(Objects::nonNull)
                 .mapToDouble(Double::doubleValue)
                 .average()
                 .orElse(0.0);
