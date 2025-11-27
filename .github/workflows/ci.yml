@@ -26,5 +26,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew clean build
+      # ⚠️ 핵심: test profile 강제 활성화
+      - name: Build with Gradle (Run Tests with test profile)
+        run: ./gradlew clean build -Dspring.profiles.active=test
