@@ -55,8 +55,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-//@Rollback(value = false)
-@ActiveProfiles("test")
 @Transactional
 class GameUserServiceImplTest {
 
