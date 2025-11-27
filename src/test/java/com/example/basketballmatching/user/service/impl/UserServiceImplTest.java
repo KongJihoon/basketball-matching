@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 class UserServiceImplTest {
 
     @Autowired
