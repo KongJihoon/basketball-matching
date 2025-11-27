@@ -1,7 +1,4 @@
 spring:
-  profiles:
-    active: test
-
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -14,11 +11,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        show_sql: true
+        format_sql: true
 
   data:
     redis:
       host: localhost
-      port: 0   # redis 비활성화
+      port: 0
+
+  jwt:
+    secret: dummy-test-secret
+    access-token-expiration: 3600000
+    refresh-token-expiration: 1209600000
 
   security:
     oauth2:
@@ -40,7 +44,3 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-jwt:
-  secret: dummy-test-secret
-  access-token-expiration: 3600000
-  refresh-token-expiration: 1209600000

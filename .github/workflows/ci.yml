@@ -21,11 +21,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
+          cache: gradle
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission for Gradle Wrapper
         run: chmod +x gradlew
 
-      # ⚠️ 핵심: test profile 강제 활성화
-      - name: Build with Gradle (Run Tests with test profile)
-        run: ./gradlew clean build -Dspring.profiles.active=test
+      # ===============================
+      # 🧪 테스트 (test 프로필 강제 적용)
+      # ===============================
+      - name: Run Tests with test profile
+        run: ./gradlew clean test -Dspring.profiles.active=test
+
+      # ===============================
+      # 📦 빌드
+      #  - 테스트 후 빌드 실행
+      # ===============================
+      - name: Build (without tests)
+        run: ./gradlew build -x test
