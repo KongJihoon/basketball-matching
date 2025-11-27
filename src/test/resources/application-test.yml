@@ -1,3 +1,18 @@
+DB_URL: jdbc:h2:mem:testdb
+DB_USERNAME: sa
+DB_PASSWORD:
+
+REDIS_HOST: localhost
+REDIS_PORT: 6379
+
+MAIL_USERNAME: test
+MAIL_PASSWORD: test
+
+JWT_SECRET: dummy-test-secret
+
+KAKAO_CLIENT_ID: dummy-test-client-id
+KAKAO_CLIENT_SECRET: dummy-test-client-secret
+
 spring:
   datasource:
     driver-class-name: org.h2.Driver
