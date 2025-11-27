@@ -46,7 +46,7 @@ class UserServiceImplTest {
     @Autowired
     private UserService userService;
 
-    @Autowired
+    @MockBean
     private MailService mailService;
 
     @MockBean
