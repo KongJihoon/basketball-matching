@@ -18,10 +18,7 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-  jwt:
-    secret: dummy-test-secret
-    access-token-expiration: 3600000
-    refresh-token-expiration: 1209600000
+
 
 
   security:
@@ -44,3 +41,7 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+jwt:
+  secret: dummy-test-secret
+  access-token-expiration: 3600000
+  refresh-token-expiration: 1209600000
