@@ -49,12 +49,13 @@ jobs:
       ## application.yml secret 값 복붙
       - name: Create application.yml
         run: |
-          echo"${{secrets.APPLICATION}}" > src/main/resources/application.yml
+          mkdir -p src/main/resources
+          printf "%s\n" "${{ secrets.APPLICATION }}" > src/main/resources/application.yml
 
       - name: Create application-test.yml
         run: |
-          echo"${{secrets.APPLICATION_TEST}}" > src/main/resources/application-test.yml
-
+          mkdir -p src/test/resources
+          printf "%s\n" "${{ secrets.APPLICATION_TEST }}" > src/test/resources/application-test.yml
       ## Gradle Build를 위한 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
