@@ -57,6 +57,7 @@ public class ParticipantGameEntity extends BaseEntity {
                 .participantGameStatus(ParticipantGameStatus.ACCEPT)
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
+                .acceptDateTime(LocalDateTime.now())
                 .build();
     }
 

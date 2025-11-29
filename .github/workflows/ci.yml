@@ -2,11 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -23,8 +21,15 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
+      - name: Create application.yml
+        run: |
+          mkdir -p src/main/resources
+          printf "%s\n" "${{ secrets.APPLICATION }}" > src/main/resources/application.yml
+          cat src/main/resources/application.yml
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle (skip tests for now)
+
+      - name: Build with tests
         run: ./gradlew clean build -x test

@@ -67,7 +67,7 @@ public class GameQueryRepository {
         return new PageImpl<>(searchGames, pageable, total);
     }
 
-    public List<GameEntity> findRecent10GamesByUser(UserEntity userEntity) {
+    public List<Long> findRecent10GamesByUser(UserEntity userEntity) {
 
         QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
 
@@ -77,9 +77,11 @@ public class GameQueryRepository {
 
         builder.and(participantGameEntity.userEntity.eq(userEntity));
         builder.and(gameEntity.endDateTime.before(LocalDateTime.now()));
+        builder.and(gameEntity.deletedDateTime.isNull());
+        builder.and(participantGameEntity.participantGameStatus.eq(ACCEPT));
 
         return jpaQueryFactory
-                .select(participantGameEntity.gameEntity)
+                .select(gameEntity.gameId)
                 .from(participantGameEntity)
                 .join(participantGameEntity.gameEntity, gameEntity)
                 .where(builder)
