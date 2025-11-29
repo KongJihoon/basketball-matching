@@ -51,11 +51,14 @@ jobs:
         run: |
           mkdir -p src/main/resources
           printf "%s\n" "${{ secrets.APPLICATION }}" > src/main/resources/application.yml
+          cat src/test/resources/application-test.yml
+
 
       - name: Create application-test.yml
         run: |
           mkdir -p src/test/resources
           printf "%s\n" "${{ secrets.APPLICATION_TEST }}" > src/test/resources/application-test.yml
+          cat src/test/resources/application-test.yml
       ## Gradle Build를 위한 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
