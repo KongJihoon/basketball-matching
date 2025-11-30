@@ -21,7 +21,7 @@ RUN ./gradlew clean build -x test --no-daemon
 ###############
 # 2. Runtime Stage
 ###############
-FROM openjdk:17-slim-buster
+FROM FROM eclipse-temurin:17-jre-slim
 
 # 보안 업데이트 (경량화 + 안전)
 RUN apt-get update && \
