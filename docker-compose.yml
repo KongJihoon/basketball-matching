@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - appnet
+
+  backend:
+    image: ${DOCKER_IMAGE}
+    container_name: basketball-backend
+    restart: always
+    depends_on:
+      - redis
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+
+    volumes:
+      - backend_logs:/app/logs
+    networks:
+      - appnet
+
+networks:
+  appnet:
+
+volumes:
+  redis_data:
+  backend_logs:
