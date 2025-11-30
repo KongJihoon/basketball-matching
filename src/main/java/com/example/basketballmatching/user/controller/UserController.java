@@ -69,7 +69,7 @@ public class UserController {
     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/check-email")
     public ResponseEntity<CheckResponse> checkEmail(
-            @Parameter(name = "이메일", example = "test@test.com", required = true)
+            @Parameter(name = "email", example = "test@test.com", required = true)
             @RequestParam String email
     ) {
         CheckResponse checkResponse = userService.checkEmail(email);
@@ -86,7 +86,7 @@ public class UserController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/check-nickname")
     public ResponseEntity<CheckResponse> checkNickname(
-            @Parameter(name = "닉네임", example = "커리", required = true)
+            @Parameter(name = "nickname", example = "커리", required = true)
             @RequestParam String nickname
     ) {
         CheckResponse checkResponse = userService.checkNickname(nickname);
@@ -105,7 +105,7 @@ public class UserController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/send-mail")
     public ResponseEntity<CheckResponse> sendMailAuth(
-            @Parameter(name = "이메일", example = "test@test.com", required = true)
+            @Parameter(name = "email", example = "test@test.com", required = true)
             @RequestParam String email
     ) {
         mailService.sendAuthMail(email);
@@ -171,7 +171,7 @@ public class UserController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/password/send-auth")
     public ResponseEntity<CheckResponse> sendPasswordAuthCode(
-            @Parameter(name = "이메일", example = "test@test.com", required = true)
+            @Parameter(name = "email", example = "test@test.com", required = true)
             @RequestParam String email
     ) {
 

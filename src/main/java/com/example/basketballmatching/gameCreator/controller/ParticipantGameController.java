@@ -73,11 +73,11 @@ public class ParticipantGameController {
     @GetMapping("/search/accept")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CommonResponse<List<AcceptGameUserListDto>>> getAcceptParticipantList(
-            @Parameter(name = "게임아이디", example = "1", required = true)
+            @Parameter(name = "gameId", example = "1", required = true)
             @RequestParam Long gameId,
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
@@ -103,9 +103,9 @@ public class ParticipantGameController {
     @PatchMapping("/accept")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> acceptGameUser (
-            @Parameter(name = "게임 아이디", example = "1", required = true)
+            @Parameter(name = "gameId", example = "1", required = true)
             @RequestParam Long gameId,
-            @Parameter(name = "참가자 아이디", example = "1", required = true)
+            @Parameter(name = "participantId", example = "1", required = true)
             @RequestParam Long participantId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
@@ -129,9 +129,9 @@ public class ParticipantGameController {
     @PatchMapping("/reject")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> rejectGameUser (
-            @Parameter(name = "게임 아이디", example = "1", required = true)
+            @Parameter(name = "gameId", example = "1", required = true)
             @RequestParam Long gameId,
-            @Parameter(name = "참가자 아이디", example = "1", required = true)
+            @Parameter(name = "participantId", example = "1", required = true)
             @RequestParam Long participantId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
@@ -154,9 +154,9 @@ public class ParticipantGameController {
     @PatchMapping("/kickout")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> kickoutGameUser (
-            @Parameter(name = "게임 아이디", example = "1", required = true)
+            @Parameter(name = "gameId", example = "1", required = true)
             @RequestParam Long gameId,
-            @Parameter(name = "참가자 아이디", example = "1", required = true)
+            @Parameter(name = "participantId", example = "1", required = true)
             @RequestParam Long participantId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
@@ -180,7 +180,7 @@ public class ParticipantGameController {
     @PatchMapping("/delete")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> deleteGame (
-            @Parameter(name = "경기 아이디", example = "1L")
+            @Parameter(name = "gameId", example = "1L")
             @RequestParam Long gameId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {

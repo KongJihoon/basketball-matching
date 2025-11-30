@@ -42,9 +42,9 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> createReport(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "신고받은 유저 아이디", example = "1")
+            @Parameter(name = "targetUserId", example = "1")
             @RequestParam Long targetUserId,
-            @Parameter(name = "해당 게임 아이디", example = "1")
+            @Parameter(name = "gameId", example = "1")
             @RequestParam Long gameId,
             @RequestBody @Valid CreateReportDto request) {
 
@@ -63,9 +63,9 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<CommonResponse<Page<ReportListDto>>> getReportUserList(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size) {
 
         PageRequest pageRequest = PageRequest.of(page, size);

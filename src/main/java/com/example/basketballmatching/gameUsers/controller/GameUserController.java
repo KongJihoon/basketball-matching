@@ -43,7 +43,7 @@ public class GameUserController {
     @PostMapping("/apply")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CommonResponse<ApplyGameUserDto>> applyGame(
-            @Parameter(name = "경기 아이디", example = "1")
+            @Parameter(name = "gameId", example = "1")
             @RequestParam Long gameId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
@@ -67,6 +67,7 @@ public class GameUserController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> cancelGame(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @Parameter(name = "gameId", example = "1")
             @RequestParam Long gameId
     ) {
 
@@ -88,9 +89,9 @@ public class GameUserController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CommonResponse<List<CurrentGameListDto>>> getMyCurrentGameList (
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
 
@@ -114,9 +115,9 @@ public class GameUserController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CommonResponse<List<LastGameListDto>>> getMyLastGameList (
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size
     ){
 
@@ -139,7 +140,7 @@ public class GameUserController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> evaluatePlayer(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "평가 경기 아이디", example = "1")
+            @Parameter(name = "gameId", example = "1")
             @PathVariable Long gameId,
             @RequestBody @Valid EvaluatePlayerDto request
             ) {
