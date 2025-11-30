@@ -51,20 +51,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # SSH 키 설정
       - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.EC2_SSH_KEY }}
-          name: id_rsa
-          known_hosts: 'github.com'
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keygen -y -f ~/.ssh/id_rsa > /dev/null
 
-      # EC2에 SSH 접속해 배포 수행
       - name: Deploy on EC2
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd /srv/basketball
-            docker compose pull backend
+
+            # 최신 이미지 Pull
+            docker compose pull
+
+            # 기존 컨테이너 종료
             docker compose down
+
+            # 새로운 컨테이너 실행
             docker compose up -d
+
+            # 상태 확인
+            docker ps
           EOF
