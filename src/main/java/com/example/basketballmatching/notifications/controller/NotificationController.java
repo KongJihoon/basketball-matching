@@ -43,7 +43,7 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<SseEmitter> subscribe(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "Last-Event-ID", description = "유실된 이벤트 복구를 위한 마지막 이벤트 ID")
+            @Parameter(name = "lastEventId", description = "유실된 이벤트 복구를 위한 마지막 이벤트 ID")
             @RequestHeader(value = "lastEventId", required = false, defaultValue = "")
             String lastEventId) {
 
@@ -65,9 +65,9 @@ public class NotificationController {
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CommonResponse<List<NotificationDto>>> getUnreadNotifications(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);

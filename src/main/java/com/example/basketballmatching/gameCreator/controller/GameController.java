@@ -66,6 +66,7 @@ public class GameController {
     schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/details")
     public ResponseEntity<CommonResponse<GameDto>> detailGame(
+            @Parameter(name = "gameId", example = "1")
             @RequestParam Long gameId
     ) {
 
@@ -84,28 +85,28 @@ public class GameController {
     schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/search")
     public ResponseEntity<CommonResponse<Page<SearchGameDto>>> searchGame(
-            @Parameter(name = "경기 날짜", example = "2025-12-02", required = true)
+            @Parameter(name = "date", example = "2025-12-02", required = true)
             @RequestParam @Valid LocalDate date,
 
-            @Parameter(name = "도시 이름", example = "INCHEON")
+            @Parameter(name = "cityName", example = "INCHEON")
             @RequestParam(required = false) CityName cityName,
 
-            @Parameter(name = "경기 형식", example = "THREE_ON_THREE")
+            @Parameter(name = "matchFormat", example = "THREE_ON_THREE")
             @RequestParam(required = false) MatchFormat matchFormat,
 
-            @Parameter(name = "경기 실내외 형식", example = "INDOOR")
+            @Parameter(name = "fieldStatus", example = "INDOOR")
             @RequestParam(required = false) FieldStatus fieldStatus,
 
-            @Parameter(name = "경기 성별 형식", example = "MALE_ONLY")
+            @Parameter(name = "matchGenderType", example = "MALE_ONLY")
             @RequestParam(required = false) MatchGenderType matchGenderType,
 
-            @Parameter(name = "경기 상태", example = "RECRUITING")
+            @Parameter(name = "gameStatus", example = "RECRUITING")
             @RequestParam(required = false) GameStatus gameStatus,
 
-            @Parameter(name = "페이지", example = "0")
+            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(name = "페이지 사이즈", example = "10")
+            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size
     ) {
 
@@ -129,7 +130,7 @@ public class GameController {
     public ResponseEntity<CommonResponse<GameDto>> editGame(
             @RequestBody @Valid EditGameDto request,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "게임 아이디", example = "1")
+            @Parameter(name = "gameId", example = "1")
             @RequestParam Long gameId
     ) {
 
