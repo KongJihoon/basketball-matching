@@ -15,6 +15,593 @@
 ## 1️⃣ ERD
 ![](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/erd01.png?raw=true)
 
+---
+
+
+## 📄 API 명세서
+
+<details>
+  <summary><strong>🙋‍♂️ 유저 API</strong></summary>
+
+  <hr>
+
+  <details>
+    <summary>✅ 회원가입</summary>
+
+   ### [POST] /api/v1/user/signup  
+   <hr>
+
+   ### 🔸 Request
+
+   ```json
+   {
+      "email": "test@test.com",
+      "password": "Test@1234",
+      "checkPassword": "Test@1234",
+      "nickname": "커리",
+      "name": "서장훈",
+      "birth": "2025-12-01",
+      "phone": "010-1111-0000",
+      "address": "서울특별시 강남구",
+      "position": "NONE",
+      "genderType": "MALE",
+      "loginProvider": "LOCAL"
+    }
+   ```
+   ### 🔸 Response (200)
+   
+   ```json
+   {
+      "message" : "회원가입에 성공하였습니다."
+      "data" : {
+         "email": "test@test.com",
+         "nickname": "커리",
+         "name": "서장훈",
+         "birth": "2025-12-01",
+         "phone": "010-1111-0000",
+         "address": "서울특별시 강남구",
+         "position": "NONE",
+         "genderType": "MALE",
+         "userType": "USER",
+         "createdAt": "2025-12-01T11:11:15.614Z"
+         
+      }
+   }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "EMAIL_NOT_VERIFIED",
+         "errorMessage": "이메일 인증을 먼저 진행해주세요.",
+         "details": null
+      }   
+   ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 이메일 중복 확인</summary>
+   
+   ### [POST] /api/v1/user/check-email 
+   
+   <hr>
+   
+   ### 🔸 Query Parameters
+   - **email**: test@test.com
+     
+   ### 🔸 Response (200)
+     
+   ```json
+        {
+           "success" : true,
+           "message" : "사용가능한 이메일입니다."   
+        }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "ALREADY_EXIST_EMAIL",
+         "errorMessage": "이미 존재하는 이메일입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+
+  <details>
+  <summary>✅ 닉네임 중복 확인</summary>
+   
+   ### [POST] /api/v1/user/check-nickname 
+   
+   <hr>
+   
+   ### 🔸 Query Parameters
+   - **nickname**: testNickname 
+     
+   ### 🔸 Response (200)
+     
+   ```json
+        {
+           "success" : true,
+           "message" : "사용가능한 닉네임입니다."   
+        }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "ALREADY_EXIST_NICKNAME",
+         "errorMessage": "이미 존재하는 닉네임입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+  
+  <details>
+  <summary>✅ 회원가입 이메일 전송</summary>
+   
+   ### [POST] /api/v1/user/send-mail
+   
+   <hr>
+   
+   ### 🔸 Query Parameters
+   - **email**: test@test.com
+     
+   ### 🔸 Response (200)
+     
+   ```json
+        {
+           "success" : true,
+           "message" : "이메일 인증번호가 전송되었습니다."   
+        }
+   ```
+   ### 🔸 Response (500)
+   ```json
+      {
+         "statusCode": 500,
+         "errorCode": "INTERNAL_SERVER_ERROR",
+         "errorMessage": "내부 서버 오류입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+  <details>
+  <summary>✅ 회원가입 이메일 인증번호 확인</summary>
+
+   
+   ### [POST] /api/v1/user/verify-email
+
+   <hr>
+
+   ### 🔸 Request Body
+   ```json
+      {
+         "email" : "test@test.com"
+         "code" : "123456"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "이메일 인증에 성공하였습니다."
+      }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "INVALID_CODE",
+         "errorMessage": "유효하지 않은 인증번호입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+  <details>
+  <summary>✅ 회원 정보 조회</summary>
+
+   ### [GET] /api/v1/user/user-info
+
+   <hr>
+
+   **인증된 사용자만 접근 가능 (`@PreAuthorize`)**
+
+   ### 🔸 Response (200)
+
+   ```json
+      {
+        "확인 메시지": "회원정보 조회에 성공하였습니다.",
+        "data": {
+          "userId": 1,
+          "email": "test@test.com",
+          "nickname": "커리",
+          "name": "서장훈",
+          "birth": "2025-12-01",
+          "phone": "010-1111-0000",
+          "address": "서울특별시 강남구",
+          "position": "NONE",
+          "genderType": "MALE",
+          "userType": "USER",
+          "createdAt": "2025-12-01T12:08:57.090Z",
+          "updatedAt": "2025-12-01T12:08:57.090Z"
+         }
+      }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "USER_NOT_FOUND",
+         "errorMessage": "사용자를 찾을 수 없습니다.",
+         "details": null
+      }   
+   ```  
+  </details>
+  <details>
+  <summary>✅ 회원 정보 수정</summary>
+
+   ### [PATCH] /api/v1/user/edit-info
+
+   <hr>
+
+   ### 🔸 Request Body
+   ```json
+      {
+        "nickname": "커리",
+        "phone": "010-1111-0000",
+        "address": "서울특별시 강남구",
+        "genderType": "MALE",
+        "position": "NONE"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         {
+           "확인 메시지": 회원 정보 수정에 성공하였습니다.",
+           "data": {
+             "userId": 1,
+             "email": "test@test.com",
+             "nickname": "커리",
+             "name": "서장훈",
+             "birth": "2025-12-01",
+             "phone": "010-1111-0000",
+             "address": "서울특별시 강남구",
+             "position": "NONE",
+             "genderType": "MALE",
+             "userType": "USER",
+             "createdAt": "2025-12-01T12:11:42.649Z",
+             "updatedAt": "2025-12-01T12:11:42.649Z"
+           }
+         }
+      }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "USER_NOT_FOUND",
+         "errorMessage": "사용자를 찾을 수 없습니다.",
+         "details": null
+      }   
+   ```  
+  </details>
+  <details>
+  <summary>✅ 비밀번호 찾기 인증번호 전송</summary>
+   
+   ### [POST] /api/v1/user/password/send-auth
+   
+   <hr>
+   
+   ### 🔸 Query Parameters
+   - **email**: test@test.com
+     
+   ### 🔸 Response (200)
+     
+   ```json
+        {
+           "success" : true,
+           "message" : "이메일 인증번호가 전송되었습니다."   
+        }
+   ```
+   ### 🔸 Response (500)
+   ```json
+      {
+         "statusCode": 500,
+         "errorCode": "INTERNAL_SERVER_ERROR",
+         "errorMessage": "내부 서버 오류입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+  <details>
+  <summary>✅ 비밀번호 변경 인증번호 확인</summary>
+
+   
+   ### [POST] /api/v1/user/password/verify-code
+
+   <hr>
+
+   ### 🔸 Request Body
+   ```json
+      {
+         "email" : "test@test.com"
+         "code" : "123456"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "이메일 인증에 성공하였습니다."
+      }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "INVALID_CODE",
+         "errorMessage": "유효하지 않은 인증번호입니다.",
+         "details": null
+      }   
+   ```
+  </details>
+  <details>
+  <summary>✅ 비밀번호 찾기 비밀번호 변경</summary>
+
+   ### [PATCH] /api/v1/user/password/reset
+
+   <hr>
+
+   ### 🔸 Request Body
+
+   ```json
+      {
+         "email" : "test@test.com"
+         "password" : "Test@12"
+         "checkPassword" : "Test@12"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "비밀번호 변경을 완료하였습니다."
+      }
+   ```
+
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "EMAIL_NOT_VERIFIED",
+         "errorMessage": "이메일 인증을 먼저 진행해주세요.",
+         "details": null
+      }   
+   ```
+   
+      
+  </details>
+  <details>
+  <summary>✅ 비밀번호 변경</summary>
+
+   ### [PATCH] /api/v1/user/password/change
+
+   <hr>
+
+   ### 🔸 Request Body
+
+   ```json
+      {
+         "currentPassword" : "Test@123"
+         "password" : "Test@12"
+         "checkPassword" : "Test@12"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "비밀번호 변경을 완료하였습니다."
+      }
+   ```
+
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "PASSWORD_NOT_MATCH",
+         "errorMessage": "비밀번호가 일치하지 않습니다.",
+         "details": null
+      }   
+   ```
+   
+      
+  </details>
+  <details>
+  <summary>✅ 회원 탈퇴</summary>
+
+   ### [PATCH] api/v1/user/delete
+
+   **인증된 사용자만 접근 가능 (`@PreAuthorize`)**
+
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "회원탈퇴에 성공하였습니다."
+      
+      }
+   ```
+   ### 🔸 Response (401)
+   ```json
+      {
+         "statusCode": 401,
+         "errorCode": "NOT_FOUND_TOKEN",
+         "errorMessage": "토큰이 존재하지 않습니다.",
+         "details": null
+      }   
+   ```
+   
+  </details>
+
+
+
+</details>
+
+</br>
+
+<details>
+<summary>✍️ 인증 인가</summary>
+
+   <hr>
+
+   <details>
+   <summary>✅ 유저 로그인</summary>
+
+   ### [POST] /api/v1/user/login
+
+   <hr>
+
+   ### 🔸 Request Body
+
+   ```
+      {
+         "email" : "test@test.com",
+         "password" : "Test@12"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```
+      {
+         {
+           "확인 메시지": "로그인에 성공하였습니다.",
+           "data": {
+             "accessToken": "string",
+             "refreshToken": "string",
+             "userDto": {
+               "userId": 1,
+               "email": "test@test.com",
+               "nickname": "커리",
+               "name": "서장훈",
+               "birth": "2025-12-01",
+               "phone": "010-1111-0000",
+               "address": "서울특별시 강남구",
+               "position": "NONE",
+               "genderType": "MALE",
+               "userType": "USER",
+               "createdAt": "2025-12-01T12:32:34.331Z",
+               "updatedAt": "2025-12-01T12:32:34.331Z"
+             }
+           }
+         }
+      }
+   ```
+   ### 🔸 Response (400)
+   ```json
+      {
+         "statusCode": 400,
+         "errorCode": "PASSWORD_NOT_MATCH",
+         "errorMessage": "비밀번호가 일치하지 않습니다.",
+         "details": null
+      }   
+   ```
+   
+   
+   </details>
+   <details>
+   <summary>✅ 유저 로그아웃</summary>
+
+   ### [PATCH] /api/v1/user/logout
+
+   **인증된 사용자만 접근 가능 (`@PreAuthorize`)**
+
+   <hr>
+   
+   ### 🔸 Response (200)
+   ```json
+      {
+         "success" : true,
+         "message" : "로그아웃에 성공하였습니다."
+      
+      }
+   ```
+
+   ### 🔸 Response (401)
+   ```json
+      {
+         "statusCode": 401,
+         "errorCode": "NOT_FOUND_TOKEN",
+         "errorMessage": "토큰이 존재하지 않습니다.",
+         "details": null
+      }   
+   ```
+   
+   
+   </details>
+   <details>
+   <summary>✅ 토큰 재발급</summary>
+
+   ### [POST] /api/v1/user/reissue
+
+   ### 🔸 Request Body
+   ```
+      {
+         "email" : "test@test.com",
+         "refreshToken" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9......"
+      }
+   ```
+
+   ### 🔸 Response (200)
+   ```
+      {
+         {
+           "확인 메시지": "토큰 재발급에 성공하였습니다.",
+           "data": {
+             "accessToken": "string",
+             "refreshToken": "string",
+             "userDto": {
+               "userId": 1,
+               "email": "test@test.com",
+               "nickname": "커리",
+               "name": "서장훈",
+               "birth": "2025-12-01",
+               "phone": "010-1111-0000",
+               "address": "서울특별시 강남구",
+               "position": "NONE",
+               "genderType": "MALE",
+               "userType": "USER",
+               "createdAt": "2025-12-01T12:32:34.331Z",
+               "updatedAt": "2025-12-01T12:32:34.331Z"
+             }
+           }
+         }
+      }
+   ```
+   ### 🔸 Response (401)
+   ```json
+      {
+         "statusCode": 401,
+         "errorCode": "NOT_FOUND_TOKEN",
+         "errorMessage": "토큰이 존재하지 않습니다.",
+         "details": null
+      }   
+   ```
+     
+   </details>
+
+
+</details>
+
+
+---
 
 ## 🛠 기술 스택
 
