@@ -597,6 +597,237 @@
      
    </details>
 
+</details>
+
+<br>
+
+<details>
+<summary>🏀 경기 생성</summary>
+
+  <hr>
+
+  <details>
+  <summary>✅ 경기 생성</summary>
+
+  ### [POST] /api/v1/game/create
+
+  <hr>
+
+  ### 🔸 Request Body
+  ```
+    {
+      "title": "주말 3대3 농구 매치",
+      "content": "강남 체육관에서 가볍게 농구하실 분 모집합니다!",
+      "headCount": 9,
+      "fieldStatus": "INDOOR",
+      "matchFormat": "THREE_ON_THREE",
+      "startDateTime": "2025-12-25T09:30:00",
+      "endDateTime": "2025-12-25T10:30:00",
+      "placeName": "강남농구센터 A코트",
+      "address": "서울특별시 강남구 테헤란로 145",
+      "latitude": 37.498095,
+      "longitude": 127.027610,
+      "matchGenderType": "MALE_ONLY"
+    }
+  ```
+
+  ### Response(200)
+  ```
+    {
+      "message": "경기 생성이 완료되었습니다.",
+      "data": {
+        "gameId": 5,
+        "title": "주말 3대3 농구 매치",
+        "content": "강남 체육관에서 가볍게 농구하실 분 모집합니다!",
+        "headCount": 9,
+        "participantCount": 1,
+        "fieldStatus": "INDOOR",
+        "matchFormat": "THREE_ON_THREE",
+        "gameStatus": "RECRUITING",
+        "startDateTime": "2025-12-26T09:30:00",
+        "placeName": "강남농구센터 A코트",
+        "address": "서울특별시 강남구 테헤란로 145",
+        "latitude": 37.498095,
+        "longitude": 127.02761,
+        "cityName": "SEOUL",
+        "matchGenderType": "MALE_ONLY",
+        "creatorId": 2,
+        "creatorNickname": "test1"
+    }
+
+  ```
+
+  ### Response(400)
+  ```
+    {
+      "statusCode": 400,
+      "errorCode": "PLACE_SCHEDULE_OVERLAP",
+      "errorMessage": "해당 장소에 겹치는 경기가 존재합니다.",
+      "details": null
+    }
+  ```
+
+  </details>
+  <details>
+  <summary>✅ 경기 검색 정렬</summary>
+
+  ### [GET] /api/v1/game/search
+
+  <hr>
+
+  ### 🔸 Query Parameters
+   - **date** : 2025-12-02 (required)
+   - **cityName** : INCHEON
+   - **matchFormat** : FIVE_ON_FIVE
+   - **fieldStatus** : INDOOR
+   - **matchGenderType** : MALE_ONLY
+   - **gameStatus** : RECQUITING
+   - **page** : 0
+   - **size** : 10
+
+  ### 🔸 Response(200)
+  ```
+    {
+      "message": "경기 검색이 완료되었습니다.",
+      "data": {
+        "totalPages": 0,
+        "totalElements": 0,
+        "pageable": {
+          "pageNumber": 0,
+          "pageSize": 0,
+          "paged": true,
+          "unpaged": true,
+          "offset": 0,
+          "sort": [
+            {
+              "direction": "string",
+              "nullHandling": "string",
+              "ascending": true,
+              "property": "string",
+              "ignoreCase": true
+            }
+          ]
+        },
+        "first": true,
+        "last": true,
+        "numberOfElements": 0,
+        "size": 0,
+        "content": [
+          {
+            "gameId": 0,
+            "title": "string",
+            "address": "string",
+            "startDateTime": "2025-12-02T11:05:17.400Z",
+            "matchGenderType": "MALE_ONLY",
+            "matchFormat": "FIVE_ON_FIVE",
+            "gameStatus": "RECRUITING"
+          }
+        ],
+        "number": 0,
+        "sort": [
+          {
+            "direction": "string",
+            "nullHandling": "string",
+            "ascending": true,
+            "property": "string",
+            "ignoreCase": true
+          }
+        ],
+        "empty": true
+      }
+    }
+  ```
+  
+
+    
+  </details>  
+
+  <details>
+  <summary>✅ 경기 상세 조회</summary>
+
+  ### [GET] /api/v1/game/details
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+
+  ### ✅ Response (200)
+  ```
+    {
+      "message": "경기 상세조회에 성공하였습니다.",
+      "data": {
+        "gameId": 5,
+        "title": "주말 3대3 농구 매치",
+        "content": "강남 체육관에서 가볍게 농구하실 분 모집합니다!",
+        "headCount": 9,
+        "participantCount": 1,
+        "fieldStatus": "INDOOR",
+        "matchFormat": "THREE_ON_THREE",
+        "gameStatus": "RECRUITING",
+        "startDateTime": "2025-12-26T09:30:00",
+        "endDateTime": "2025-12-26T10:30:00",
+        "placeName": "강남농구센터 A코트",
+        "address": "서울특별시 강남구 테헤란로 145",
+        "latitude": 37.498095,
+        "longitude": 127.02761,
+        "cityName": "SEOUL",
+        "matchGenderType": "MALE_ONLY",
+        "creatorId": 2,
+        "creatorNickname": "test1"
+      }
+    }
+  ```
+
+    
+  </details>
+  <details>
+  <summary>✅ 경기 수정</summary>  
+
+  ### [PATCH] /api/v1/game/edit
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+
+  ### 🔸 Request Body
+  ```
+    {
+      "title": "서울 xx체육관에서 3대3 인원 모집",
+      "detail": "3대3인원 모집합니다.",
+      "headCount": 6,
+      "matchFormat": "THREE_ON_THREE"
+    }
+  ```
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "경기 수정이 완료되었습니다.",
+      "data": {
+        "gameId": 5,
+        "title": "주말 3대3 농구 매치",
+        "content": "강남 체육관에서 가볍게 농구하실 분 모집합니다!",
+        "headCount": 9,
+        "participantCount": 1,
+        "fieldStatus": "INDOOR",
+        "matchFormat": "THREE_ON_THREE",
+        "gameStatus": "RECRUITING",
+        "startDateTime": "2025-12-26T09:30:00",
+        "endDateTime": "2025-12-26T10:30:00",
+        "placeName": "강남농구센터 A코트",
+        "address": "서울특별시 강남구 테헤란로 145",
+        "latitude": 37.498095,
+        "longitude": 127.02761,
+        "cityName": "SEOUL",
+        "matchGenderType": "MALE_ONLY",
+        "creatorId": 2,
+        "creatorNickname": "test1"
+      }
+    }
+  ```
+  
+    
+  </details>
 
 </details>
 
