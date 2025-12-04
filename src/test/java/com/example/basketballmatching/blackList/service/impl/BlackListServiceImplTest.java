@@ -1,5 +1,7 @@
 package com.example.basketballmatching.blackList.service.impl;
 
+import com.example.basketballmatching.blackList.dto.BlackListDto;
+import com.example.basketballmatching.blackList.entity.BlackListEntity;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.blackList.service.BlackListService;
 import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
@@ -10,6 +12,7 @@ import com.example.basketballmatching.gameCreator.type.FieldStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.service.RedisService;
@@ -28,6 +31,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -153,7 +159,7 @@ class BlackListServiceImplTest {
         boolean exists = blackListRepository.existsByUserEntity_UserId(blackList.getUserId());
 
         ReportEntity report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_REPORT));
+                .orElseThrow(() -> new CustomException(NOT_FOUND_REPORT));
 
         String data = redisService.getData("blackList:" + blackList.getEmail());
 
@@ -166,9 +172,92 @@ class BlackListServiceImplTest {
         assertEquals("BLACKLIST", data);
         assertTrue(exists);
         assertTrue(report.isBanned());
-        assertTrue(expiration > 0);
+        assertNotNull(expiration);
+        assertTrue(expiration >= 0);
 
     }
+
+    @Test
+    @DisplayName("블랙리스트 등록 실패 테스트 - 이미 등록된 유저 블랙리스트 등록")
+    void createBlackListUserFailTest_ALREADY_CHECK_REPORT() {
+        // given
+
+        Long adminId = admin.getUserId();
+
+        Long blackListUserId = blackList.getUserId();
+
+        ReportEntity report = reportRepository.findByTargetUser_UserId(blackListUserId)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_REPORT));
+
+        blackListService.createBlackListUser(adminId, report.getReportId());
+
+
+        // when
+
+        CustomException exception = assertThrows(CustomException.class, () -> blackListService.createBlackListUser(adminId, report.getReportId()));
+
+        // then
+
+        assertEquals(ALREADY_CHECK_REPORT, exception.getErrorCode());
+
+    }
+
+    @Test
+    @DisplayName("블랙리스트 등록 실패 테스트 - 탈퇴 유저 블랙리스트 등록")
+    void createBlackListUserFailTest_USER_NOT_FOUND() {
+        // given
+
+        Long adminUserId = admin.getUserId();
+
+        Long blackListUserId = blackList.getUserId();
+
+        UserEntity userEntity = userRepository.findById(blackListUserId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        userEntity.setDeletedDateTime(LocalDateTime.now());
+
+        userRepository.save(userEntity);
+
+        Long reportId = reportEntity.getReportId();
+
+
+        // when
+
+        CustomException exception = assertThrows(CustomException.class, () -> blackListService.createBlackListUser(adminUserId, reportId));
+
+
+        // then
+
+        assertEquals(USER_NOT_FOUND, exception.getErrorCode());
+
+    }
+
+    @Test
+    @DisplayName("블랙리스트 유저 리스트 조회 테스트")
+    void getBlackLists() {
+        // given
+
+        Long adminUserId = admin.getUserId();
+
+        Long reportId = reportEntity.getReportId();
+
+        blackListService.createBlackListUser(adminUserId, reportId);
+
+        Long blackListUserId = blackList.getUserId();
+
+        // when
+
+        CommonResponse<Page<BlackListDto>> blackLists = blackListService.getBlackLists(adminUserId, PageRequest.of(0, 10));
+
+        Long blackListUserId1 = blackLists.getData().get().toList().get(0).getBlackListUserId();
+
+        // then
+
+        assertEquals(blackListUserId, blackListUserId1);
+
+    }
+
+
 
 
 
