@@ -13,7 +13,7 @@
 
 ---
 ## 1️⃣ ERD
-![](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/erd01.png?raw=true)
+![](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/ERD02.png?raw=true)
 
 ---
 
