@@ -458,7 +458,7 @@
 </br>
 
 <details>
-<summary>✍️ 인증 인가</summary>
+<summary>✍️ 인증 인가 API</summary>
 
    <hr>
 
@@ -602,7 +602,7 @@
 <br>
 
 <details>
-<summary>🏀 경기 생성</summary>
+<summary>🏀 경기 생성 API</summary>
 
   <hr>
 
@@ -786,6 +786,8 @@
 
   ### [PATCH] /api/v1/game/edit
 
+  <hr>
+
   ### 🔸 Query Parameters
   - **gameId** : 1
 
@@ -831,6 +833,583 @@
 
 </details>
 
+<br>
+
+<details>
+<summary>🏀 경기 참가 API</summary>  
+
+  <hr>
+
+  <details>
+  <summary>✅ 경기 참가 신청자 조회</summary>
+
+  ### [GET] /api/game/creator/apply
+
+  <hr>
+  
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+  - **page** : 0
+  - **size** : 10
+
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "경기 신청자 조회가 완료되었습니다.",
+      "data": [
+        {
+          "participantId": 0,
+          "nickname": "커리",
+          "genderType": "MALE",
+          "position": "NONE",
+          "birth": "2025-12-04"
+        }
+      ]
+    }
+  ```
+  </details>
+  <details>
+  <summary>✅ 경기 신청 수락</summary>
+
+  ### [PATCH] /api/v1/game/creator/accept
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+  - **participantId** : 1
+
+  ### 🔸 Response (200)
+  ```
+      {
+        "success": true,
+        "message": "경기 수락이 완료되었습니다."
+      }
+  ```
+    
+  </details>
+  
+  <details>
+  <summary>✅ 경기 참가 수락자 조회</summary>
+
+  ### [GET] /api/v1/game/creator/search/accept
+
+  <hr>
+
+  
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+  - **page** : 0
+  - **size** : 10
+
+
+    ### 🔸 Response (200)
+    ```
+      {
+        "message": "경기 신청자 조회가 완료되었습니다.",
+        "data": [
+          {
+            "participantId": 0,
+            "nickname": "커리",
+            "genderType": "MALE",
+            "position": "NONE",
+            "birth": "2025-12-04"
+          }
+        ]
+      }
+    ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 경기 수락자 강퇴</summary>
+
+  ### [PATCH] /api/v1/game/creator/kickout
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+  - **participantId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "참가자 강퇴를 완료하였습니다."
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 경기 신청 거절</summary>
+
+  ### [PATCH] /api/v1/game/creator/reject
+
+  <hr>
+    
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+  - **participantId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "경기 거절을 완료하였습니다."
+    }
+  ```
+  
+    
+  </details>
+
+  <details>
+  <summary>✅ 경기 삭제</summary>
+
+  ### [PATCH] /api/v1/game/creator/delete
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "경기 삭제가 완료되었습니다."
+    }
+  ```
+  
+    
+  </details>
+
+</details>
+
+<br>
+
+<details>
+<summary>⛹️‍♂️ 경기 참가자 API</summary>
+
+  <hr>
+
+  <details>
+  <summary>✅ 경기 참가</summary>
+
+  ### [POST] /api/v1/game/user/apply
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "경기 신청이 완료되었습니다.",
+      "data": {
+        "userId": 0,
+        "gameId": 0,
+        "gameAddress": "국민체육센터",
+        "participantGameStatus": "APPLY",
+        "createdDateTime": "2025-12-04T09:54:28.476Z"
+      }
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 경기 참가 취소</summary>
+
+  ### [PATCH] /api/v1/game/cancel
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **gameId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "경기 취소가 완료되었습니다."
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 현재 예정 경기 조회</summary>
+
+  ### [GET] /api/v1/game/user/current-game
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **page** : 0
+  - **size** : 10
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "확인 메시지": "현재 예정된 게임 조회가 완료되었습니다.",
+      "data": [
+        {
+          "gameId": 0,
+          "title": "인천 서구 5대5 경기 모집",
+          "address": "인천광역시 계양구",
+          "cityName": "INCHEON",
+          "matchFormat": "FIVE_ON_FIVE",
+          "matchGenderType": "MALE_ONLY",
+          "startDateTime": "2025-12-04T10:02:25.183Z",
+          "participantGameStatus": "APPLY"
+        }
+      ]
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 지난 경기 조회</summary>
+
+  ### [GET] /api/v1/game/user/last-game
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **page** : 0
+  - **size** : 10
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "확인 메시지": "지난 게임 조회가 완료되었습니다.",
+      "data": [
+        {
+          "gameId": 0,
+          "title": "인천 서구 5대5 경기 모집",
+          "address": "인천광역시 계양구",
+          "cityName": "INCHEON",
+          "matchFormat": "FIVE_ON_FIVE",
+          "matchGenderType": "MALE_ONLY",
+          "startDateTime": "2025-12-04T10:02:25.183Z",
+          "participantGameStatus": "APPLY"
+        }
+      ]
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 참가자 실력 평가</summary>
+
+  ### [POST] /api/v1/game/user/evaluate/{gameId}
+
+  <hr>
+
+  ### 🔸 Path Variable
+  - **gameId** : 1
+
+  ### 🔸 RequestBody
+  ```
+    {
+      "receiverId" : 1,
+      "score" : 5
+    }
+  ```
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "경기 참가자 평가를 완료하였습니다."
+    }
+  ```
+  
+    
+  </details>
+
+  <details>
+  <summary>✅ 유저 랭크 조회</summary>  
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "유저 랭크 조회를 완료하였습니다.",
+      "data": {
+        "userId": 0,
+        "nickname": "커리",
+        "gameUserLevel": "SEMI_PRO"
+      }
+    }
+  ```
+  </details>
+  
+</details>
+
+<br>
+
+<details>
+<summary>💡 알림 API</summary>
+
+  <hr>
+
+  <details>
+  <summary>✅ 알림 구독(SSE)</summary>
+
+  <hr>
+
+  ### [GET] /api/v1/notification/subscribe
+
+  ### 🔸 Header
+  - **lastEventId**
+     - 'String'
+     - 마지막으로 수신한 이벤트 ID
+     - 재연결 시 유실된 이벤트로부터 다시 전송하기 위해 사용
+
+  ### 🔸 Response (200)
+  ```text
+    {
+      id : 12
+      event : notification
+      data : {
+        "timeout" : 0
+      }
+    }
+  ```
+  </details>
+
+  <details>
+  <summary>✅ 읽지 않은 알림 조회</summary>
+
+  ### [GET] /api/v1/notification/unread-notification
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **page** : 0
+  - **size** : 10
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "현재 읽지 않은 알림 조회에 성공하였습니다.",
+      "data": [
+        {
+          "notificationId": 0,
+          "notificationType": "KICKED_OUT",
+          "content": "",
+          "createAt": "2025-12-04T10:30:58.430Z"
+        }
+      ]
+    }
+  ```
+    
+  </details>
+  
+  
+</details>
+
+<br>
+
+<details>
+<summary>📢 유저 신고 API</summary>
+
+  <hr>
+
+  <details>
+  <summary>✅ 유저 신고 등록</summary>
+
+  ### [POST] /api/v1/report
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **targetUserId** : 1
+  - **gameId** : 1
+
+  ### 🔸 Request Body
+  ```
+    {
+      "reportType": "POOR_SPORTSMANSHIP",
+      "content": "비매너 행위"
+    }
+  ```
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "해당 유저 신고를 완료하였습니다."
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 신고 받은 유저 리스트 조회</summary>
+
+  ### [GET] /api/v1/report/list
+
+  <hr>
+  
+  ### 🔸 Query Parameters
+  - **page** : 0
+  - **size** : 10
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "확인 메시지": "신고목록 조회를 완료하였습니다.",
+      "data": {
+        "totalPages": 0,
+        "totalElements": 0,
+        "pageable": {
+          "pageSize": 0,
+          "pageNumber": 0,
+          "paged": true,
+          "unpaged": true,
+          "offset": 0,
+          "sort": [
+            {
+              "direction": "string",
+              "nullHandling": "string",
+              "ascending": true,
+              "property": "string",
+              "ignoreCase": true
+            }
+          ]
+        },
+        "numberOfElements": 0,
+        "first": true,
+        "last": true,
+        "size": 0,
+        "content": [
+          {
+            "reportId": 0,
+            "reportUserId": 0,
+            "reportedUserId": 0,
+            "reportedUserNickname": "string",
+            "reportType": "POOR_SPORTSMANSHIP",
+            "content": "string",
+            "reportedDateTime": "2025-12-04T10:42:35.320Z"
+          }
+        ],
+        "number": 0,
+        "sort": [
+          {
+            "direction": "string",
+            "nullHandling": "string",
+            "ascending": true,
+            "property": "string",
+            "ignoreCase": true
+          }
+        ],
+        "empty": true
+      }
+    }
+  ```
+  </details>
+
+
+  
+</details>
+
+<br>
+
+<details>
+<summary>☠️ 블랙리스트 API</summary>
+
+  <hr>
+  
+  <details>
+  <summary>✅ 블랙리스트 등록</summary>  
+
+  ### [POST] /api/v1/admin/blacklist/create
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **reportId** : 1
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "success": true,
+      "message": "신고 유저 블랙리스트 등록에 성공하였습니다."
+    }
+  ```
+    
+  </details>
+
+  <details>
+  <summary>✅ 블랙리스트 유저 리스트 조회</summary>
+
+  ### [GET] /api/v1/admin/blacklist/list
+
+  <hr>
+
+  ### 🔸 Query Parameters
+  - **page** : 0
+  - **size** : 10
+
+  ### 🔸 Response (200)
+  ```
+    {
+      "message": "블랙리스트 유저 조회에 성공하였습니다.",
+      "data": {
+        "totalPages": 0,
+        "totalElements": 0,
+        "pageable": {
+          "pageSize": 0,
+          "pageNumber": 0,
+          "paged": true,
+          "unpaged": true,
+          "offset": 0,
+          "sort": [
+            {
+              "direction": "string",
+              "nullHandling": "string",
+              "ascending": true,
+              "property": "string",
+              "ignoreCase": true
+            }
+          ]
+        },
+        "numberOfElements": 0,
+        "first": true,
+        "last": true,
+        "size": 0,
+        "content": [
+          {
+            "blackListUserId": 0,
+            "bannedDateTime": "2025-12-04T10:51:11.337Z"
+          }
+        ],
+        "number": 0,
+        "sort": [
+          {
+            "direction": "string",
+            "nullHandling": "string",
+            "ascending": true,
+            "property": "string",
+            "ignoreCase": true
+          }
+        ],
+        "empty": true
+      }
+    }
+  ```
+
+  
+  </details>
+  
+</details>
 
 ---
 
