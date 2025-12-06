@@ -17,6 +17,8 @@ public interface UserService {
     CheckResponse checkNickname(String nickname);
     CommonResponse<UserDto> getUserInfo(Long userId);
 
+
+
     CommonResponse<UserDto> editUserInfo(Long userId, EditUserDto editUserDto);
 
     CheckResponse verifyPasswordCode(String email, String code);

@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedisService {
 
+
+
     private final RedisTemplate<String, String> redisTemplate;
 
     public void setDataExpireMinutes(String key, String value, Long expiredTime) {
@@ -35,6 +37,7 @@ public class RedisService {
         valueOperations.set(key, value, Duration.ofDays(days));
 
     }
+
 
 
     public String getData(String key) {

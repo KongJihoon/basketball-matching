@@ -48,7 +48,7 @@ public class BlackListServiceImpl implements BlackListService {
     public CheckResponse createBlackListUser(Long userId, Long reportId) {
 
         // 관리자 존재 여부
-        userRepository.findById(userId)
+        userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         // 신고 내역 존재 여부
@@ -122,7 +122,7 @@ public class BlackListServiceImpl implements BlackListService {
     }
 
     private UserEntity getUser(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
