@@ -63,7 +63,7 @@ public class GameUserController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/cancel")
+    @PatchMapping("/cancel")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> cancelGame(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,

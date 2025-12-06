@@ -137,7 +137,7 @@ public class UserController {
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/user-info")
-    @PreAuthorize("hasAnyRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<CommonResponse<UserDto>> getUserInfo(@AuthenticationPrincipal UserInfoDetails userInfoDetails) {
 
         CommonResponse<UserDto> userInfo = userService.getUserInfo(userInfoDetails.getUserEntity().getUserId());

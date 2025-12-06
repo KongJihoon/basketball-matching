@@ -5,8 +5,8 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
@@ -20,6 +20,7 @@ import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ import java.util.Objects;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
-import static com.example.basketballmatching.notifications.type.NotificationType.*;
+import static com.example.basketballmatching.notifications.type.NotificationType.DELETE_GAME;
 
 @Service
 @RequiredArgsConstructor
@@ -44,12 +45,15 @@ public class UserServiceImpl implements UserService {
 
     private final RedisService redisService;
 
+    private final UserCacheService userCacheService;
+
     private final TokenProvider tokenProvider;
 
     private final ParticipantGameRepository participantGameRepository;
     private final GameRepository gameRepository;
     private final NotificationService notificationService;
     private final GameQueryRepository gameQueryRepository;
+
 
 
     /**
@@ -122,15 +126,16 @@ public class UserServiceImpl implements UserService {
      * 회원 정보 조회
      */
     @Override
+    @Transactional
     public CommonResponse<UserDto> getUserInfo(Long userId) {
 
-        UserEntity userEntity = getUser(userId);
+        log.info("[유저 정보 조회 시작] userId : {}", userId);
 
-        UserDto userDto = UserDto.fromEntity(userEntity);
-
+        UserDto userDto = userCacheService.getUserDtoCached(userId);
 
         return CommonResponse.of("회원정보 조회에 성공하였습니다.", userDto);
     }
+
 
 
 
@@ -139,6 +144,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "userDto", key = "#userId")
     public CommonResponse<UserDto> editUserInfo(Long userId, EditUserDto editUserDto) {
 
         log.info("[유저 회원정보 수정 시작 : {}]", userId);
@@ -250,6 +256,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "userDto", key = "#userId")
     public CheckResponse deleteUser(Long userId, String token) {
 
         UserEntity userEntity = getUser(userId);
