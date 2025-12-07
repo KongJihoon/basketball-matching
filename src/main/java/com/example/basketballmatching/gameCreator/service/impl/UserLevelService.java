@@ -5,7 +5,6 @@ import com.example.basketballmatching.gameUsers.dto.GameAvgScoreDto;
 import com.example.basketballmatching.gameUsers.repository.LevelQueryRepository;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

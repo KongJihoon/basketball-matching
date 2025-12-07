@@ -95,20 +95,22 @@ public class GameQueryRepository {
 
         QParticipantGameEntity participantGame = QParticipantGameEntity.participantGameEntity;
 
-        BooleanBuilder builder = new BooleanBuilder();
+        QGameEntity gameEntity = QGameEntity.gameEntity;
 
         LocalDateTime now = LocalDateTime.now();
 
-        builder.and(participantGame.userEntity.userId.eq(userId));
-        builder.and(participantGame.participantGameStatus.in(ACCEPT, APPLY));
-        builder.and(participantGame.gameEntity.startDateTime.after(now));
 
 
         List<ParticipantGameEntity> gameEntities = jpaQueryFactory
                 .select(participantGame)
                 .from(participantGame)
-                .where(builder)
-                .orderBy(participantGame.gameEntity.startDateTime.asc())
+                .join(participantGame.gameEntity, gameEntity)
+                .fetchJoin()
+                .where(
+                        participantGame.userEntity.userId.eq(userId),
+                        participantGame.participantGameStatus.in(ACCEPT, APPLY),
+                        participantGame.gameEntity.startDateTime.after(now))
+                .orderBy(gameEntity.startDateTime.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -122,20 +124,23 @@ public class GameQueryRepository {
     public List<LastGameListDto> getLastGameList(Long userId, Pageable pageable) {
 
         QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
-
-        BooleanBuilder builder = new BooleanBuilder();
+        QGameEntity gameEntity = QGameEntity.gameEntity;
 
         LocalDateTime now = LocalDateTime.now();
 
-        builder.and(participantGameEntity.userEntity.userId.eq(userId));
-        builder.and(participantGameEntity.participantGameStatus.eq(ACCEPT));
-        builder.and(participantGameEntity.gameEntity.endDateTime.before(now));
+
 
         List<ParticipantGameEntity> lastGameList = jpaQueryFactory
                 .select(participantGameEntity)
                 .from(participantGameEntity)
-                .where(builder)
-                .orderBy(participantGameEntity.gameEntity.endDateTime.desc())
+                .join(participantGameEntity.gameEntity, gameEntity)
+                .fetchJoin()
+                .where(
+                        participantGameEntity.userEntity.userId.eq(userId),
+                        participantGameEntity.participantGameStatus.eq(ACCEPT),
+                        participantGameEntity.gameEntity.endDateTime.before(now)
+                )
+                .orderBy(gameEntity.endDateTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
