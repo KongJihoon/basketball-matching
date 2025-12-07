@@ -6,14 +6,13 @@ import com.example.basketballmatching.gameCreator.repository.GameQueryRepository
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
-import com.example.basketballmatching.gameUsers.dto.*;
-import com.example.basketballmatching.gameUsers.entity.LevelEntity;
-import com.example.basketballmatching.gameUsers.repository.LevelQueryRepository;
-import com.example.basketballmatching.gameUsers.repository.LevelRepository;
+import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
+import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
+import com.example.basketballmatching.gameUsers.dto.GameUserLevelDto;
+import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
-import com.example.basketballmatching.gameUsers.type.GameUserLevel;
-import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,12 +39,10 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final GameQueryRepository gameQueryRepository;
 
-    private final LevelRepository levelRepository;
 
     private final UserRepository userRepository;
 
     private final GameRepository gameRepository;
-    private final LevelQueryRepository levelQueryRepository;
 
 
     /**
@@ -166,48 +162,6 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
-    /**
-     * 경기 참가자 평가
-     */
-    @Override
-    @Transactional
-    public CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request) {
-
-        GameEntity gameEntity = getGame(gameId);
-
-        if (gameEntity.getEndDateTime().isAfter(LocalDateTime.now())) {
-            throw new CustomException(NOT_GAME_ENDED);
-        }
-
-        ParticipantGameEntity evaluator = getParticipantGame(evaluatorId, gameEntity.getGameId());
-
-        ParticipantGameEntity receiver = getParticipantGame(request.getReceiverId(), gameId);
-
-        if (evaluator.getParticipantGameId().equals(receiver.getParticipantGameId())) {
-            throw new CustomException(CANNOT_EVALUATE_SELF);
-        }
-
-        boolean exists = levelRepository.existsByGameEntity_GameIdAndEvaluator_UserIdAndReceiver_UserId(gameId, evaluator.getUserEntity().getUserId(), receiver.getUserEntity().getUserId());
-
-        if (exists) {
-            throw new CustomException(ALREADY_EVALUATED);
-        }
-
-        if (request.getScore()< 1 || request.getScore() > 5) {
-            throw new CustomException(INVALID_LEVEL_SCORE);
-        }
-
-        LevelEntity levelEntity = EvaluatePlayerDto.toEntity(evaluator.getUserEntity(), receiver.getUserEntity(), gameEntity, request.getScore());
-
-
-        levelRepository.save(levelEntity);
-
-        updatePlayerLevel(receiver.getUserEntity());
-
-        userRepository.save(receiver.getUserEntity());
-
-        return CheckResponse.of(true, "경기 참가자 평가를 완료하였습니다.");
-    }
 
 
 
@@ -246,41 +200,6 @@ public class GameUserServiceImpl implements GameUserService {
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
     }
 
-    // 최근 10경기 평균으로 Level측정
-    private void updatePlayerLevel(UserEntity receiver) {
-
-        List<Long> recent10GamesIds = gameQueryRepository.findRecent10GamesByUser(receiver);
-
-        if (recent10GamesIds.size() < 10) {
-            receiver.updateLevel(GameUserLevel.NONE);
-            return;
-        }
-
-        List<GameAvgScoreDto> avgScoreByGames = levelQueryRepository.findAvgScoreByGames(
-                receiver.getUserId(),
-                recent10GamesIds
-        );
-
-        if (avgScoreByGames.size() < 5) {
-            receiver.updateLevel(GameUserLevel.NONE);
-            return;
-        }
-
-
-        double average = avgScoreByGames.stream()
-                .map(GameAvgScoreDto::getAvgScore)
-                .filter(Objects::nonNull)
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0.0);
-
-
-        GameUserLevel newLevel = GameUserLevel.fromScore(average);
-
-
-        receiver.updateLevel(newLevel);
-
-    }
 
 
 

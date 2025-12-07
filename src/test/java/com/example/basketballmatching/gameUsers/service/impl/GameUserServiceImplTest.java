@@ -6,6 +6,7 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.gameCreator.service.EvaluationService;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
 import com.example.basketballmatching.gameCreator.type.FieldStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
@@ -88,6 +89,8 @@ class GameUserServiceImplTest {
     private GameQueryRepository gameQueryRepository;
     @Autowired
     private ParticipantGameService participantGameService;
+    @Autowired
+    private EvaluationService evaluationService;
 
     @BeforeEach
     void setUp() {
@@ -615,7 +618,7 @@ class GameUserServiceImplTest {
         for (int i = 0; i < gameIds.size(); i++) {
 
 
-            gameUserService.evaluatePlayer(gameIds.get(i), creatorId, evaluator);
+            evaluationService.evaluatePlayer(gameIds.get(i), creatorId, evaluator);
 
         }
 
