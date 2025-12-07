@@ -23,6 +23,7 @@ public class LevelEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long levelId;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluator_id")
     private UserEntity evaluator;

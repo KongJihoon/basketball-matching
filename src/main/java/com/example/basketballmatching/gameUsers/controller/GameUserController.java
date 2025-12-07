@@ -1,6 +1,8 @@
 package com.example.basketballmatching.gameUsers.controller;
 
 
+import com.example.basketballmatching.gameCreator.service.EvaluationService;
+import com.example.basketballmatching.gameCreator.service.impl.UserLevelService;
 import com.example.basketballmatching.gameUsers.dto.*;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -31,6 +33,7 @@ import java.util.List;
 public class GameUserController {
 
     private final GameUserService gameUserService;
+    private final EvaluationService evaluationService;
 
     /**
      * 경기 참가
@@ -145,7 +148,7 @@ public class GameUserController {
             @RequestBody @Valid EvaluatePlayerDto request
             ) {
 
-        CheckResponse checkResponse = gameUserService.evaluatePlayer(gameId, userInfoDetails.getUserEntity().getUserId(), request);
+        CheckResponse checkResponse = evaluationService.evaluatePlayer(gameId, userInfoDetails.getUserEntity().getUserId(), request);
 
 
         return ResponseEntity.ok(checkResponse);

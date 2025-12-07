@@ -18,7 +18,6 @@ public interface GameUserService {
 
     CommonResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable);
 
-    CheckResponse evaluatePlayer(Long gameId, Long evaluatorId, EvaluatePlayerDto request);
 
     CommonResponse<GameUserLevelDto> getMyGameUserLevel(Long userId);
 }
