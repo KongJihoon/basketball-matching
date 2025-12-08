@@ -55,7 +55,8 @@ public class RedisCacheConfig {
         cacheConfig.put("userDto", defaultConfig
                         .serializeValuesWith(userDtoValuePair)
                 .entryTtl(Duration.ofMinutes(10)));
-
+        cacheConfig.put("myCurrentGameList", defaultConfig.entryTtl(Duration.ofMinutes(2)));
+        cacheConfig.put("myLastGameList", defaultConfig.entryTtl(Duration.ofMinutes(5)));
 
         return RedisCacheManager.builder(cf)
                 .cacheDefaults(defaultConfig)
@@ -64,5 +65,7 @@ public class RedisCacheConfig {
 
 
     }
+
+
 
 }
