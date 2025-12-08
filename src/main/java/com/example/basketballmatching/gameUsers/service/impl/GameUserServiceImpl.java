@@ -19,6 +19,7 @@ import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,8 @@ public class GameUserServiceImpl implements GameUserService {
     private final ParticipantGameRepository participantGameRepository;
 
     private final GameQueryRepository gameQueryRepository;
+
+    private final GameUserCacheService gameUserCacheService;
 
 
     private final UserRepository userRepository;
@@ -93,6 +96,7 @@ public class GameUserServiceImpl implements GameUserService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse cancelGame(Long userId, Long gameId) {
 
         GameEntity gameEntity = getGameWithLock(gameId);
@@ -140,7 +144,7 @@ public class GameUserServiceImpl implements GameUserService {
         getUser(userId);
 
 
-        List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userId, pageable);
+        List<CurrentGameListDto> currentGameList = gameUserCacheService.getMyCurrentGameListCached(userId, pageable);
 
         return CommonResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
     }
@@ -155,8 +159,7 @@ public class GameUserServiceImpl implements GameUserService {
         getUser(userId);
 
 
-        List<LastGameListDto> lastGameList = gameQueryRepository.getLastGameList(userId, pageable);
-
+        List<LastGameListDto> lastGameList = gameUserCacheService.getMyLastGameListCached(userId, pageable);
 
         return CommonResponse.of("지난 게임 조회가 완료되었습니다.", lastGameList);
     }

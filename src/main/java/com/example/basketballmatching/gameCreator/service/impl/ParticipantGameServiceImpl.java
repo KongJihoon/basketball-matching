@@ -18,6 +18,7 @@ import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -112,6 +113,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse acceptGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[참가자 경기 수락 시작] participantId : {}, gameId : {}", participantUserId, gameId);
@@ -162,6 +164,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse rejectGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[경기 참가자 거절 시작] participantId : {}, gameId : {}", participantUserId, gameId);
@@ -208,6 +211,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse kickOutGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[경기 강퇴 시작] : participantId : {}, gameId : {}", participantUserId, gameId);
@@ -254,6 +258,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse deleteGame(Long userId, Long gameId) {
 
         log.info("[경기 삭제 시작] userId : {}, gameId : {}", userId, gameId);
