@@ -4,6 +4,7 @@ import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.exception.dto.FieldErrorDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -34,7 +33,10 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
 
 
-        log.warn("CustomException 발생 : {}", e.getErrorCode().getHttpStatus());
+        log.warn("CustomException: code={}, status={}, message={}",
+                e.getErrorCode().name(),
+                e.getErrorCode().getHttpStatus(),
+                e.getMessage());
 
 
         return new ResponseEntity<>(ErrorResponse.of(e.getErrorCode()), e.getErrorCode().getHttpStatus());
@@ -44,25 +46,43 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
 
-        log.warn("MethodArgumentNotValidException 발생 : {}", e.getMessage());
-
         List<FieldErrorDetail> details = e.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> FieldErrorDetail.of(
                         error.getField(),
-                        error.getCode(),
+                        Optional.ofNullable(error.getCode()).orElse("NotBlank"),
                         error.getDefaultMessage()
                 )).toList();
 
-        String firstCode = Optional.ofNullable(e.getBindingResult().getFieldErrors().get(0).getCode())
+        String firstCode = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(FieldError::getCode)
+                .filter(code -> code != null && !code.isBlank())
                 .orElse("NotBlank");
 
         ErrorCode errorCode = map(firstCode);
 
+        log.warn("Validation failed: repCode={}, detailsSize={}", firstCode, details.size());
+
 
         return new ResponseEntity<>(ErrorResponse.of(errorCode, details), errorCode.getHttpStatus());
     }
+
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<ErrorResponse> handleException(Exception e) {
+
+        log.error("[Unhandled exception]", e);
+
+        return new ResponseEntity<>(
+                ErrorResponse.of(INTERNAL_SERVER_ERROR),
+                INTERNAL_SERVER_ERROR.getHttpStatus()
+        );
+
+    }
+
 
     private static ErrorCode map(String validationCode) {
         return CODE_MAP.getOrDefault(validationCode, INVALID_INPUT);
