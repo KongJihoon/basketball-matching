@@ -1,20 +1,17 @@
 package com.example.basketballmatching.blackList.service.impl;
 
 import com.example.basketballmatching.blackList.dto.BlackListDto;
-import com.example.basketballmatching.blackList.entity.BlackListEntity;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.blackList.service.BlackListService;
 import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
-import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.FieldStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.report.dto.CreateReportDto;
 import com.example.basketballmatching.report.entity.ReportEntity;
