@@ -7,10 +7,7 @@ import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -45,17 +42,19 @@ public class SignUpDto {
 
         @Schema(description = "닉네임", example = "커리")
         @NotBlank(message = "닉네임을 입력해주세요.")
+        @Size(min = 2, max = 12, message = "닉네임은 2~12자여야 합니다.")
         private String nickname;
 
         @Schema(description = "이름", example = "서장훈")
         @NotBlank(message = "이름을 입력해주세요.")
         private String name;
 
-        @Schema(description = "생년월일", example = "19970101")
+        @Schema(description = "생년월일", example = "1997-01-01")
         @JsonFormat(
             shape = JsonFormat.Shape.STRING,
                 pattern = "yyyy-MM-dd"
         )
+        @NotNull(message = "생년월일을 입력해주세요.")
         private LocalDate birth;
 
         @Schema(description = "휴대폰 번호", example = "010-1111-0000")
@@ -114,7 +113,7 @@ public class SignUpDto {
         @Schema(description = "이름", example = "서장훈")
         private String name;
 
-        @Schema(description = "생년월일", example = "19970101")
+        @Schema(description = "생년월일", example = "1997-01-01")
         private LocalDate birth;
 
         @Schema(description = "휴대폰 번호", example = "010-1111-0000")

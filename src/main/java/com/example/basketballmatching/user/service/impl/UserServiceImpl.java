@@ -126,7 +126,7 @@ public class UserServiceImpl implements UserService {
      * 회원 정보 조회
      */
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public CommonResponse<UserDto> getUserInfo(Long userId) {
 
         log.info("[유저 정보 조회 시작] userId : {}", userId);
@@ -151,10 +151,12 @@ public class UserServiceImpl implements UserService {
 
         UserEntity userEntity = getUser(userId);
 
-        boolean exists = userRepository.existsByNickname(editUserDto.getNickname());
 
-        if (editUserDto.getNickname() != null && exists) {
-            throw new CustomException(ALREADY_EXIST_NICKNAME);
+        if (editUserDto.getNickname() != null) {
+            boolean exists = userRepository.existsByNicknameAndUserIdNot(editUserDto.getNickname(), userEntity.getUserId());
+            if (exists) {
+                throw new CustomException(ALREADY_EXIST_NICKNAME);
+            }
         }
 
         userEntity.editUserInfo(editUserDto);

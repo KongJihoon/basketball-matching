@@ -105,7 +105,7 @@ public class TokenProvider {
         );
     }
 
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
 
         try {
 
@@ -113,11 +113,15 @@ public class TokenProvider {
                     .build()
                     .parseClaimsJws(token);
 
-            return !claims.getBody().getExpiration().before(new Date());
+            if (claims.getBody().getExpiration().before(new Date())) {
+                throw new CustomException(EXPIRED_TOKEN);
+            }
 
         } catch (IllegalArgumentException e) {
             throw new CustomException(NOT_FOUND_TOKEN);
         } catch (MalformedJwtException e) {
+            throw new CustomException(INVALID_TOKEN);
+        } catch (UnsupportedJwtException e) {
             throw new CustomException(UNSUPPORTED_TOKEN);
         } catch (ExpiredJwtException e) {
             throw new CustomException(EXPIRED_TOKEN);

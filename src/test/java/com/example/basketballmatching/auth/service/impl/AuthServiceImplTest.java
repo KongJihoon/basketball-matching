@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @Transactional
-@ActiveProfiles("local-test")
+@ActiveProfiles("test-only")
 class AuthServiceImplTest {
 
     @Autowired

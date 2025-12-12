@@ -51,6 +51,7 @@ public enum ErrorCode {
     GAME_NOT_FOUND(HttpStatus.NOT_FOUND, "경기를 찾을 수 없습니다."),
     NOT_GAME_CREATOR(HttpStatus.FORBIDDEN, "경기 생성자가 아닙니다."),
     UPDATE_GAME_HEAD_COUNT(HttpStatus.BAD_REQUEST, "경기 인원 수를 변경해주세요."),
+    LOCK_BY_GAME(HttpStatus.BAD_REQUEST, "잠시 후에 다시 시도해주세요."),
 
     // participant (입력 검증 = 400/ 리소스 없음 = 404/ 권한 부족 =  403/ 중복 = 409)
     ALREADY_APPLY_GAME_USER(HttpStatus.CONFLICT, "이미 참가 신청한 유저입니다."),

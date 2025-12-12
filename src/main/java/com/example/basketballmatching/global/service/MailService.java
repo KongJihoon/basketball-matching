@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -37,7 +38,6 @@ public class MailService {
 
 
     @Async
-    @Transactional
     public void sendAuthMail(String email) {
 
         String code = createRandomCode();
@@ -85,7 +85,6 @@ public class MailService {
     }
 
     @Async
-    @Transactional
     public void sendPasswordAuthCode(String email) {
 
         UserEntity userEntity = userRepository.findByEmail(email)
@@ -156,7 +155,7 @@ public class MailService {
 
     private String createRandomCode() {
 
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
 
         StringBuilder sb = new StringBuilder();
 

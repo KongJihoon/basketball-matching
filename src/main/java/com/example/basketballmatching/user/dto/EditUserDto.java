@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,8 @@ public class EditUserDto {
 
 
     @Schema(name = "닉네임", example = "커리", defaultValue = "커리")
+    @Size(min = 2, max = 12, message = "닉네임은 2~12자여야 합니다.")
+    @Pattern(regexp = "^(?!\\s*$).+", message = "닉네임은 공백만 입력할 수 없습니다.")
     private String nickname;
 
     @Schema(description = "휴대폰 번호", example = "010-1111-0000")
