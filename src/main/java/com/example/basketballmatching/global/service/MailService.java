@@ -8,6 +8,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -75,7 +76,7 @@ public class MailService {
 
             log.info("이메일 인증번호 전송완료.");
 
-        } catch (MessagingException e) {
+        } catch (MessagingException  | MailException e) {
             log.error("이메일 전송 오류 : {}", e.getMessage());
             throw new CustomException(INTERNAL_SERVER_ERROR);
         }

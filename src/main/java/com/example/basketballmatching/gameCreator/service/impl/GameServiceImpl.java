@@ -6,8 +6,10 @@ import com.example.basketballmatching.gameCreator.dto.EditGameDto;
 import com.example.basketballmatching.gameCreator.dto.GameDto;
 import com.example.basketballmatching.gameCreator.dto.SearchGameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
+import com.example.basketballmatching.gameCreator.entity.PlaceLockEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
+import com.example.basketballmatching.gameCreator.repository.PlaceLockRepository;
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -38,6 +41,7 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
     private final GameQueryRepository gameQueryRepository;
     private final ParticipantGameRepository participantGameRepository;
+    private final PlaceLockRepository placeLockRepository;
 
     /**
      * 경기 생성
@@ -48,10 +52,20 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
+        String lockKey = request.getPlaceName() + "|" + request.getAddress();
+
+
+        placeLockRepository.ensureExists(lockKey);
+
+        placeLockRepository.lockByKey(lockKey)
+                .orElseThrow(() -> new CustomException(LOCK_BY_GAME));
+
         UserEntity userEntity = getUser(userId);
 
         // 경기 생성 유효성 검사
         validateCreateGame(request);
+
+
 
         GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
 
@@ -208,16 +222,12 @@ public class GameServiceImpl implements GameService {
             }
         }
 
-        boolean exists = gameRepository.existsBySamePlaceAtSameTime(
-                request.getPlaceName(),
-                request.getAddress(),
-                request.getStartDateTime(),
-                request.getEndDateTime()
-        );
+        boolean exists = gameRepository.existsBySamePlaceAtSameTime(request.getPlaceName(), request.getAddress(), request.getStartDateTime(), request.getEndDateTime());
 
         if (exists) {
             throw new CustomException(PLACE_SCHEDULE_OVERLAP);
         }
+
 
     }
 
