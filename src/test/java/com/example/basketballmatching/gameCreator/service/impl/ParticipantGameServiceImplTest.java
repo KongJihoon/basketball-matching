@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-@ActiveProfiles("local-test")
+@ActiveProfiles("test-only")
 class ParticipantGameServiceImplTest {
 
     @Autowired

@@ -26,7 +26,7 @@ import static com.example.basketballmatching.global.exception.ErrorCode.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AuthentificationFilter  extends OncePerRequestFilter {
+public class AuthentificationFilter extends OncePerRequestFilter {
 
     public static final String TOKEN_HEADER = "Authorization";
     public static final String TOKEN_PREFIX = "Bearer ";
@@ -46,49 +46,50 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
             return;
         }
 
-        String email = tokenProvider.parseToken(token).getSubject();
-
-
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
 
         try {
 
 
+            tokenProvider.validateToken(token);
 
-            if (tokenProvider.validateToken(token)) {
-
-                String logoutToken = redisService.getData("logout:access:" + token);
-
-                String blackList = redisService.getData("blackList:" + email);
-
-                if (logoutToken != null) {
-                    log.warn("[로그아웃 유저 접근]: {}", email );
-
-                    setErrorResponse(response, LOGOUT_USER);
-                    return;
-                }
-
-                if (blackList != null) {
-                    log.warn("[블랙리스트 유저 접근]: {}", email);
-
-                    setErrorResponse(response, BLACKLIST_USER);
-                    return;
-                }
+            String email = tokenProvider.getEmailFromToken(token);
 
 
+            String logoutToken = redisService.getData("logout:access:" + token);
 
-                Authentication authentication = tokenProvider.getAuthentication(token);
+            String blackList = redisService.getData("blackList:" + email);
 
-                log.info("인증 객체 principal: {}", authentication.getPrincipal());
+            if (logoutToken != null) {
+                log.warn("[로그아웃 유저 접근]: {}", email);
 
-                if (authentication != null) {
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-
-
-                filterChain.doFilter(request, response);
-
+                setErrorResponse(response, LOGOUT_USER);
+                return;
             }
+
+            if (blackList != null) {
+                log.warn("[블랙리스트 유저 접근]: {}", email);
+
+                setErrorResponse(response, BLACKLIST_USER);
+                return;
+            }
+
+
+            Authentication authentication = tokenProvider.getAuthentication(token);
+
+
+            if (authentication != null) {
+                log.info("인증 객체 principal: {}", authentication.getPrincipal());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+
+            filterChain.doFilter(request, response);
+
 
         } catch (CustomException e) {
             log.warn("JWT 검증 실패: {}", e.getErrorCode().getErrorMessage());
@@ -99,8 +100,6 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
             setErrorResponse(response, INTERNAL_SERVER_ERROR);
             return;
         }
-
-
 
 
     }
@@ -116,7 +115,7 @@ public class AuthentificationFilter  extends OncePerRequestFilter {
         return null;
     }
 
-    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException{
+    private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setContentType("application/json; charset=UTF-8");
         response.setStatus(errorCode.getStatusCode());
 

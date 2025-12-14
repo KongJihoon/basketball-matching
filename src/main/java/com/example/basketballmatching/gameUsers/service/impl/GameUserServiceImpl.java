@@ -38,7 +38,6 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final ParticipantGameRepository participantGameRepository;
 
-    private final GameQueryRepository gameQueryRepository;
 
     private final GameUserCacheService gameUserCacheService;
 

@@ -8,12 +8,14 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.Random;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -37,7 +39,6 @@ public class MailService {
 
 
     @Async
-    @Transactional
     public void sendAuthMail(String email) {
 
         String code = createRandomCode();
@@ -75,7 +76,7 @@ public class MailService {
 
             log.info("이메일 인증번호 전송완료.");
 
-        } catch (MessagingException e) {
+        } catch (MessagingException  | MailException e) {
             log.error("이메일 전송 오류 : {}", e.getMessage());
             throw new CustomException(INTERNAL_SERVER_ERROR);
         }
@@ -85,7 +86,6 @@ public class MailService {
     }
 
     @Async
-    @Transactional
     public void sendPasswordAuthCode(String email) {
 
         UserEntity userEntity = userRepository.findByEmail(email)
@@ -156,7 +156,7 @@ public class MailService {
 
     private String createRandomCode() {
 
-        Random random = new Random();
+        SecureRandom random = new SecureRandom();
 
         StringBuilder sb = new StringBuilder();
 

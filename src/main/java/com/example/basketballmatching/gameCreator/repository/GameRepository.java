@@ -4,7 +4,6 @@ import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,6 +28,21 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
                                         @Param("startDateTime") LocalDateTime startDateTime,
                                         @Param("endDateTime") LocalDateTime endDateTime);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query ("""
+        select g
+        from GameEntity g
+        where g.deletedDateTime is null 
+        and g.placeName = :placeName
+        and g.address = :address
+        and g.startDateTime < :endDateTime
+        and g.endDateTime > :startDateTime
+""")
+    List<GameEntity> findByOverlapPlace(@Param("placeName") String placeName,
+                                        @Param("address") String address,
+                                        @Param("startDateTime") LocalDateTime startDateTime,
+                                        @Param("endDateTime") LocalDateTime endDateTime);
+
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select g from GameEntity g where g.gameId = :gameId and g.deletedDateTime is NULL ")
@@ -40,6 +54,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
     List<GameEntity> findByUserEntity_UserIdAndDeletedDateTimeIsNull(Long userId);
 
 
+    long countByPlaceNameAndAddressAndStartDateTimeAndEndDateTime(String placeName, String address, LocalDateTime start, LocalDateTime end);
 
     Optional<GameEntity> findByTitle(String title);
 
