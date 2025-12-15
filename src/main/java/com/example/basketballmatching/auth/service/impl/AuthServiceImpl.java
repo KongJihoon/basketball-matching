@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public TokenDto loginUser(String email, String password) {
 
         log.info("[유저 로그인 시작]: {}", email);
