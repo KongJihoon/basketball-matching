@@ -56,7 +56,7 @@ public enum ErrorCode {
     // participant (입력 검증 = 400/ 리소스 없음 = 404/ 권한 부족 =  403/ 중복 = 409)
     ALREADY_APPLY_GAME_USER(HttpStatus.CONFLICT, "이미 참가 신청한 유저입니다."),
     FULL_HEADCOUNT_GAME(HttpStatus.CONFLICT, "남은 신청 자리가 없습니다."),
-    NOT_ALLOWED_TO_JOIN(HttpStatus.FORBIDDEN, "경기 참가를 요청할 수 없습니다."),
+    NOT_ALLOWED_TO_JOIN(HttpStatus.BAD_REQUEST, "경기 참가를 요청할 수 없습니다."),
     NOT_ALLOWED_CANCEL(HttpStatus.FORBIDDEN, "경기 취소를 요청할 수 없습니다."),
     ONLY_FEMALE_GAME(HttpStatus.FORBIDDEN, "여성 유저만 신청가능합니다."),
     ONLY_MALE_GAME(HttpStatus.FORBIDDEN, "남성 유저만 신청가능합니다."),
