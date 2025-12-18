@@ -52,19 +52,18 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
-        String lockKey = request.getPlaceName() + "|" + request.getAddress();
+//        String lockKey = request.getPlaceName() + "|" + request.getAddress();
 
 
-        placeLockRepository.ensureExists(lockKey);
-
-        placeLockRepository.lockByKey(lockKey)
-                .orElseThrow(() -> new CustomException(LOCK_BY_GAME));
+//        placeLockRepository.ensureExists(lockKey);
+//
+//        placeLockRepository.lockByKey(lockKey)
+//                .orElseThrow(() -> new CustomException(LOCK_BY_GAME));
 
         UserEntity userEntity = getUser(userId);
 
         // 경기 생성 유효성 검사
         validateCreateGame(request);
-
 
 
         GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
@@ -103,7 +102,6 @@ public class GameServiceImpl implements GameService {
     }
 
 
-
     /**
      * 경기 검색 정렬
      */
@@ -113,7 +111,7 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 검색 정렬 시작] date : {}", date);
 
-        Page<SearchGameDto> responses = gameQueryRepository.searchByKeyword(date, cityName, matchFormat, fieldStatus,matchGenderType, gameStatus, pageable);
+        Page<SearchGameDto> responses = gameQueryRepository.searchByKeyword(date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable);
 
 
         if (responses.isEmpty()) {
@@ -146,7 +144,6 @@ public class GameServiceImpl implements GameService {
         gameEntity.editGameInfo(request);
 
 
-
         log.info("[경기 수정 완료] gameId : {}", gameId);
 
         return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
@@ -157,7 +154,7 @@ public class GameServiceImpl implements GameService {
             throw new CustomException(NOT_GAME_CREATOR);
         }
 
-        if(request.getMatchFormat() != null && request.getHeadCount() == 0) {
+        if (request.getMatchFormat() != null && request.getHeadCount() == 0) {
             throw new CustomException(UPDATE_GAME_HEAD_COUNT);
         }
 
@@ -168,24 +165,26 @@ public class GameServiceImpl implements GameService {
                 throw new CustomException(INVALID_HEADCOUNT);
             }
 
-            if (request.getMatchFormat() != null) {
-                switch (request.getMatchFormat()) {
-                    case THREE_ON_THREE -> {
 
-                        if (request.getHeadCount() < 6 || request.getHeadCount() > 9) {
-                            throw new CustomException(INVALID_HEADCOUNT);
-                        }
+            MatchFormat matchFormat = (request.getMatchFormat() != null) ? request.getMatchFormat() : gameEntity.getMatchFormat();
 
-                    }
-                    case FIVE_ON_FIVE -> {
-                        if (request.getHeadCount() < 10 || request.getHeadCount() > 15) {
-                            throw new CustomException(INVALID_HEADCOUNT);
-                        }
+            switch (matchFormat) {
+                case THREE_ON_THREE -> {
+
+                    if (request.getHeadCount() < 6 || request.getHeadCount() > 9) {
+                        throw new CustomException(INVALID_HEADCOUNT);
                     }
 
                 }
+                case FIVE_ON_FIVE -> {
+                    if (request.getHeadCount() < 10 || request.getHeadCount() > 15) {
+                        throw new CustomException(INVALID_HEADCOUNT);
+                    }
+                }
 
             }
+
+
         }
     }
 
@@ -232,7 +231,7 @@ public class GameServiceImpl implements GameService {
     }
 
     private UserEntity getUser(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 

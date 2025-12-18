@@ -2,7 +2,6 @@ package com.example.basketballmatching.gameUsers.service.impl;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
-import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
