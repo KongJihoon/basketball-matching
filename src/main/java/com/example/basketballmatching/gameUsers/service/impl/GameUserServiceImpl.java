@@ -72,7 +72,6 @@ public class GameUserServiceImpl implements GameUserService {
         participantGameRepository.save(entity);
 
 
-
         gameEntity.increaseParticipantCount();
 
 
@@ -214,7 +213,6 @@ public class GameUserServiceImpl implements GameUserService {
 
         if (Objects.equals(userEntity.getUserId(), gameEntity.getUserEntity().getUserId())) {
             throw new CustomException(NOT_APPLY_GAME_CREATOR);
-
         }
 
         if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(userEntity.getUserId(),gameEntity.getGameId())) {
