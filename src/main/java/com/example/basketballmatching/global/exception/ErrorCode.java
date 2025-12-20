@@ -61,6 +61,7 @@ public enum ErrorCode {
     ONLY_FEMALE_GAME(HttpStatus.FORBIDDEN, "여성 유저만 신청가능합니다."),
     ONLY_MALE_GAME(HttpStatus.FORBIDDEN, "남성 유저만 신청가능합니다."),
     NOT_APPLY_USER(HttpStatus.BAD_REQUEST, "경기 참가 신청을 한 유저가 아닙니다."),
+    NOT_APPLY_KICKOUT_USER(HttpStatus.BAD_REQUEST, "강퇴당한 유저는 신청 불가입니다."),
     ALREADY_START_GAME(HttpStatus.CONFLICT, "이미 시작한 경기입니다."),
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "경기 참가자를 찾을 수 없습니다."),
     ALREADY_ACCEPT_USER(HttpStatus.CONFLICT, "이미 수락된 참가자입니다."),

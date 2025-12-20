@@ -8,7 +8,9 @@ import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepo
 import com.example.basketballmatching.gameCreator.type.FieldStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
+import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
+import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
@@ -30,8 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
@@ -103,8 +104,8 @@ class GameUserServiceImpUnitTest {
         when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
                 .thenReturn(Optional.of(gameEntity));
 
-        when(participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(participant.getUserId(), gameEntity.getGameId()))
-                .thenReturn(false);
+        when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participant.getUserId()))
+                .thenReturn(Optional.empty());
 
         when(participantGameRepository.save(any(ParticipantGameEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -123,7 +124,7 @@ class GameUserServiceImpUnitTest {
 
         verify(userRepository).findByUserIdAndDeletedDateTimeIsNull(participant.getUserId());
         verify(gameRepository).findByGameIdWithLock(gameEntity.getGameId());
-        verify(participantGameRepository).existsByUserEntity_UserIdAndGameEntity_GameId(participant.getUserId(), gameEntity.getGameId());
+        verify(participantGameRepository).findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participant.getUserId());
         verify(participantGameRepository).save(participantCaptor.capture());
 
         ParticipantGameEntity savedParticipant = participantCaptor.getValue();
@@ -155,8 +156,8 @@ class GameUserServiceImpUnitTest {
         when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
                 .thenReturn(Optional.of(gameEntity));
 
-        when(participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(participant.getUserId(), gameEntity.getGameId()))
-                .thenReturn(false);
+        when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participant.getUserId()))
+                .thenReturn(Optional.empty());
 
 
         // when
@@ -169,7 +170,7 @@ class GameUserServiceImpUnitTest {
 
         verify(userRepository).findByUserIdAndDeletedDateTimeIsNull(participant.getUserId());
         verify(gameRepository).findByGameIdWithLock(gameEntity.getGameId());
-        verify(participantGameRepository).existsByUserEntity_UserIdAndGameEntity_GameId(participant.getUserId(), gameEntity.getGameId());
+        verify(participantGameRepository).findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participant.getUserId());
         verify(participantGameRepository, never()).save(any());
 
         assertEquals(ErrorCode.NOT_ALLOWED_TO_JOIN, exception.getErrorCode());
@@ -177,5 +178,109 @@ class GameUserServiceImpUnitTest {
         verifyNoMoreInteractions(userRepository, gameRepository, participantGameRepository);
 
     }
+
+    @Test
+    @DisplayName("경기 참가 실패 테스트 - 경기 개설자 참가 신청 시 참가 신청 불가")
+    void applyGameFailTest_NOT_APPLY_GAME_CREATOR() {
+        // given
+        when(userRepository.findByUserIdAndDeletedDateTimeIsNull(creator.getUserId()))
+                .thenReturn(Optional.of(creator));
+
+        when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
+                .thenReturn(Optional.of(gameEntity));
+
+        when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), creator.getUserId()))
+                .thenReturn(Optional.empty());
+
+
+        // when
+
+        CustomException exception = assertThrows(CustomException.class, () -> gameUserService.applyGame(gameEntity.getGameId(), creator.getUserId()));
+
+        // then
+
+        verify(userRepository).findByUserIdAndDeletedDateTimeIsNull(creator.getUserId());
+        verify(gameRepository).findByGameIdWithLock(gameEntity.getGameId());
+        verify(participantGameRepository).findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), creator.getUserId());
+        verify(participantGameRepository, never()).save(any());
+
+        assertEquals(ErrorCode.NOT_APPLY_GAME_CREATOR, exception.getErrorCode());
+
+        verifyNoMoreInteractions(userRepository, participantGameRepository, gameRepository);
+
+    }
+
+    @Test
+    @DisplayName("경기 참가 취소 테스트")
+    void cancelGame() {
+        // given
+
+        ParticipantGameEntity applyUser = ParticipantGameEntity.createApply(gameEntity, participant);
+
+        applyUser.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, LocalDateTime.now());
+
+        when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
+                .thenReturn(Optional.of(gameEntity));
+
+        when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(
+                gameEntity.getGameId(), participant.getUserId()
+        )).thenReturn(Optional.of(applyUser));
+
+
+        // when
+
+        CheckResponse checkResponse = gameUserService.cancelGame(participant.getUserId(), gameEntity.getGameId());
+
+
+
+        // then
+
+        assertTrue(checkResponse.isSuccess());
+        assertEquals("경기 취소가 완료되었습니다.", checkResponse.getMessage());
+
+        assertEquals(ParticipantGameStatus.CANCEL, applyUser.getParticipantGameStatus());
+
+        verify(gameRepository).findByGameIdWithLock(gameEntity.getGameId());
+        verify(participantGameRepository).findByGameEntity_GameIdAndUserEntity_UserId(
+                gameEntity.getGameId(), participant.getUserId()
+        );
+        verifyNoMoreInteractions(gameRepository, participantGameRepository);
+
+
+    }
+
+    @Test
+    @DisplayName("경기 취소 실패 테스트 - 이미 취소한 유저 취소 불가")
+    void cancelGameFailTest_ALREADY_CANCELED_USER() {
+        // given
+        ParticipantGameEntity applyUser = ParticipantGameEntity.createApply(gameEntity, participant);
+
+        applyUser.setParticipantGameStatusAndCanceledDateTime(ParticipantGameStatus.CANCEL, LocalDateTime.now());
+
+        when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
+                .thenReturn(Optional.of(gameEntity));
+
+        when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(
+                gameEntity.getGameId(), participant.getUserId()
+        )).thenReturn(Optional.of(applyUser));
+
+
+        // when
+
+        CustomException exception = assertThrows(CustomException.class, () -> gameUserService.cancelGame(participant.getUserId(), gameEntity.getGameId()));
+
+        // then
+
+        verify(gameRepository).findByGameIdWithLock(gameEntity.getGameId());
+        verify(participantGameRepository).findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participant.getUserId());
+
+        assertEquals(ErrorCode.ALREADY_CANCELED_USER, exception.getErrorCode());
+
+        verifyNoMoreInteractions(gameRepository, participantGameRepository);
+
+
+    }
+
+
 
 }

@@ -59,30 +59,32 @@ public class GameUserServiceImpl implements GameUserService {
 
         GameEntity gameEntity = getGameWithLock(gameId);
 
-        validateParticipantInfo(userEntity, gameEntity);
+        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
+                .orElse(null);
+
+        validateParticipantInfo(userEntity, gameEntity, participantGameEntity);
+
+        if (participantGameEntity == null) {
+
+            participantGameEntity = ParticipantGameEntity.createApply(gameEntity, userEntity);
 
 
+            participantGameRepository.save(participantGameEntity);
 
-        ParticipantGameEntity entity = ParticipantGameEntity.builder()
-                .participantGameStatus(APPLY)
-                .gameEntity(gameEntity)
-                .userEntity(userEntity)
-                .build();
-
-        participantGameRepository.save(entity);
+            gameEntity.increaseParticipantCount();
 
 
-        gameEntity.increaseParticipantCount();
+        } else if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {
+
+            participantGameEntity.reApply();
+            gameEntity.increaseParticipantCount();
+        }
 
 
+        ApplyGameUserDto participantDto = ApplyGameUserDto.fromEntity(participantGameEntity);
 
 
-
-
-        ApplyGameUserDto participantDto = ApplyGameUserDto.fromEntity(entity);
-
-
-        log.info("[경기 참가 신청 완료] gameId : {}, participantId : {}", gameId, entity.getParticipantGameId());
+        log.info("[경기 참가 신청 완료] gameId : {}, participantId : {}", gameId, participantGameEntity.getParticipantGameId());
 
         return CommonResponse.of("경기 신청이 완료되었습니다.", participantDto);
     }
@@ -101,7 +103,6 @@ public class GameUserServiceImpl implements GameUserService {
         ParticipantGameEntity participantGameEntity = getParticipantGame(userId, gameId);
 
 
-
         LocalDateTime now = LocalDateTime.now();
 
         if (now.isAfter(gameEntity.getStartDateTime().minusMinutes(30))) {
@@ -117,18 +118,13 @@ public class GameUserServiceImpl implements GameUserService {
         }
 
 
-
         participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
-
-        gameEntity.decreaseParticipantCount();
-        gameRepository.save(gameEntity);
 
 
 
 
         return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
     }
-
 
 
     /**
@@ -162,9 +158,6 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
-
-
-
     @Override
     @Transactional(readOnly = true)
     public CommonResponse<GameUserLevelDto> getMyGameUserLevel(Long userId) {
@@ -178,7 +171,6 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
-
     private UserEntity getUser(Long userId) {
         return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -189,11 +181,6 @@ public class GameUserServiceImpl implements GameUserService {
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
     }
 
-    private GameEntity getGame(Long gameId) {
-        return gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
-    }
-
 
     private GameEntity getGameWithLock(Long gameId) {
         return gameRepository.findByGameIdWithLock(gameId)
@@ -201,13 +188,7 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
-
-
-
-
-
-
-    private void validateParticipantInfo(UserEntity userEntity, GameEntity gameEntity) {
+    private void validateParticipantInfo(UserEntity userEntity, GameEntity gameEntity, ParticipantGameEntity participantGameEntity) {
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -215,9 +196,22 @@ public class GameUserServiceImpl implements GameUserService {
             throw new CustomException(NOT_APPLY_GAME_CREATOR);
         }
 
-        if (participantGameRepository.existsByUserEntity_UserIdAndGameEntity_GameId(userEntity.getUserId(),gameEntity.getGameId())) {
-            throw new CustomException(ALREADY_APPLY_GAME_USER);
+        if (participantGameEntity != null) {
+
+            if (participantGameEntity.getParticipantGameStatus().equals(KICKOUT)) {
+                throw new CustomException(NOT_APPLY_KICKOUT_USER);
+            }
+
+            if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
+                throw new CustomException(ALREADY_ACCEPT_USER);
+            }
+
+            if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
+                throw new CustomException(ALREADY_APPLY_GAME_USER);
+            }
+
         }
+
 
         if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
@@ -228,7 +222,7 @@ public class GameUserServiceImpl implements GameUserService {
         }
 
         if (gameEntity.getMatchGenderType().equals(MatchGenderType.FEMALE_ONLY) &&
-        userEntity.getGenderType().equals(GenderType.MALE)) {
+                userEntity.getGenderType().equals(GenderType.MALE)) {
             throw new CustomException(ONLY_FEMALE_GAME);
         }
 
@@ -237,7 +231,6 @@ public class GameUserServiceImpl implements GameUserService {
                 userEntity.getGenderType().equals(GenderType.FEMALE)) {
             throw new CustomException(ONLY_MALE_GAME);
         }
-
 
 
     }
