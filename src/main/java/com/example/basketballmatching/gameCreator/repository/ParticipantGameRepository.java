@@ -30,5 +30,6 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
     List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses);
 
+    boolean existsByUserEntity_UserIdAndGameEntity_GameIdAndParticipantGameStatus(Long userId,Long gameId, ParticipantGameStatus participantGameStatus);
 
 }

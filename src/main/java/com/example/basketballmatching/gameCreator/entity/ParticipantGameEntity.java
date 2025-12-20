@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,9 +51,21 @@ public class ParticipantGameEntity extends BaseEntity {
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
 
+    public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity) {
+
+        return ParticipantGameEntity.builder()
+                .participantGameStatus(APPLY)
+                .gameEntity(gameEntity)
+                .userEntity(userEntity)
+                .build();
+
+
+    }
+
     public ParticipantGameEntity toGameCreatorEntity(
             GameEntity gameEntity, UserEntity userEntity
     ) {
+
 
         return ParticipantGameEntity.builder()
                 .participantGameStatus(ParticipantGameStatus.ACCEPT)
@@ -61,11 +75,17 @@ public class ParticipantGameEntity extends BaseEntity {
                 .build();
     }
 
+    public void reApply() {
+        this.canceledDateTime = null;
+        this.participantGameStatus = ParticipantGameStatus.APPLY;
+
+    }
+
+
     public void setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime acceptDateTime) {
         this.participantGameStatus = participantGameStatus;
         this.acceptDateTime = acceptDateTime;
     }
-
 
     public void setParticipantGameStatusAndRejectDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime rejectDateTime) {
         this.participantGameStatus = participantGameStatus;
