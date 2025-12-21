@@ -7,10 +7,10 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
-import com.example.basketballmatching.gameCreator.type.GameStatus;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
 import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.notifications.service.NotificationService;
 import com.example.basketballmatching.notifications.type.NotificationType;
@@ -18,7 +18,7 @@ import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,6 +43,9 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
     private final UserRepository userRepository;
 
     private final NotificationService notificationService;
+
+    private final ApplicationEventPublisher eventPublisher;
+
 
 
     /**
@@ -113,7 +116,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse acceptGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[참가자 경기 수락 시작] participantId : {}, gameId : {}", participantUserId, gameId);
@@ -150,6 +152,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
+
         log.info("[참가자 경기 수락 완료] participantId : {}, gameId : {}", participantUserId, gameId);
 
         return CheckResponse.of(true, "경기 수락이 완료되었습니다.");
@@ -164,7 +167,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse rejectGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[경기 참가자 거절 시작] participantId : {}, gameId : {}", participantUserId, gameId);
@@ -198,6 +200,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
 
+
+
         log.info("[경기 참가자 거절 완료] participantId : {}, gameId : {}", participantUserId, gameId);
 
         return CheckResponse.of(true, "경기 거절을 완료하였습니다.");
@@ -211,7 +215,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse kickOutGameUser(Long participantUserId, Long userId, Long gameId) {
 
         log.info("[경기 강퇴 시작] : participantId : {}, gameId : {}", participantUserId, gameId);
@@ -244,6 +247,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
+
         log.info("[경기 강퇴 완료] participantId : {}, gameId : {}", participantUserId, gameId);
 
         return CheckResponse.of(true, "참가자 강퇴를 완료하였습니다.");
@@ -258,7 +262,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse deleteGame(Long userId, Long gameId) {
 
         log.info("[경기 삭제 시작] userId : {}, gameId : {}", userId, gameId);
@@ -300,6 +303,9 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         gameEntity.setDeletedDateTime(now);
 
         gameRepository.save(gameEntity);
+
+
+        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
         log.info("[경기 삭제 완료] userId : {}, gameId : {}", userId, gameId);
 

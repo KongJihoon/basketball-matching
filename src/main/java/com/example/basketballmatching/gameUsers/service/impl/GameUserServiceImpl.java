@@ -2,6 +2,7 @@ package com.example.basketballmatching.gameUsers.service.impl;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
+import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
@@ -18,7 +19,6 @@ import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,13 +37,10 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final ParticipantGameRepository participantGameRepository;
 
-
-    private final GameUserCacheService gameUserCacheService;
-
-
     private final UserRepository userRepository;
 
     private final GameRepository gameRepository;
+    private final GameQueryRepository gameQueryRepository;
 
 
     /**
@@ -80,7 +77,6 @@ public class GameUserServiceImpl implements GameUserService {
             gameEntity.increaseParticipantCount();
         }
 
-
         ApplyGameUserDto participantDto = ApplyGameUserDto.fromEntity(participantGameEntity);
 
 
@@ -95,7 +91,6 @@ public class GameUserServiceImpl implements GameUserService {
      */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "myCurrentGameList", allEntries = true)
     public CheckResponse cancelGame(Long userId, Long gameId) {
 
         GameEntity gameEntity = getGameWithLock(gameId);
@@ -123,6 +118,7 @@ public class GameUserServiceImpl implements GameUserService {
 
 
 
+
         return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
     }
 
@@ -134,10 +130,10 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional(readOnly = true)
     public CommonResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
 
-        getUser(userId);
+        UserEntity userEntity = getUser(userId);
 
 
-        List<CurrentGameListDto> currentGameList = gameUserCacheService.getMyCurrentGameListCached(userId, pageable);
+        List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userEntity.getUserId(), pageable);
 
         return CommonResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
     }
@@ -149,10 +145,10 @@ public class GameUserServiceImpl implements GameUserService {
     @Transactional(readOnly = true)
     public CommonResponse<List<LastGameListDto>> getMyLastGameList(Long userId, Pageable pageable) {
 
-        getUser(userId);
+        UserEntity userEntity = getUser(userId);
 
 
-        List<LastGameListDto> lastGameList = gameUserCacheService.getMyLastGameListCached(userId, pageable);
+        List<LastGameListDto> lastGameList = gameQueryRepository.getLastGameList(userEntity.getUserId(), pageable);
 
         return CommonResponse.of("지난 게임 조회가 완료되었습니다.", lastGameList);
     }
