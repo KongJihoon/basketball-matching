@@ -28,20 +28,7 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
                                         @Param("startDateTime") LocalDateTime startDateTime,
                                         @Param("endDateTime") LocalDateTime endDateTime);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query ("""
-        select g
-        from GameEntity g
-        where g.deletedDateTime is null 
-        and g.placeName = :placeName
-        and g.address = :address
-        and g.startDateTime < :endDateTime
-        and g.endDateTime > :startDateTime
-""")
-    List<GameEntity> findByOverlapPlace(@Param("placeName") String placeName,
-                                        @Param("address") String address,
-                                        @Param("startDateTime") LocalDateTime startDateTime,
-                                        @Param("endDateTime") LocalDateTime endDateTime);
+
 
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -56,6 +43,5 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
     long countByPlaceNameAndAddressAndStartDateTimeAndEndDateTime(String placeName, String address, LocalDateTime start, LocalDateTime end);
 
-    Optional<GameEntity> findByTitle(String title);
 
 }

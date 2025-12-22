@@ -3,18 +3,16 @@ package com.example.basketballmatching.gameCreator.service.impl;
 
 import com.example.basketballmatching.gameCreator.dto.*;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
-import com.example.basketballmatching.gameCreator.entity.PlaceLockEntity;
-import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
+import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
-import com.example.basketballmatching.gameCreator.repository.PlaceLockRepository;
+import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
 import com.example.basketballmatching.global.cache.version.GameSearchCacheVersionService;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
-import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.global.lock.RedissonLockExecutor;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +23,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -40,54 +38,64 @@ public class GameServiceImpl implements GameService {
 
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
-    private final GameQueryRepository gameQueryRepository;
     private final ParticipantGameRepository participantGameRepository;
-    private final PlaceLockRepository placeLockRepository;
-
     private final GameSearchCacheVersionService versionService;
     private final GameSearchCacheService cacheService;
 
     private final ApplicationEventPublisher eventPublisher;
 
+    private final RedissonLockExecutor lockExecutor;
+    private final TransactionTemplate transactionTemplate;
+
+
+    private static final String LOCK_PREFIX = "lock:game-create:";
+    private static final long LOCK_WAIT_MS = 3000;
+    private static final long LOCK_LEASE_MS = 10000;
 
     /**
      * 경기 생성
      */
     @Override
-    @Transactional
     public CommonResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
 
-        log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
-
-//        String lockKey = request.getPlaceName() + "|" + request.getAddress();
-
-
-//        placeLockRepository.ensureExists(lockKey);
-//
-//        placeLockRepository.lockByKey(lockKey)
-//                .orElseThrow(() -> new CustomException(LOCK_BY_GAME));
-
-        UserEntity userEntity = getUser(userId);
-
-        // 경기 생성 유효성 검사
-        validateCreateGame(request);
+        String lockKey = buildPlaceLockKey(request.getPlaceName(), request.getAddress());
+        String redisKey = LOCK_PREFIX + lockKey;
 
 
-        GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
+        return lockExecutor.executeWithLock(redisKey, LOCK_WAIT_MS, LOCK_LEASE_MS, () ->
+                transactionTemplate.execute(status -> {
 
-        gameRepository.save(gameEntity);
-
-        ParticipantGameEntity participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, userEntity);
-
-        participantGameRepository.save(participantGameEntity);
+                    log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
 
-        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
-        log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
+                    validateCreateGame(request);
 
 
-        return CommonResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
+
+                    validateOverLap(request);
+
+                    UserEntity userEntity = getUser(userId);
+
+
+                    GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
+
+                    gameRepository.save(gameEntity);
+
+                    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, userEntity);
+
+                    participantGameRepository.save(participantGameEntity);
+
+
+                    eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
+
+                    log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
+
+
+                    return CommonResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
+
+
+                }));
     }
 
 
@@ -235,14 +243,41 @@ public class GameServiceImpl implements GameService {
             }
         }
 
-        boolean exists = gameRepository.existsBySamePlaceAtSameTime(request.getPlaceName(), request.getAddress(), request.getStartDateTime(), request.getEndDateTime());
+
+    }
+
+    private void validateOverLap(CreateGameDto.Request request) {
+
+        boolean exists = gameRepository.existsBySamePlaceAtSameTime(
+                request.getPlaceName(),
+                request.getAddress(),
+                request.getStartDateTime(),
+                request.getEndDateTime()
+        );
 
         if (exists) {
             throw new CustomException(PLACE_SCHEDULE_OVERLAP);
         }
 
+    }
+
+    private String buildPlaceLockKey(String placeName, String address) {
+
+        String pn = normalize(placeName).replace("|", " ");
+        String ad = normalize(address).replace("|", " ");
+        return pn + "|" + ad;
+
 
     }
+
+    private String normalize(String s) {
+        if (s == null) {
+            return "";
+        }
+
+        return s.trim().replaceAll("\\s+", " ");
+    }
+
 
     private UserEntity getUser(Long userId) {
         return userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)

@@ -4,6 +4,7 @@ import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEven
 import com.example.basketballmatching.global.cache.version.GameSearchCacheVersionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,6 +17,7 @@ public class GameSearchCacheBumpListener {
     private final GameSearchCacheVersionService versionService;
 
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void on(GameSearchCacheBumpEvent gameSearchCacheBumpEvent) {
         long newVersion = versionService.bump();
