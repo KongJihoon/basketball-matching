@@ -1,8 +1,7 @@
 package com.example.basketballmatching.global.config;
 
-import com.example.basketballmatching.user.dto.UserDto;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +10,6 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -25,12 +23,18 @@ public class RedisCacheConfig {
 
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory cf, ObjectMapper objectMapper) {
+    public RedisCacheManager cacheManager(RedisConnectionFactory cf) {
 
 
-        ObjectMapper cacheMapper = objectMapper.copy()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        ObjectMapper cacheMapper = new ObjectMapper();
+
+        cacheMapper.registerModule(new JavaTimeModule());
+        cacheMapper.findAndRegisterModules();
+        cacheMapper.activateDefaultTyping(
+                cacheMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
 
 
         var key = RedisSerializationContext.SerializationPair
@@ -44,19 +48,10 @@ public class RedisCacheConfig {
                 .serializeValuesWith(value)
                 .disableCachingNullValues()
                 .entryTtl(Duration.ofMinutes(3));
-        Jackson2JsonRedisSerializer<UserDto> userDtoSer = new Jackson2JsonRedisSerializer<>(cacheMapper, UserDto.class);
-
-
-
-        var userDtoValuePair = RedisSerializationContext.SerializationPair
-                .fromSerializer(userDtoSer);
 
         Map<String, RedisCacheConfiguration> cacheConfig = new HashMap<>();
-        cacheConfig.put("userDto", defaultConfig
-                        .serializeValuesWith(userDtoValuePair)
-                .entryTtl(Duration.ofMinutes(10)));
-        cacheConfig.put("myCurrentGameList", defaultConfig.entryTtl(Duration.ofMinutes(2)));
-        cacheConfig.put("myLastGameList", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
+        cacheConfig.put("gameSearch", defaultConfig.entryTtl(Duration.ofSeconds(60)));
 
         return RedisCacheManager.builder(cf)
                 .cacheDefaults(defaultConfig)

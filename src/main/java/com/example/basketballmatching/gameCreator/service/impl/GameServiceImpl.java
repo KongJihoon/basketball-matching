@@ -1,10 +1,7 @@
 package com.example.basketballmatching.gameCreator.service.impl;
 
 
-import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
-import com.example.basketballmatching.gameCreator.dto.EditGameDto;
-import com.example.basketballmatching.gameCreator.dto.GameDto;
-import com.example.basketballmatching.gameCreator.dto.SearchGameDto;
+import com.example.basketballmatching.gameCreator.dto.*;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.PlaceLockEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
@@ -12,6 +9,8 @@ import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.PlaceLockRepository;
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
+import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
+import com.example.basketballmatching.global.cache.version.GameSearchCacheVersionService;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
@@ -20,7 +19,9 @@ import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,12 @@ public class GameServiceImpl implements GameService {
     private final GameQueryRepository gameQueryRepository;
     private final ParticipantGameRepository participantGameRepository;
     private final PlaceLockRepository placeLockRepository;
+
+    private final GameSearchCacheVersionService versionService;
+    private final GameSearchCacheService cacheService;
+
+    private final ApplicationEventPublisher eventPublisher;
+
 
     /**
      * 경기 생성
@@ -74,6 +81,8 @@ public class GameServiceImpl implements GameService {
 
         participantGameRepository.save(participantGameEntity);
 
+
+        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
         log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
 
@@ -111,16 +120,20 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 검색 정렬 시작] date : {}", date);
 
-        Page<SearchGameDto> responses = gameQueryRepository.searchByKeyword(date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable);
+        long version = versionService.getVersion();
 
 
-        if (responses.isEmpty()) {
-            return CommonResponse.of("경기 검색결과가 없습니다.", responses);
+        GameSearchCacheDto<SearchGameDto> searchGameCached = cacheService.searchGameCached(
+                version, date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable
+        );
+
+        if (searchGameCached.getContent().isEmpty()) {
+            return CommonResponse.of("경기 검색결과가 없습니다.", new PageImpl<>(searchGameCached.getContent(), pageable, searchGameCached.getTotalElement()));
         }
 
         log.info("[경기 검색 정렬 완료] date : {}", date);
 
-        return CommonResponse.of("경기 검색이 완료되었습니다.", responses);
+        return CommonResponse.of("경기 검색이 완료되었습니다.", new PageImpl<>(searchGameCached.getContent(), pageable, searchGameCached.getTotalElement()));
     }
 
     /**
@@ -143,6 +156,7 @@ public class GameServiceImpl implements GameService {
 
         gameEntity.editGameInfo(request);
 
+        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 

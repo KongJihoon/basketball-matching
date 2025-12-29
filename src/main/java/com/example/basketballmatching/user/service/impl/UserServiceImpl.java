@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
 
     private final RedisService redisService;
 
-    private final UserCacheService userCacheService;
+
 
     private final TokenProvider tokenProvider;
 
@@ -131,7 +131,9 @@ public class UserServiceImpl implements UserService {
 
         log.info("[유저 정보 조회 시작] userId : {}", userId);
 
-        UserDto userDto = userCacheService.getUserDtoCached(userId);
+        UserEntity userEntity = getUser(userId);
+
+        UserDto userDto = UserDto.fromEntity(userEntity);
 
         return CommonResponse.of("회원정보 조회에 성공하였습니다.", userDto);
     }
