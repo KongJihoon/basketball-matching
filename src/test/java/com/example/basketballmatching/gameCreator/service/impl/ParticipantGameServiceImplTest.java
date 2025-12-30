@@ -13,6 +13,7 @@ import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -85,6 +86,7 @@ class ParticipantGameServiceImplTest {
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
                 .userType(UserType.USER)
+                .gameUserLevel(GameUserLevel.BEGINNER)
                 .build();
 
         creator.setEmailAuth();
@@ -103,6 +105,7 @@ class ParticipantGameServiceImplTest {
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
                 .userType(UserType.USER)
+                .gameUserLevel(GameUserLevel.SEMI_PRO)
                 .build();
 
         participant.setEmailAuth();
@@ -124,6 +127,8 @@ class ParticipantGameServiceImplTest {
                 .build();
 
         gameEntity = CreateGameDto.Request.toEntity(request, creator);
+
+        gameEntity.setGameUserLevel(creator.getGameUserLevel());
 
         gameRepository.save(gameEntity);
         participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
@@ -255,6 +260,7 @@ class ParticipantGameServiceImplTest {
 
         assertEquals("경기 수락이 완료되었습니다.", checkResponse.getMessage());
         assertEquals(ParticipantGameStatus.ACCEPT, participantGameEntity.getParticipantGameStatus());
+        assertEquals(GameUserLevel.AMATEUR, participantGameEntity.getGameEntity().getGameUserLevel());
 
 
 

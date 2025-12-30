@@ -8,6 +8,7 @@ import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
 import com.example.basketballmatching.global.cache.version.GameSearchCacheVersionService;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -79,6 +80,10 @@ public class GameServiceImpl implements GameService {
 
 
                     GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
+
+                    GameUserLevel gameUserLevel = userEntity.getGameUserLevel();
+
+                    gameEntity.setGameUserLevel(gameUserLevel);
 
                     gameRepository.save(gameEntity);
 

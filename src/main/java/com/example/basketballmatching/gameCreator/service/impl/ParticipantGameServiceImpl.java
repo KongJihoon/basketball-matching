@@ -8,6 +8,7 @@ import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -143,9 +145,10 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         // 경기 참가자 상태 유효성 검사
         validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
 
-        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, now);
+        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ACCEPT, now);
 
 
+        updateGameUserLevel(gameEntity);
 
         notificationService.send(NotificationType.ACCEPT_GAME, participantGameEntity.getUserEntity(),
                 participantGameEntity.getGameEntity().getTitle() + "에 참가가 수락되었습니다.");
@@ -242,6 +245,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
         gameRepository.save(participantGameEntity.getGameEntity());
+
+        updateGameUserLevel(gameEntity);
 
         notificationService.send(NotificationType.KICKED_OUT, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에서 강퇴당하였습니다.");
 
@@ -368,4 +373,23 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         }
         return now;
     }
+
+    public void updateGameUserLevel(GameEntity gameEntity) {
+
+        List<ParticipantGameEntity> acceptedParticipants = participantGameRepository.findByGameEntity_GameIdAndParticipantGameStatus(gameEntity.getGameId(), ACCEPT);
+
+
+        double average = acceptedParticipants.stream()
+                .map(participantGameEntity -> participantGameEntity.getUserEntity().getGameUserLevel())
+                .mapToDouble(GameUserLevel::getValue)
+                .average()
+                .orElse(0.0);
+
+        GameUserLevel gameUserLevel = GameUserLevel.fromUserLevelAverage(average);
+
+
+        gameEntity.setGameUserLevel(gameUserLevel);
+
+    }
+
 }

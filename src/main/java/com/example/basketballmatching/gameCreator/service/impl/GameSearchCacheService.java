@@ -26,7 +26,6 @@ public class GameSearchCacheService {
             key = "#version + ':' + #date + ':' + #cityName + ':' + #matchFormat + ':' + #fieldStatus + ':' + #matchGenderType + ':' + #gameStatus + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort.toString()",
             unless = "#result == null || #result.getContent() == null || #result.getContent().isEmpty()"
     )
-
     public GameSearchCacheDto<SearchGameDto> searchGameCached(
             long version,
             LocalDate date,

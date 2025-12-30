@@ -151,6 +151,7 @@ public class GameQueryRepository {
                 .toList();
     }
 
+
     public List<ParticipantGameEntity> getParticipantUsers(Long gameId, LocalDateTime now) {
 
         QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
