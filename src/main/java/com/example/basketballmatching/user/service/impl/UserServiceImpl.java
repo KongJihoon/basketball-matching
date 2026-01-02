@@ -198,7 +198,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 검증 후 비밀번호 찾기
+     * 검증 후 비밀번호 리셋
      */
     @Override
     @Transactional
@@ -230,7 +230,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
+    /**
+     * 비밃번호 변경
+     */
     @Override
     @Transactional
     public CheckResponse changePassword(Long userId, ChangePasswordDto request) {
@@ -258,9 +260,12 @@ public class UserServiceImpl implements UserService {
         return CheckResponse.of(true, "비밀번호 변경을 완료하였습니다.");
     }
 
+
+    /**
+     * 회원 탈퇴
+     */
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "userDto", key = "#userId")
     public CheckResponse deleteUser(Long userId, String token) {
 
         UserEntity userEntity = getUser(userId);

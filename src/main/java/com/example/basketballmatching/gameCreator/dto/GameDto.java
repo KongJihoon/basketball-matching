@@ -2,6 +2,7 @@ package com.example.basketballmatching.gameCreator.dto;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.type.*;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -69,6 +70,9 @@ public class GameDto {
     @Schema(name = "경기 생성자 닉네임", example = "커리")
     private String creatorNickname;
 
+    @Schema(name = "경기 참가자 수준", example = "BEGINNER")
+    private GameUserLevel gameUserLevel;
+
 
 
     public static GameDto fromEntity(GameEntity gameEntity) {
@@ -90,6 +94,7 @@ public class GameDto {
                 .longitude(gameEntity.getLongitude())
                 .cityName(gameEntity.getCityName())
                 .matchGenderType(gameEntity.getMatchGenderType())
+                .gameUserLevel(gameEntity.getGameUserLevel())
                 .creatorId(gameEntity.getUserEntity().getUserId())
                 .creatorNickname(gameEntity.getUserEntity().getNickname())
                 .build();
