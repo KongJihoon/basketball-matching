@@ -1,15 +1,12 @@
 package com.example.basketballmatching.gameCreator.repository;
 
-import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
-import io.lettuce.core.dynamic.annotation.Param;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +27,15 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
     List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses);
 
-    boolean existsByUserEntity_UserIdAndGameEntity_GameIdAndParticipantGameStatus(Long userId,Long gameId, ParticipantGameStatus participantGameStatus);
 
+
+    @Query(
+            """
+        select p from ParticipantGameEntity p
+        join fetch p.userEntity
+        where p.gameEntity.gameId = :gameId
+        and p.participantGameStatus = :participantGameStatus
+"""
+    )
+    List<ParticipantGameEntity> findByGameEntity_GameIdAndParticipantGameStatus(@Param("gameId") Long gameId, @Param("participantGameStatus") ParticipantGameStatus participantGameStatus);
 }

@@ -3,6 +3,7 @@ package com.example.basketballmatching.gameCreator.entity;
 
 import com.example.basketballmatching.gameCreator.dto.EditGameDto;
 import com.example.basketballmatching.gameCreator.type.*;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.user.entity.UserEntity;
 import jakarta.persistence.*;
@@ -75,6 +76,10 @@ public class GameEntity extends BaseEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private GameStatus gameStatus;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private GameUserLevel gameUserLevel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
