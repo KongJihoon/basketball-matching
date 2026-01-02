@@ -44,6 +44,9 @@ public class UserController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
+    @ApiResponse(responseCode = "409", description = "중복 데이터",
+    content = {@Content(mediaType = "application/json",
+    schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/signup")
     public ResponseEntity<CommonResponse<Response>> signup(
             @RequestBody @Valid SignUpDto.Request request
@@ -64,7 +67,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "이메일 중복 확인 성공",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = CheckResponse.class))})
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+    @ApiResponse(responseCode = "409", description = "중복 데이터",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/check-email")
@@ -81,7 +84,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "닉네임 중복 확인 성공",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = CheckResponse.class))})
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+    @ApiResponse(responseCode = "409", description = "중복 데이터",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/check-nickname")
@@ -133,7 +136,7 @@ public class UserController {
 
     @Operation(summary = "회원 정보 조회")
     @ApiResponse(responseCode = "200", description = "회원 정보 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+    @ApiResponse(responseCode = "403", description = "권한 부족",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/user-info")

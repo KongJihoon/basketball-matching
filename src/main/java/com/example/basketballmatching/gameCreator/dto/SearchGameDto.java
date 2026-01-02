@@ -4,6 +4,7 @@ import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.type.GameStatus;
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
+import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +29,8 @@ public class SearchGameDto {
 
         private GameStatus gameStatus;
 
+        private GameUserLevel gameUserLevel;
+
         public static SearchGameDto fromEntity(GameEntity gameEntity) {
 
             return SearchGameDto.builder()
@@ -38,6 +41,7 @@ public class SearchGameDto {
                     .matchGenderType(gameEntity.getMatchGenderType())
                     .matchFormat(gameEntity.getMatchFormat())
                     .gameStatus(gameEntity.getGameStatus())
+                    .gameUserLevel(gameEntity.getGameUserLevel())
                     .build();
 
         }
