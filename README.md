@@ -18,6 +18,10 @@
 ---
 
 
+## 🏛️ 시스템 아키텍쳐
+
+![](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/systemArchitecture.png?raw=true)
+
 ## 📄 API 명세서
 
 <details>
