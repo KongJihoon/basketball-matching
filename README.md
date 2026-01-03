@@ -47,19 +47,18 @@
 - OAuth2 (Kakao Login)  
 
 ### 💬 Real-time Communication
-- Spring WebSocket + STOMP (경기방 채팅)  
 - SSE (Server-Sent Events, 알림 이벤트 전송)  
-- Redis Pub/Sub (멀티 인스턴스 확장 시 메시지 브로커)  
+- Redis Pub/Sub
 
 ### ⚙️ Infra & Database
 - MySQL (주요 데이터 저장)  
-- Redis (토큰 관리, 세션/매칭 대기열 캐싱)  
-- AWS (EC2, RDS, S3)  
+- Redis (토큰 관리, 캐싱, 분산 락 적용)  
+- AWS (EC2, RDS)  
 - Docker (개발/배포 환경 관리)  
 
 ### 🧰 Tools
 - IntelliJ IDEA Ultimate  
-- Postman / IntelliJ HTTP Client (API 테스트)  
+- Swagger / Postman (API 명세 및 테스트)
 - Git & GitHub  
 - Notion (기획, 일정 관리)  
 
@@ -81,32 +80,31 @@
 - [x] 경기 등록 / 수정 / 삭제 (주최자 권한)
    - THREE_ON_THREE(최소인원 : 6명, 최대인원 : 9명)
    - FIVE__ON_FIVE(최소인원 : 10명, 최대인원 : 15명)
+   - 경기 등록 시 생성자 랭크로 경기 랭크 표시
 - [x] 경기 목록 / 상세 조회
 - [x] 경기 신청 / 취소
 - [x] 매칭 확정 (참가자 확정 및 상태 관리)
 - [x] 경기 상태 관리 (RECRUITING, CLOSED)
 - [x] 현재 예정 경기 조회(QueryDSL)
+   - N+1 문제 발생 -> fetchJoin 적용
 - [x] 지난 경기 조회(QueryDSL)
+   - N+1 문제 발생 -> fetchJoin 적용
 
 ---
 
 ### 👥 매칭 & 참가자 관리
 - [x] 참가자 상태 관리(APPLY/ ACCEPT/ CANCEL 등)
+   - 경기 수락 시 참가자 랭크 평균 계산 후 경기 랭크 변경
 - [x] 경기별 참가자 목록 조회
 
 
 ---
 
-### 💬 채팅 & 알림
-- [ ] 경기방 채팅 (WebSocket + STOMP)
+### 💬알림
+
 - [x] 실시간 알림 (SSE 기반)
 - [x] 알림 종류: 경기 확정/취소, 신청 결과, 신고 처리 등
-- [ ] Redis Pub/Sub을 통한 멀티 인스턴스 확장
-
----
-
-### ⭐ 평가 & 랭크
-- [x] 경기 종료 후 참가자 평가 기능
+- [ ] Redis Pub/Sub을 통한 멀 경기 종료 후 참가자 평가 기능
 - [x] 자기 자신 평가 방지
 - [x] 동일 경기 중복 평가 방지
 - [x] 참가자 실력 평가 반영 (레벨/랭크 시스템)
