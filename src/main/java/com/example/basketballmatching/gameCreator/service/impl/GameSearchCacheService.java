@@ -23,11 +23,10 @@ public class GameSearchCacheService {
 
     @Cacheable(
             cacheNames = "gameSearch",
-            key = "#version + ':' + #date + ':' + #cityName + ':' + #matchFormat + ':' + #fieldStatus + ':' + #matchGenderType + ':' + #gameStatus + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort.toString()",
+            key = "#date + ':' + #cityName + ':' + #matchFormat + ':' + #fieldStatus + ':' + #matchGenderType + ':' + #gameStatus + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort.toString()",
             unless = "#result == null || #result.getContent() == null || #result.getContent().isEmpty()"
     )
     public GameSearchCacheDto<SearchGameDto> searchGameCached(
-            long version,
             LocalDate date,
             CityName cityName,
             MatchFormat matchFormat,
@@ -36,8 +35,8 @@ public class GameSearchCacheService {
             GameStatus gameStatus,
             Pageable pageable
     ) {
-        log.info("[DB 조회 수행] version={}, date={}, city={}, page={}, size={}, sort={}",
-                version, date, cityName, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+        log.info("[DB 조회 수행] date={}, city={}, page={}, size={}, sort={}",
+                date, cityName, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         Page<SearchGameDto> searchGameDtos = gameQueryRepository.searchByKeyword(date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable);
 
         return new GameSearchCacheDto<>(searchGameDtos.getContent(), searchGameDtos.getTotalElements());

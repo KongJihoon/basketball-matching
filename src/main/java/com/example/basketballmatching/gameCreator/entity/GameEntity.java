@@ -103,6 +103,10 @@ public class GameEntity extends BaseEntity {
             this.matchFormat = editGameDto.getMatchFormat();
         }
 
+        if (editGameDto.getMatchGenderType() != null) {
+            this.matchGenderType = editGameDto.getMatchGenderType();
+        }
+
 
 
 

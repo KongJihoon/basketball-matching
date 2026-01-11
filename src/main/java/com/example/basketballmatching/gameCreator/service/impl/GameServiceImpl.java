@@ -9,8 +9,6 @@ import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepo
 import com.example.basketballmatching.gameCreator.service.GameService;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
-import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
-import com.example.basketballmatching.global.cache.version.GameSearchCacheVersionService;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.lock.RedissonLockExecutor;
@@ -18,6 +16,7 @@ import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -40,7 +39,7 @@ public class GameServiceImpl implements GameService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final ParticipantGameRepository participantGameRepository;
-    private final GameSearchCacheVersionService versionService;
+
     private final GameSearchCacheService cacheService;
 
     private final ApplicationEventPublisher eventPublisher;
@@ -57,6 +56,7 @@ public class GameServiceImpl implements GameService {
      * 경기 생성
      */
     @Override
+    @CacheEvict(value = "gameSearch", allEntries = true)
     public CommonResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
 
         String lockKey = buildPlaceLockKey(request.getPlaceName(), request.getAddress());
@@ -92,7 +92,6 @@ public class GameServiceImpl implements GameService {
                     participantGameRepository.save(participantGameEntity);
 
 
-                    eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
                     log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
 
@@ -133,11 +132,9 @@ public class GameServiceImpl implements GameService {
 
         log.info("[경기 검색 정렬 시작] date : {}", date);
 
-        long version = versionService.getVersion();
-
 
         GameSearchCacheDto<SearchGameDto> searchGameCached = cacheService.searchGameCached(
-                version, date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable
+                date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable
         );
 
         if (searchGameCached.getContent().isEmpty()) {
@@ -154,6 +151,7 @@ public class GameServiceImpl implements GameService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "gameSearch", allEntries = true)
     public CommonResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
 
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);
@@ -169,7 +167,6 @@ public class GameServiceImpl implements GameService {
 
         gameEntity.editGameInfo(request);
 
-        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 

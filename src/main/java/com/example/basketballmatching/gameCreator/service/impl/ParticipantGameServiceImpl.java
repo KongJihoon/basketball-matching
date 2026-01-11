@@ -9,7 +9,6 @@ import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepo
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
-import com.example.basketballmatching.global.cache.event.GameSearchCacheBumpEvent;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -19,6 +18,7 @@ import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -267,6 +267,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
+    @CacheEvict(value = "gameSearch", allEntries = true)
     public CheckResponse deleteGame(Long userId, Long gameId) {
 
         log.info("[경기 삭제 시작] userId : {}, gameId : {}", userId, gameId);
@@ -309,8 +310,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         gameRepository.save(gameEntity);
 
-
-        eventPublisher.publishEvent(new GameSearchCacheBumpEvent());
 
         log.info("[경기 삭제 완료] userId : {}, gameId : {}", userId, gameId);
 

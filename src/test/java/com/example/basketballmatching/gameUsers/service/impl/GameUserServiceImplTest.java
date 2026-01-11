@@ -106,6 +106,7 @@ class GameUserServiceImplTest {
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
                 .userType(UserType.USER)
+                .gameUserLevel(GameUserLevel.AMATEUR)
                 .build();
 
         creator.setEmailAuth();
@@ -145,6 +146,8 @@ class GameUserServiceImplTest {
                 .build();
 
         gameEntity = CreateGameDto.Request.toEntity(request, creator);
+
+        gameEntity.setGameUserLevel(creator.getGameUserLevel());
 
         gameRepository.save(gameEntity);
         participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
