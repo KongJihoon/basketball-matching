@@ -1,6 +1,7 @@
 package com.example.basketballmatching.gameCreator.dto;
 
 import com.example.basketballmatching.gameCreator.type.MatchFormat;
+import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,5 +23,7 @@ public class EditGameDto {
         @Schema(name = "경기 형식", example = "THREE_ON_THREE")
         private MatchFormat matchFormat;
 
+        @Schema(name = "경기 성별", example = "MALE_ONLY")
+        private MatchGenderType matchGenderType;
 
 }

@@ -104,8 +104,8 @@ public class GameQueryRepository {
         List<ParticipantGameEntity> gameEntities = jpaQueryFactory
                 .select(participantGame)
                 .from(participantGame)
-                .join(participantGame.gameEntity, gameEntity)
-                .fetchJoin()
+//                .join(participantGame.gameEntity, gameEntity)
+//                .fetchJoin()
                 .where(
                         participantGame.userEntity.userId.eq(userId),
                         participantGame.participantGameStatus.in(ACCEPT, APPLY),
