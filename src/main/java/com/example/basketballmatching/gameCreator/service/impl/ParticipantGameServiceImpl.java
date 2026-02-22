@@ -7,6 +7,7 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
+import com.example.basketballmatching.gameCreator.type.GameStatus;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -29,6 +30,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static com.example.basketballmatching.gameCreator.type.GameStatus.CLOSED;
+import static com.example.basketballmatching.gameCreator.type.GameStatus.RECRUITING;
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -131,7 +134,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
-        if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
+        if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount() || gameEntity.getGameStatus().equals(CLOSED)) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
         }
 
@@ -199,6 +202,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         participantGameEntity.setParticipantGameStatusAndRejectDateTime(REJECT, now);
 
+        gameEntity.setGameStatus(RECRUITING);
 
 
         notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
@@ -244,9 +248,11 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
 
 
+
         gameRepository.save(participantGameEntity.getGameEntity());
 
         updateGameUserLevel(gameEntity);
+        gameEntity.setGameStatus(RECRUITING);
 
         notificationService.send(NotificationType.KICKED_OUT, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에서 강퇴당하였습니다.");
 

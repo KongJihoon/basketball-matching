@@ -55,17 +55,16 @@ public class GameServiceImpl implements GameService {
     /**
      * 경기 생성
      */
+
     @Override
-    @CacheEvict(value = "gameSearch", allEntries = true)
     public CommonResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request) {
 
-        String lockKey = buildPlaceLockKey(request.getPlaceName(), request.getAddress());
-        String redisKey = LOCK_PREFIX + lockKey;
+
+        String lockKey = buildPlaceLockKey(request);
 
 
-        return lockExecutor.executeWithLock(redisKey, LOCK_WAIT_MS, LOCK_LEASE_MS, () ->
+        return lockExecutor.executeWithLock(lockKey, LOCK_WAIT_MS, LOCK_LEASE_MS, () ->
                 transactionTemplate.execute(status -> {
-
                     log.info("[경기 생성 시작] userId = {} title = {}", userId, request.getTitle());
 
 
@@ -91,17 +90,17 @@ public class GameServiceImpl implements GameService {
 
                     participantGameRepository.save(participantGameEntity);
 
+                    eventPublisher.publishEvent(
+                            GameCreatedEventDto.of(gameEntity.getGameId(), userId, request.getTitle())
+                    );
 
 
                     log.info("[경기 생성 완료] gameId = {}", gameEntity.getGameId());
 
 
                     return CommonResponse.of("경기 생성이 완료되었습니다.", CreateGameDto.Response.fromDto(GameDto.fromEntity(gameEntity)));
-
-
                 }));
     }
-
 
     /**
      * 경기 상세조회
@@ -263,11 +262,14 @@ public class GameServiceImpl implements GameService {
 
     }
 
-    private String buildPlaceLockKey(String placeName, String address) {
+    private String buildPlaceLockKey(CreateGameDto.Request request) {
 
-        String pn = normalize(placeName).replace("|", " ");
-        String ad = normalize(address).replace("|", " ");
-        return pn + "|" + ad;
+        String pn = normalize(request.getPlaceName());
+        String ad = normalize(request.getAddress());
+        String day = request.getStartDateTime().toLocalDate().toString(); // ex) 2026-02-06
+
+
+        return LOCK_PREFIX + day + ":" + pn + "|" + ad;
 
 
     }
@@ -277,7 +279,7 @@ public class GameServiceImpl implements GameService {
             return "";
         }
 
-        return s.trim().replaceAll("\\s+", " ");
+        return s.trim().replaceAll("\\s+", " ").replace("|", " ");
     }
 
 

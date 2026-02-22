@@ -73,7 +73,7 @@ public enum ErrorCode {
     ALREADY_KICKOUT_USER(HttpStatus.CONFLICT, "이미 강퇴한 참가자입니다."),
     NOT_DELETE_GAME(HttpStatus.FORBIDDEN, "경기를 삭제할 수 없습니다."),
     NOT_APPLY_GAME_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자는 참가신청을 할 수 없습니다."),
-
+    CLOSED_GAME(HttpStatus.BAD_REQUEST, "모집 마감된 경기입니다."),
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),
@@ -90,7 +90,13 @@ public enum ErrorCode {
 
     // blackList
     ALREADY_BLACK_USER(HttpStatus.CONFLICT, "이미 블랙리스트 등록된 유저입니다."),
-    BLACKLIST_USER(HttpStatus.FORBIDDEN, "블랙리스트 유저입니다.");
+    BLACKLIST_USER(HttpStatus.FORBIDDEN, "블랙리스트 유저입니다."),
+
+
+    // friend
+    ALREADY_EXIST_FRIEND(HttpStatus.BAD_REQUEST, "이미 친구목록에 존재하는 유저입니다."),
+    INVALID_FRIEND_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 친구요청입니다.")
+    ;
 
 
 

@@ -10,7 +10,21 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
+// 중복 생성 방지 DB Unique 인덱스
+@Table(
+        name = "game_entity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_game_place_time",
+                        columnNames = {
+                                "place_name",
+                                "address",
+                                "start_date_time",
+                                "end_date_time"
+                        }
+                )
+        }
+)
 @Entity
 @Getter
 @AllArgsConstructor

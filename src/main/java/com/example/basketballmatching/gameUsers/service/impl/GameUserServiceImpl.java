@@ -5,6 +5,7 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameQueryRepository;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.gameCreator.type.GameStatus;
 import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
@@ -56,6 +57,10 @@ public class GameUserServiceImpl implements GameUserService {
 
         GameEntity gameEntity = getGameWithLock(gameId);
 
+        if (gameEntity.getGameStatus().equals(GameStatus.CLOSED)) {
+            throw new CustomException(CLOSED_GAME);
+        }
+
         ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElse(null);
 
@@ -69,6 +74,10 @@ public class GameUserServiceImpl implements GameUserService {
             participantGameRepository.save(participantGameEntity);
 
             gameEntity.increaseParticipantCount();
+
+            if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
+                gameEntity.setGameStatus(GameStatus.CLOSED);
+            }
 
 
         } else if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {

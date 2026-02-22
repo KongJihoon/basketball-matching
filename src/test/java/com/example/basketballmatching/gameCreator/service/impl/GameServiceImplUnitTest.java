@@ -2,6 +2,7 @@ package com.example.basketballmatching.gameCreator.service.impl;
 
 import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
 import com.example.basketballmatching.gameCreator.dto.EditGameDto;
+import com.example.basketballmatching.gameCreator.dto.GameCreatedEventDto;
 import com.example.basketballmatching.gameCreator.dto.GameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
@@ -13,6 +14,7 @@ import com.example.basketballmatching.gameCreator.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
+import com.example.basketballmatching.global.lock.RedissonLockExecutor;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.UserType;
@@ -24,9 +26,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +50,15 @@ class GameServiceImplUnitTest {
 
     @Mock
     private ParticipantGameRepository participantGameRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private RedissonLockExecutor lockExecutor;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
     @InjectMocks
     private GameServiceImpl gameService;
@@ -192,6 +208,62 @@ class GameServiceImplUnitTest {
         verify(userRepository).findByUserIdAndDeletedDateTimeIsNull(userEntity.getUserId());
 
         verifyNoInteractions(gameRepository, participantGameRepository);
+    }
+
+    @Test
+    @DisplayName("경기 생성 성공 시 이벤트 발행 테스트")
+    void createGame_publishEvent() {
+
+        Long userId = 1L;
+
+        // given
+        CreateGameDto.Request request = CreateGameDto.Request.builder()
+                .title("주말 3대3 같이 하실 분")
+                .content("초보~중수 환영 / 즐겜 / 노쇼 금지")
+                .headCount(6) // 3vs3 최소 6
+                .fieldStatus(FieldStatus.OUTDOOR) // 예시 (실제 enum에 맞게)
+                .matchGenderType(MatchGenderType.MIXED) // 예시
+                .startDateTime(LocalDateTime.of(2026, 12, 20, 19, 0))
+                .endDateTime(LocalDateTime.of(2026, 12, 20, 20, 30))
+                .placeName("잠실종합운동장 농구장")
+                .address("서울특별시 송파구 올림픽로 25") // CityName.getCityName(address)에서 뽑을 주소
+                .latitude(37.515)   // 예시
+                .longitude(127.073) // 예시
+                .matchFormat(MatchFormat.THREE_ON_THREE)
+                .build();
+
+        when(userRepository.findByUserIdAndDeletedDateTimeIsNull(userId))
+                .thenReturn(Optional.of(userEntity));
+
+        when(gameRepository.existsBySamePlaceAtSameTime(any(), any(), any(), any()))
+                .thenReturn(false);
+
+        when(gameRepository.save(any(GameEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        when(participantGameRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        when(lockExecutor.executeWithLock(anyString(), anyLong(), anyLong(), any()))
+                .thenAnswer(inv -> {
+                    Callable<?> actions = inv.getArgument(3);
+                    return actions.call();
+                });
+
+        when(transactionTemplate.execute(any(TransactionCallback.class)))
+                .thenAnswer(inv -> {
+                    TransactionCallback<?> cb = inv.getArgument(0);
+                    return cb.doInTransaction(mock(TransactionStatus.class));
+                });
+
+
+        // when
+
+        gameService.createGame(userId, request);
+
+
+        // then
+
+        verify(eventPublisher, times(1)).publishEvent(any(GameCreatedEventDto.class));
+
     }
 
 

@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 public interface GameService {
 
-    CommonResponse<CreateGameDto.Response> createGame(Long UserId, CreateGameDto.Request request);
+    CommonResponse<CreateGameDto.Response> createGame(Long userId, CreateGameDto.Request request);
 
     CommonResponse<GameDto> detailGame(Long gameId);
 

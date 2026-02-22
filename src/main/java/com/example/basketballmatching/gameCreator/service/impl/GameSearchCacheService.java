@@ -23,7 +23,7 @@ public class GameSearchCacheService {
 
     @Cacheable(
             cacheNames = "gameSearch",
-            key = "#date + ':' + #cityName + ':' + #matchFormat + ':' + #fieldStatus + ':' + #matchGenderType + ':' + #gameStatus + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort.toString()",
+            key = "#date + ':' + #cityName + ':' + #matchFormat + ':' + #fieldStatus + ':' + #matchGenderType + ':' + #gameStatus",
             unless = "#result == null || #result.getContent() == null || #result.getContent().isEmpty()"
     )
     public GameSearchCacheDto<SearchGameDto> searchGameCached(

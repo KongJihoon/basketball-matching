@@ -10,7 +10,9 @@ public enum NotificationType {
     KICKED_OUT("강퇴"),
     ACCEPT_GAME("경기 참가 수락"),
     REJECT_GAME("경기 참가 거절"),
-    DELETE_GAME("경기 삭제");
+    DELETE_GAME("경기 삭제"),
+
+    REQUEST_FRIEND("친구 요청");
 
     private final String description;
 }
