@@ -83,26 +83,26 @@ public class UserEntity extends BaseEntity {
         this.deletedDateTime = deletedDateTime;
     }
 
-    public void editUserInfo(EditUserDto editUserDto) {
+    public void editUserInfo(String nickname, String phone, String address, GenderType genderType, Position position) {
 
-        if (editUserDto.getNickname() != null) {
-            this.nickname = editUserDto.getNickname();
+        if (nickname != null) {
+            this.nickname = nickname;
         }
 
-        if (editUserDto.getPhone() != null) {
-            this.phone = editUserDto.getPhone();
+        if (phone != null) {
+            this.phone = phone;
         }
 
-        if (editUserDto.getAddress() != null) {
-            this.address = editUserDto.getAddress();
+        if (address != null) {
+            this.address = address;
         }
 
-        if (editUserDto.getPosition() != null) {
-            this.position = editUserDto.getPosition();
+        if (position != null) {
+            this.position = position;
         }
 
-        if (editUserDto.getGenderType() != null) {
-            this.genderType = editUserDto.getGenderType();
+        if (genderType != null) {
+            this.genderType = genderType;
         }
 
     }
@@ -110,6 +110,24 @@ public class UserEntity extends BaseEntity {
     public void setPassword(String password) {
 
         this.password = password;
+
+    }
+
+    public static UserEntity create(String email, String password, String nickname, String name, LocalDate birth, String phone, String address, Position position, GenderType genderType) {
+
+        return UserEntity.builder()
+                .email(email)
+                .password(password)
+                .nickname(nickname)
+                .name(name)
+                .birth(birth)
+                .phone(phone)
+                .address(address)
+                .position(position)
+                .userType(UserType.USER)
+                .genderType(genderType)
+                .loginProvider(LoginProvider.LOCAL)
+                .build();
 
     }
 

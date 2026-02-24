@@ -77,23 +77,6 @@ public class SignUpDto {
         @Schema(description = "로그인 타입", example = "LOCAL", defaultValue = "LOCAL")
         private LoginProvider loginProvider;
 
-        public static UserEntity toEntity(SignUpDto.Request request, String encodedPassword) {
-
-            return UserEntity.builder()
-                    .email(request.getEmail())
-                    .password(encodedPassword)
-                    .nickname(request.getNickname())
-                    .name(request.getName())
-                    .birth(request.getBirth())
-                    .phone(request.getPhone())
-                    .address(request.getAddress())
-                    .position(request.getPosition())
-                    .userType(UserType.USER)
-                    .genderType(request.genderType)
-                    .loginProvider(LoginProvider.LOCAL)
-                    .build();
-        }
-
 
 
     }

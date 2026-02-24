@@ -74,7 +74,17 @@ public class UserServiceImpl implements UserService {
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
-        UserEntity userEntity = SignUpDto.Request.toEntity(request, encodedPassword);
+        UserEntity userEntity = UserEntity.create(
+                request.getEmail(),
+                encodedPassword,
+                request.getNickname(),
+                request.getName(),
+                request.getBirth(),
+                request.getPhone(),
+                request.getAddress(),
+                request.getPosition(),
+                request.getGenderType()
+        );
 
 
         userEntity.setEmailAuth();
@@ -82,9 +92,11 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(userEntity);
 
+        UserDto userDto = UserDto.fromEntity(userEntity);
+
         log.info("유저 회원가입 완료");
 
-        return CommonResponse.of("회원가입에 성공하였습니다.", SignUpDto.Response.fromDto(UserDto.fromEntity(userEntity)));
+        return CommonResponse.of("회원가입에 성공하였습니다.", SignUpDto.Response.fromDto(userDto));
     }
 
 
@@ -161,7 +173,13 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        userEntity.editUserInfo(editUserDto);
+        userEntity.editUserInfo(
+                editUserDto.getNickname(),
+                editUserDto.getPhone(),
+                editUserDto.getAddress(),
+                editUserDto.getGenderType(),
+                editUserDto.getPosition()
+        );
 
         UserDto userDto = UserDto.fromEntity(userEntity);
 
@@ -222,7 +240,6 @@ public class UserServiceImpl implements UserService {
 
         userEntity.setPassword(encodedPassword);
 
-        userRepository.save(userEntity);
 
         redisService.deleteData("password:change:" + email);
 
@@ -252,7 +269,6 @@ public class UserServiceImpl implements UserService {
 
         userEntity.setPassword(encodedPassword);
 
-        userRepository.save(userEntity);
 
         log.info("[비밀번호 변경 완료] userId : {}", userId);
 
@@ -287,7 +303,6 @@ public class UserServiceImpl implements UserService {
 
         userEntity.setDeletedDateTime(now);
 
-        userRepository.save(userEntity);
 
 
         return CheckResponse.of(true, "회원탈퇴에 성공하였습니다.");
