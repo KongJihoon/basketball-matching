@@ -72,28 +72,6 @@ public class CreateGameDto {
         @NotNull(message = "성별을 입력해주세요.")
         private MatchGenderType matchGenderType;
 
-        public static GameEntity toEntity(CreateGameDto.Request request, UserEntity userEntity) {
-
-            return GameEntity.builder()
-                    .title(request.getTitle())
-                    .content(request.getContent())
-                    .headCount(request.getHeadCount())
-                    .fieldStatus(request.getFieldStatus())
-                    .matchGenderType(request.getMatchGenderType())
-                    .startDateTime(request.getStartDateTime())
-                    .endDateTime(request.getEndDateTime())
-                    .placeName(request.getPlaceName())
-                    .address(request.getAddress())
-                    .latitude(request.getLatitude())
-                    .longitude(request.getLongitude())
-                    .cityName(CityName.getCityName(request.getAddress()))
-                    .matchFormat(request.getMatchFormat())
-                    .gameStatus(GameStatus.RECRUITING)
-                    .userEntity(userEntity)
-                    .build();
-
-
-        }
 
     }
 

@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Setter
 public class GameEntity extends BaseEntity {
 
     @Id
@@ -99,26 +98,26 @@ public class GameEntity extends BaseEntity {
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
 
-    public void editGameInfo(EditGameDto editGameDto) {
+    public void editGameInfo(String title, String content, Integer headCount, MatchFormat matchFormat, MatchGenderType matchGenderType) {
 
-        if (editGameDto.getTitle() != null) {
-            this.title = editGameDto.getTitle();
+        if (title != null) {
+            this.title = title;
         }
 
-        if (editGameDto.getContent() != null) {
-            this.content = editGameDto.getContent();
+        if (content != null) {
+            this.content = content;
         }
 
-        if (editGameDto.getHeadCount() > 0) {
-            this.headCount = editGameDto.getHeadCount();
+        if (headCount > 0) {
+            this.headCount = headCount;
         }
 
-        if (editGameDto.getMatchFormat() != null) {
-            this.matchFormat = editGameDto.getMatchFormat();
+        if (matchFormat != null) {
+            this.matchFormat = matchFormat;
         }
 
-        if (editGameDto.getMatchGenderType() != null) {
-            this.matchGenderType = editGameDto.getMatchGenderType();
+        if (matchGenderType != null) {
+            this.matchGenderType = matchGenderType;
         }
 
 
@@ -126,6 +125,33 @@ public class GameEntity extends BaseEntity {
 
 
     }
+
+    public static GameEntity create(String title, String content, Integer headCount, FieldStatus fieldStatus, MatchFormat matchFormat
+    , MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, String placeName, String address, CityName cityName, Double latitude, Double longitude, UserEntity userEntity) {
+
+        return GameEntity.builder()
+                .title(title)
+                .content(content)
+                .headCount(headCount)
+                .fieldStatus(fieldStatus)
+                .matchGenderType(matchGenderType)
+                .startDateTime(startDateTime)
+                .endDateTime(endDateTime)
+                .placeName(placeName)
+                .address(address)
+                .latitude(latitude)
+                .longitude(longitude)
+                .cityName(cityName)
+                .matchFormat(matchFormat)
+                .gameStatus(GameStatus.RECRUITING)
+                .userEntity(userEntity)
+                .build();
+    }
+
+    public void setGameUserLevel(GameUserLevel gameUserLevel) {
+        this.gameUserLevel = gameUserLevel;
+    }
+
 
     public void increaseParticipantCount() {
         this.participantCount++;

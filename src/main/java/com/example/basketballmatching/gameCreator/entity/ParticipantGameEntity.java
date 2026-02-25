@@ -62,7 +62,7 @@ public class ParticipantGameEntity extends BaseEntity {
 
     }
 
-    public ParticipantGameEntity toGameCreatorEntity(
+    public static ParticipantGameEntity toGameCreatorEntity(
             GameEntity gameEntity, UserEntity userEntity
     ) {
 
