@@ -77,8 +77,22 @@ public class GameServiceImpl implements GameService {
 
                     UserEntity userEntity = getUser(userId);
 
-
-                    GameEntity gameEntity = CreateGameDto.Request.toEntity(request, userEntity);
+                    GameEntity gameEntity = GameEntity.create(
+                            request.getTitle(),
+                            request.getContent(),
+                            request.getHeadCount(),
+                            request.getFieldStatus(),
+                            request.getMatchFormat(),
+                            request.getMatchGenderType(),
+                            request.getStartDateTime(),
+                            request.getEndDateTime(),
+                            request.getPlaceName(),
+                            request.getAddress(),
+                            CityName.getCityName(request.getAddress()),
+                            request.getLatitude(),
+                            request.getLongitude(),
+                            userEntity
+                    );
 
                     GameUserLevel gameUserLevel = userEntity.getGameUserLevel();
 
@@ -86,7 +100,7 @@ public class GameServiceImpl implements GameService {
 
                     gameRepository.save(gameEntity);
 
-                    ParticipantGameEntity participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, userEntity);
+                    ParticipantGameEntity participantGameEntity = ParticipantGameEntity.toGameCreatorEntity(gameEntity, userEntity);
 
                     participantGameRepository.save(participantGameEntity);
 
@@ -164,7 +178,7 @@ public class GameServiceImpl implements GameService {
         validateEditGame(request, gameEntity, userEntity);
 
 
-        gameEntity.editGameInfo(request);
+        gameEntity.editGameInfo(request.getTitle(), request.getContent(), request.getHeadCount(), request.getMatchFormat(), request.getMatchGenderType());
 
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
