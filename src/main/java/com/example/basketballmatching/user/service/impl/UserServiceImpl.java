@@ -326,12 +326,12 @@ public class UserServiceImpl implements UserService {
         participantGameEntities.forEach(
                 participantGameEntity -> {
                     if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
-                        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
+                        participantGameEntity.cancel(now);
 
                     }
 
                     if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-                        participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
+                        participantGameEntity.kickout(now);
 
 
                     }
