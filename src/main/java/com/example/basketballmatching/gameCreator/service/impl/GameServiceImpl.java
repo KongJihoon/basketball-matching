@@ -100,7 +100,7 @@ public class GameServiceImpl implements GameService {
 
                     gameRepository.save(gameEntity);
 
-                    ParticipantGameEntity participantGameEntity = ParticipantGameEntity.toGameCreatorEntity(gameEntity, userEntity);
+                    ParticipantGameEntity participantGameEntity = ParticipantGameEntity.createCreator(gameEntity, userEntity);
 
                     participantGameRepository.save(participantGameEntity);
 

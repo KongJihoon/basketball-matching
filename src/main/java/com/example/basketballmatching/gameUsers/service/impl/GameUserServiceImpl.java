@@ -15,6 +15,7 @@ import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -42,6 +43,7 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final GameRepository gameRepository;
     private final GameQueryRepository gameQueryRepository;
+    private final RedisService redisService;
 
 
     /**
@@ -56,6 +58,12 @@ public class GameUserServiceImpl implements GameUserService {
         UserEntity userEntity = getUser(userId);
 
         GameEntity gameEntity = getGameWithLock(gameId);
+
+        String data = redisService.getData("blackList:" + userEntity.getEmail());
+
+        if (data != null) {
+            throw new CustomException(BLACKLIST_USER);
+        }
 
         if (gameEntity.getGameStatus().equals(GameStatus.CLOSED)) {
             throw new CustomException(CLOSED_GAME);
@@ -73,17 +81,15 @@ public class GameUserServiceImpl implements GameUserService {
 
             participantGameRepository.save(participantGameEntity);
 
-            gameEntity.increaseParticipantCount();
 
             if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
-                gameEntity.setGameStatus(GameStatus.CLOSED);
+                gameEntity.setStatue(GameStatus.CLOSED);
             }
 
 
         } else if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {
 
             participantGameEntity.reApply();
-            gameEntity.increaseParticipantCount();
         }
 
         ApplyGameUserDto participantDto = ApplyGameUserDto.fromEntity(participantGameEntity);
@@ -117,12 +123,17 @@ public class GameUserServiceImpl implements GameUserService {
             throw new CustomException(ALREADY_CANCELED_USER);
         }
 
+        if (participantGameEntity.getParticipantGameStatus().equals(KICKOUT)) {
+            throw new CustomException(ALREADY_KICKOUT_USER);
+        }
+
+
         if (!participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
             throw new CustomException(NOT_ACCEPT_USER);
         }
 
 
-        participantGameEntity.setParticipantGameStatusAndCanceledDateTime(CANCEL, now);
+        participantGameEntity.cancel(now);
 
 
 

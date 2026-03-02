@@ -148,8 +148,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         // 경기 참가자 상태 유효성 검사
         validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
 
-        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ACCEPT, now);
 
+        participantGameEntity.accept(now);
 
         updateGameUserLevel(gameEntity);
 
@@ -200,10 +200,8 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         LocalDateTime now = validateStartDateTime(gameEntity);
 
 
-        participantGameEntity.setParticipantGameStatusAndRejectDateTime(REJECT, now);
 
-        gameEntity.setGameStatus(RECRUITING);
-
+        participantGameEntity.reject(now);
 
         notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
 
@@ -245,14 +243,13 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         LocalDateTime now = validateStartDateTime(gameEntity);
 
-        participantGameEntity.setParticipantGameStatusAndKickoutDateTime(KICKOUT, now);
 
+        participantGameEntity.kickout(now);
 
 
         gameRepository.save(participantGameEntity.getGameEntity());
 
         updateGameUserLevel(gameEntity);
-        gameEntity.setGameStatus(RECRUITING);
 
         notificationService.send(NotificationType.KICKED_OUT, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에서 강퇴당하였습니다.");
 
@@ -297,7 +294,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
         // 조회 유저 상태 DELETE로 변경
         participantGameEntityList.forEach(participantGame ->
-                participantGame.setParticipantGameStatusAndDeletedDateTime(DELETE, now));
+                participantGame.delete(now));
 
         // 삭제 알림 전송
         participantGameEntityList

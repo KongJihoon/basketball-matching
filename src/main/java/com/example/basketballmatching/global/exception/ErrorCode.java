@@ -74,6 +74,9 @@ public enum ErrorCode {
     NOT_DELETE_GAME(HttpStatus.FORBIDDEN, "경기를 삭제할 수 없습니다."),
     NOT_APPLY_GAME_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자는 참가신청을 할 수 없습니다."),
     CLOSED_GAME(HttpStatus.BAD_REQUEST, "모집 마감된 경기입니다."),
+    ALREADY_PRECESSED_STATUS(HttpStatus.BAD_REQUEST, "이미 변경된 상태입니다."),
+    INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 상태변경입니다."),
+    ALREADY_FINAL_STATUS(HttpStatus.BAD_REQUEST, "이미 적용된 상태변경입니다."),
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),

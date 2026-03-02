@@ -47,7 +47,7 @@ public class GameEntity extends BaseEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private int participantCount = 1;
+    private int participantCount = 0;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -159,6 +159,10 @@ public class GameEntity extends BaseEntity {
 
     public void decreaseParticipantCount() {
         this.participantCount--;
+    }
+
+    public void setStatue(GameStatus status) {
+        this.gameStatus = status;
     }
 
     // 테스트용

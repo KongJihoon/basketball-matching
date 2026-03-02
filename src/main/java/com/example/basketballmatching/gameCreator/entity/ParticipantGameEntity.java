@@ -3,6 +3,7 @@ package com.example.basketballmatching.gameCreator.entity;
 
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.*;
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Entity
 @AllArgsConstructor
@@ -29,13 +31,13 @@ public class ParticipantGameEntity extends BaseEntity {
     @Column(nullable = false)
     private ParticipantGameStatus participantGameStatus;
 
+    private LocalDateTime applyDateTime;
+
     private LocalDateTime acceptDateTime;
 
     private LocalDateTime rejectDateTime;
 
     private LocalDateTime canceledDateTime;
-
-    private LocalDateTime withDrawDateTime;
 
     private LocalDateTime kickoutDateTime;
 
@@ -52,81 +54,137 @@ public class ParticipantGameEntity extends BaseEntity {
     private UserEntity userEntity;
 
     public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity) {
-
-        return ParticipantGameEntity.builder()
-                .participantGameStatus(APPLY)
+        ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
                 .build();
+
+        participantGameEntity.transitionTo(APPLY, LocalDateTime.now());
+
+        return participantGameEntity;
 
 
     }
 
-    public static ParticipantGameEntity toGameCreatorEntity(
+    public static ParticipantGameEntity createCreator(
             GameEntity gameEntity, UserEntity userEntity
     ) {
 
-
-        return ParticipantGameEntity.builder()
-                .participantGameStatus(ParticipantGameStatus.ACCEPT)
+        ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
-                .acceptDateTime(LocalDateTime.now())
                 .build();
+
+        participantGameEntity.transitionTo(ACCEPT, LocalDateTime.now());
+        return participantGameEntity;
     }
 
     public void reApply() {
         this.canceledDateTime = null;
-        this.participantGameStatus = ParticipantGameStatus.APPLY;
+        transitionTo(APPLY, LocalDateTime.now());
 
     }
 
+    public void accept(LocalDateTime now) {
 
-    public void setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime acceptDateTime) {
-        this.participantGameStatus = participantGameStatus;
-        this.acceptDateTime = acceptDateTime;
+        transitionTo(ACCEPT, now);
     }
 
-    public void setParticipantGameStatusAndRejectDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime rejectDateTime) {
-        this.participantGameStatus = participantGameStatus;
-        this.rejectDateTime = rejectDateTime;
-        this.getGameEntity().decreaseParticipantCount();
+    public void cancel(LocalDateTime now) {
+        transitionTo(CANCEL, now);
     }
 
-    public void setParticipantGameStatusAndCanceledDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime canceledDateTime) {
-        this.participantGameStatus = participantGameStatus;
-        this.canceledDateTime = canceledDateTime;
-        this.getGameEntity().decreaseParticipantCount();
+    public void reject(LocalDateTime now) {
 
+        transitionTo(REJECT, now);
     }
 
-    public void setParticipantGameStatusAndKickoutDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime kickoutDateTime) {
-        this.participantGameStatus = participantGameStatus;
-        this.kickoutDateTime = kickoutDateTime;
-        this.getGameEntity().decreaseParticipantCount();
+    public void kickout(LocalDateTime now) {
 
+        transitionTo(KICKOUT, now);
     }
 
-    public void setParticipantGameStatusAndDeletedDateTime(ParticipantGameStatus participantGameStatus, LocalDateTime deletedDateTime) {
-        this.participantGameStatus = participantGameStatus;
-        this.deletedDateTime = deletedDateTime;
-        this.getGameEntity().decreaseParticipantCount();
-
+    public void delete(LocalDateTime now) {
+        transitionTo(DELETE, now);
     }
 
-    public void setBlackUserStatus(ParticipantGameStatus participantGameStatus, LocalDateTime localDateTime) {
 
-        if (participantGameStatus.equals(ParticipantGameStatus.ACCEPT)) {
-            this.participantGameStatus = ParticipantGameStatus.KICKOUT;
-            this.kickoutDateTime = localDateTime;
+
+
+    private void transitionTo(ParticipantGameStatus newStatus, LocalDateTime now) {
+
+        ParticipantGameStatus oldStatus = participantGameStatus;
+
+        if (oldStatus != null) {
+            validateTransition(oldStatus, newStatus);
         }
 
-        if (participantGameStatus.equals(ParticipantGameStatus.APPLY)) {
-            this.participantGameStatus = ParticipantGameStatus.CANCEL;
-            this.canceledDateTime = localDateTime;
+        boolean wasOccupied = isOccupied(oldStatus);
+        boolean willOccupied = isOccupied(newStatus);
+
+        if (!wasOccupied && willOccupied) {
+            gameEntity.increaseParticipantCount();
+        }
+
+        if (wasOccupied && !willOccupied) {
+            gameEntity.decreaseParticipantCount();
+        }
+
+        participantGameStatus = newStatus;
+
+        applyTimestamp(newStatus, now);
+
+    }
+
+
+    private boolean isOccupied(ParticipantGameStatus status) {
+        return status == APPLY || status == ACCEPT;
+    }
+
+    private void validateTransition(ParticipantGameStatus oldStatue, ParticipantGameStatus newStatus) {
+
+        if (oldStatue == newStatus) {
+            throw new CustomException(ALREADY_PRECESSED_STATUS);
+        }
+
+        switch (oldStatue) {
+            case APPLY -> {
+                if (newStatus != ACCEPT && newStatus != REJECT && newStatus != CANCEL && newStatus != DELETE) {
+                    throw new CustomException(INVALID_STATUS_TRANSITION);
+                }
+            }
+            case ACCEPT -> {
+                if (newStatus != CANCEL && newStatus != KICKOUT && newStatus != DELETE) {
+                    throw new CustomException(INVALID_STATUS_TRANSITION);
+                }
+            }
+            case CANCEL -> {
+                if (newStatus != APPLY && newStatus != DELETE) {
+                    throw new CustomException(INVALID_STATUS_TRANSITION);
+                }
+            }
+            case REJECT, KICKOUT, DELETE -> {
+                throw new CustomException(ALREADY_FINAL_STATUS);
+            }
         }
 
     }
+
+    private void applyTimestamp(ParticipantGameStatus status, LocalDateTime now) {
+        switch (status) {
+            case APPLY -> applyDateTime = now;
+            case ACCEPT -> acceptDateTime = now;
+            case REJECT -> rejectDateTime = now;
+            case CANCEL -> canceledDateTime = now;
+            case KICKOUT -> kickoutDateTime = now;
+            case DELETE -> deletedDateTime = now;
+        }
+    }
+
+
+
+
+
 
 
 }
