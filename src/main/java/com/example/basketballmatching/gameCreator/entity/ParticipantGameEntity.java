@@ -54,14 +54,14 @@ public class ParticipantGameEntity extends BaseEntity {
     private UserEntity userEntity;
 
     public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity) {
-
-        gameEntity.increaseParticipantCount();
-        return ParticipantGameEntity.builder()
-                .participantGameStatus(APPLY)
-                .applyDateTime(LocalDateTime.now())
+        ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
                 .build();
+
+        participantGameEntity.transitionTo(APPLY, LocalDateTime.now());
+
+        return participantGameEntity;
 
 
     }
@@ -70,14 +70,13 @@ public class ParticipantGameEntity extends BaseEntity {
             GameEntity gameEntity, UserEntity userEntity
     ) {
 
-        gameEntity.increaseParticipantCount();
-
-        return ParticipantGameEntity.builder()
-                .participantGameStatus(ParticipantGameStatus.ACCEPT)
+        ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
                 .gameEntity(gameEntity)
                 .userEntity(userEntity)
-                .acceptDateTime(LocalDateTime.now())
                 .build();
+
+        participantGameEntity.transitionTo(ACCEPT, LocalDateTime.now());
+        return participantGameEntity;
     }
 
     public void reApply() {
@@ -116,7 +115,9 @@ public class ParticipantGameEntity extends BaseEntity {
 
         ParticipantGameStatus oldStatus = participantGameStatus;
 
-        validateTransition(oldStatus, newStatus);
+        if (oldStatus != null) {
+            validateTransition(oldStatus, newStatus);
+        }
 
         boolean wasOccupied = isOccupied(oldStatus);
         boolean willOccupied = isOccupied(newStatus);
@@ -183,19 +184,7 @@ public class ParticipantGameEntity extends BaseEntity {
 
 
 
-    public void setBlackUserStatus(ParticipantGameStatus participantGameStatus, LocalDateTime localDateTime) {
 
-        if (participantGameStatus.equals(ParticipantGameStatus.ACCEPT)) {
-            this.participantGameStatus = ParticipantGameStatus.KICKOUT;
-            this.kickoutDateTime = localDateTime;
-        }
-
-        if (participantGameStatus.equals(ParticipantGameStatus.APPLY)) {
-            this.participantGameStatus = ParticipantGameStatus.CANCEL;
-            this.canceledDateTime = localDateTime;
-        }
-
-    }
 
 
 }

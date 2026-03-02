@@ -47,7 +47,7 @@ public class GameEntity extends BaseEntity {
 
     @Builder.Default
     @Column(nullable = false)
-    private int participantCount = 1;
+    private int participantCount = 0;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
