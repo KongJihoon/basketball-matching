@@ -6,10 +6,7 @@ import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.gameCreator.type.FieldStatus;
-import com.example.basketballmatching.gameCreator.type.MatchFormat;
-import com.example.basketballmatching.gameCreator.type.MatchGenderType;
-import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.service.RedisService;
@@ -130,7 +127,8 @@ class BlackListServiceImpUnitTest {
                 .matchFormat(MatchFormat.THREE_ON_THREE)
                 .build();
 
-        gameEntity = CreateGameDto.Request.toEntity(request, admin);
+        gameEntity = GameEntity.create(request.getTitle(), request.getContent(), request.getHeadCount(), request.getFieldStatus(), request.getMatchFormat(), request.getMatchGenderType(), request.getStartDateTime()
+        , request.getEndDateTime(), request.getPlaceName(), request.getAddress(), CityName.getCityName(request.getAddress()), request.getLatitude(), request.getLongitude(), admin);
 
         gameEntity.setGameUserLevel(GameUserLevel.AMATEUR);
 

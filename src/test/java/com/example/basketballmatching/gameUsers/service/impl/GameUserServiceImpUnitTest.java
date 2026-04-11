@@ -214,7 +214,7 @@ class GameUserServiceImpUnitTest {
 
         ParticipantGameEntity applyUser = ParticipantGameEntity.createApply(gameEntity, participant);
 
-        applyUser.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, LocalDateTime.now());
+        applyUser.accept(LocalDateTime.now());
 
         when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
                 .thenReturn(Optional.of(gameEntity));
@@ -252,7 +252,7 @@ class GameUserServiceImpUnitTest {
         // given
         ParticipantGameEntity applyUser = ParticipantGameEntity.createApply(gameEntity, participant);
 
-        applyUser.setParticipantGameStatusAndCanceledDateTime(ParticipantGameStatus.CANCEL, LocalDateTime.now());
+        applyUser.cancel( LocalDateTime.now());
 
         when(gameRepository.findByGameIdWithLock(gameEntity.getGameId()))
                 .thenReturn(Optional.of(gameEntity));

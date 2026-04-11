@@ -59,6 +59,8 @@ class GameServiceImplTest {
     @Autowired
     private AuthService authService;
 
+    private GameEntity gameEntity;
+
     @BeforeEach
     void setUp() {
         // given: 테스트용 유저 데이터 삽입
@@ -94,7 +96,8 @@ class GameServiceImplTest {
                 .matchFormat(MatchFormat.THREE_ON_THREE)
                 .build();
 
-        GameEntity gameEntity = CreateGameDto.Request.toEntity(request, user);
+        gameEntity = GameEntity.create(request.getTitle(), request.getContent(), request.getHeadCount(), request.getFieldStatus(), request.getMatchFormat(), request.getMatchGenderType(), request.getStartDateTime()
+                ,request.getEndDateTime(), request.getPlaceName(), request.getAddress(), CityName.getCityName(request.getAddress()), request.getLatitude(), request.getLongitude(), user);
 
         gameRepository.save(gameEntity);
     }

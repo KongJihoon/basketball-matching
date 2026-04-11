@@ -8,17 +8,13 @@ import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.repository.GameRepository;
 import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
 import com.example.basketballmatching.gameCreator.service.ParticipantGameService;
-import com.example.basketballmatching.gameCreator.type.FieldStatus;
-import com.example.basketballmatching.gameCreator.type.MatchFormat;
-import com.example.basketballmatching.gameCreator.type.MatchGenderType;
-import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
-import com.example.basketballmatching.user.dto.SignUpDto;
 import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -126,12 +122,13 @@ class ParticipantGameServiceImplTest {
                 .matchFormat(MatchFormat.THREE_ON_THREE)
                 .build();
 
-        gameEntity = CreateGameDto.Request.toEntity(request, creator);
+        gameEntity = GameEntity.create(request.getTitle(), request.getContent(), request.getHeadCount(), request.getFieldStatus(), request.getMatchFormat(), request.getMatchGenderType(), request.getStartDateTime()
+                ,request.getEndDateTime(), request.getPlaceName(), request.getAddress(), CityName.getCityName(request.getAddress()), request.getLatitude(), request.getLongitude(), creator);
 
         gameEntity.setGameUserLevel(creator.getGameUserLevel());
 
         gameRepository.save(gameEntity);
-        participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
+        participantGameEntity = new ParticipantGameEntity().createCreator(gameEntity, creator);
 
         participantGameRepository.save(participantGameEntity);
     }

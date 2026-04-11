@@ -16,7 +16,6 @@ import com.example.basketballmatching.gameUsers.dto.ApplyGameUserDto;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
 import com.example.basketballmatching.gameUsers.dto.EvaluatePlayerDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
-import com.example.basketballmatching.gameUsers.entity.LevelEntity;
 import com.example.basketballmatching.gameUsers.repository.LevelRepository;
 import com.example.basketballmatching.gameUsers.service.GameUserService;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
@@ -30,7 +29,6 @@ import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,12 +142,12 @@ class GameUserServiceImplTest {
                 .matchFormat(MatchFormat.THREE_ON_THREE)
                 .build();
 
-        gameEntity = CreateGameDto.Request.toEntity(request, creator);
+//        gameEntity = CreateGameDto.Request.toEntity(request, creator);
 
         gameEntity.setGameUserLevel(creator.getGameUserLevel());
 
         gameRepository.save(gameEntity);
-        participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
+        participantGameEntity = new ParticipantGameEntity().createCreator(gameEntity, creator);
 
         participantGameRepository.save(participantGameEntity);
     }
@@ -280,7 +277,7 @@ class GameUserServiceImplTest {
         ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
-        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, LocalDateTime.now());
+        participantGameEntity.accept(LocalDateTime.now());
 
         participantGameRepository.save(participantGameEntity);
 
@@ -329,7 +326,7 @@ class GameUserServiceImplTest {
         ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
-        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, LocalDateTime.now());
+        participantGameEntity.accept(LocalDateTime.now());
 
         participantGameRepository.save(participantGameEntity);
 
@@ -390,10 +387,10 @@ class GameUserServiceImplTest {
                     .matchFormat(MatchFormat.THREE_ON_THREE)
                     .build();
 
-            gameEntity = CreateGameDto.Request.toEntity(request, creator);
+//            gameEntity = GameEntity.create(request.getTitle(), request.getContent(), request.getHeadCount(), request.getFieldStatus(), request.getMatchFormat(), request.getMatchGenderType(), request.getStartDateTime(), request.getEndDateTime(), request.getPlaceName(), request.getAddress(), request.getPlaceName(), request.getLatitude(), request.getLongitude(), request.getFieldStatus(), creator);
 
             gameRepository.save(gameEntity);
-            participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
+            participantGameEntity = new ParticipantGameEntity().createCreator(gameEntity, creator);
 
             gameIds.add(gameEntity.getGameId());
         }
@@ -429,7 +426,7 @@ class GameUserServiceImplTest {
         ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
-        participantGameEntity.setParticipantGameStatusAndAcceptDateTime(ParticipantGameStatus.ACCEPT, LocalDateTime.now());
+        participantGameEntity.accept(LocalDateTime.now());
 
         participantGameRepository.save(participantGameEntity);
 
@@ -585,10 +582,10 @@ class GameUserServiceImplTest {
                     .matchFormat(MatchFormat.THREE_ON_THREE)
                     .build();
 
-            gameEntity = CreateGameDto.Request.toEntity(request, creator);
+//            gameEntity = CreateGameDto.Request.toEntity(request, creator);
 
             gameRepository.save(gameEntity);
-            participantGameEntity = new ParticipantGameEntity().toGameCreatorEntity(gameEntity, creator);
+            participantGameEntity = new ParticipantGameEntity().createCreator(gameEntity, creator);
 
             participantGameRepository.save(participantGameEntity);
             gameIds.add(gameEntity.getGameId());

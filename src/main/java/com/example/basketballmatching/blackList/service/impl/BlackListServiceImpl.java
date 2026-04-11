@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -129,17 +130,27 @@ public class BlackListServiceImpl implements BlackListService {
 
 
     private List<ParticipantGameEntity> handleBlackUserStatus(UserEntity targetUser) {
+        LocalDateTime now = LocalDateTime.now();
+
+
         List<ParticipantGameEntity> list = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(targetUser.getUserId(), List.of(ParticipantGameStatus.ACCEPT, APPLY))
                 .stream()
-                .filter(participantGameEntity -> participantGameEntity.getGameEntity().getStartDateTime().isAfter(LocalDateTime.now()))
+                .filter(participantGameEntity -> participantGameEntity.getGameEntity().getStartDateTime().isAfter(now))
                 .toList();
 
+
         list.forEach(participantGameEntity -> {
+            if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
+                participantGameEntity.kickout(now);
+                return;
+            }
 
-
-            participantGameEntity.setBlackUserStatus(participantGameEntity.getParticipantGameStatus(), LocalDateTime.now());
+            if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
+                participantGameEntity.cancel(now);
+            }
 
         });
+
         return list;
     }
 }

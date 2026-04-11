@@ -45,7 +45,6 @@ public class GameUserServiceImpl implements GameUserService {
     private final GameQueryRepository gameQueryRepository;
     private final RedisService redisService;
 
-
     /**
      * 경기 참가 신청
      */
