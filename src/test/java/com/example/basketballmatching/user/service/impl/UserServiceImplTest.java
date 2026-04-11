@@ -98,7 +98,6 @@ class UserServiceImplTest {
                 .position(Position.GUARD)
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
-
                 .build();
         // when
 

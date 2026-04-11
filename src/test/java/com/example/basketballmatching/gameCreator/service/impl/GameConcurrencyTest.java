@@ -41,8 +41,7 @@ class GameConcurrencyTest {
 
     @Autowired
     private GameRepository gameRepository;
-    @Autowired
-    private View error;
+
     @Autowired
     private ParticipantGameRepository participantGameRepository;
 
