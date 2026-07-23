@@ -38,4 +38,18 @@ out/
 
 # 민감한 설정 파일
 src/main/resources/application.yml
-src/main/resources/application-local.yml
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Local archives
+*.zip
+
+# Local Gradle environment
+/gradle.properties
+
+# Local configuration with secrets
+/src/main/resources/application-local.yml
+/src/main/resources/application-seed.yml
+/src/test/resources/application-test-only.yml

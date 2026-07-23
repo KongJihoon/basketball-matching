@@ -1,6 +1,6 @@
 package com.example.basketballmatching.user.oauth2.service.impl;
 
-import com.example.basketballmatching.auth.dto.TokenDto;
+import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
@@ -68,7 +68,7 @@ public class OAuthServiceImpl implements OAuthService {
 
     @Override
     @Transactional
-    public TokenDto kakaoLogin(String code) throws JsonProcessingException {
+    public AuthTokenResponse kakaoLogin(String code) throws JsonProcessingException {
 
         if (code == null || code.isBlank()) {
             throw new CustomException(ErrorCode.OAUTH_CODE_NOT_FOUND);
@@ -97,10 +97,9 @@ public class OAuthServiceImpl implements OAuthService {
         }
 
 
-        KakaoLoginDto loginDto = kakaoUserLogin(kakaoAccount.getEmail());
 
         log.info("[카카오 로그인 완료] nickname : {}", properties.getNickname());
-        return authService.kakaoLogin(loginDto.getEmail());
+        return authService.loginWithKakao(kakaoAccount.getEmail());
     }
 
 

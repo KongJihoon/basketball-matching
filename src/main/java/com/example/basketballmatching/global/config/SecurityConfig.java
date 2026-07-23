@@ -35,7 +35,9 @@ public class SecurityConfig {
                                         "/api/v1/email-verifications",
                                         "/api/v1/email-verifications/confirm",
                                         "/api/v1/password-resets/email-verifications",
-                                        "/api/v1/password-resets/email-verifications/confirm"
+                                        "/api/v1/password-resets/email-verifications/confirm",
+                                        "/api/v1/auth/login",
+                                        "/api/v1/auth/token/reissue"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/v1/users/availability/email",
@@ -45,8 +47,6 @@ public class SecurityConfig {
                                         "/api/v1/password-resets"
                                 ).permitAll()
                                 .requestMatchers(
-                                        "/api/v1/user/login",
-                                        "/api/v1/user/reissue",
                                         "/api/oauth2/**",
                                         "/api/v1/game/details",
                                         "/api/v1/game/search",
