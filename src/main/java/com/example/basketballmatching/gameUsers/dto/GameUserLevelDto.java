@@ -1,7 +1,7 @@
 package com.example.basketballmatching.gameUsers.dto;
 
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

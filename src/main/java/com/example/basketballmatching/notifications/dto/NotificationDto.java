@@ -2,7 +2,6 @@ package com.example.basketballmatching.notifications.dto;
 
 import com.example.basketballmatching.notifications.entity.NotificationEntity;
 import com.example.basketballmatching.notifications.type.NotificationType;
-import com.example.basketballmatching.user.entity.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

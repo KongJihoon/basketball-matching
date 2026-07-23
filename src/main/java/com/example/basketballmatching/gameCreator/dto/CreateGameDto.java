@@ -1,8 +1,6 @@
 package com.example.basketballmatching.gameCreator.dto;
 
-import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameCreator.type.*;
-import com.example.basketballmatching.user.entity.UserEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;

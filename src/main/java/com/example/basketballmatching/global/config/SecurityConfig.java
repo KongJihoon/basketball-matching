@@ -4,6 +4,7 @@ import com.example.basketballmatching.global.security.AuthentificationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,12 +30,21 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request
+                                .requestMatchers(HttpMethod.POST,
+                                        "/api/v1/users/signup",
+                                        "/api/v1/email-verifications",
+                                        "/api/v1/email-verifications/confirm",
+                                        "/api/v1/password-resets/email-verifications",
+                                        "/api/v1/password-resets/email-verifications/confirm"
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.GET,
+                                        "/api/v1/users/availability/email",
+                                        "/api/v1/users/availability/nickname"
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.PATCH,
+                                        "/api/v1/password-resets"
+                                ).permitAll()
                                 .requestMatchers(
-                                        "/api/v1/user/signup",
-                                        "/api/v1/user/check-email",
-                                        "/api/v1/user/check-nickname",
-                                        "/api/v1/user/send-mail",
-                                        "/api/v1/user/verify-mail",
                                         "/api/v1/user/login",
                                         "/api/v1/user/reissue",
                                         "/api/oauth2/**",

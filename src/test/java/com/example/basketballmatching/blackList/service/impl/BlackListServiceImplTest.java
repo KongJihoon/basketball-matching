@@ -18,7 +18,7 @@ import com.example.basketballmatching.report.dto.CreateReportDto;
 import com.example.basketballmatching.report.entity.ReportEntity;
 import com.example.basketballmatching.report.repository.ReportRepository;
 import com.example.basketballmatching.report.type.ReportType;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;

@@ -14,7 +14,7 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.report.entity.ReportEntity;
 import com.example.basketballmatching.report.repository.ReportRepository;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -4,7 +4,7 @@ package com.example.basketballmatching.report.entity;
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.report.dto.CreateReportDto;
 import com.example.basketballmatching.report.type.ReportType;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

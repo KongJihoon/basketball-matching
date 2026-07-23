@@ -1,17 +1,31 @@
-name: CI-CD
+name: CI
 
 on:
+  pull_request:
+    branches:
+      - main
+
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-
-  build-and-push:
-    name: Build & Push Docker Image
+  user-tests:
+    name: User Unit & Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -19,59 +33,48 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: gradle
 
-      - name: Grant permission for gradlew
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build JAR
-        run: ./gradlew clean build -x test
+      - name: Run User tests
+        run: |
+          ./gradlew clean test \
+            --tests "com.example.basketballmatching.user.service.UserServiceUnitTest" \
+            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceTest" \
+            --tests "com.example.basketballmatching.user.service.UserServiceIntegrationTest" \
+            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest"
 
-      # Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          name: user-test-report
+          path: build/reports/tests/test/
+          if-no-files-found: ignore
 
-      - name: Build & Push Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/basketball-backend:latest
+  build:
+    name: Build Application
+    needs:
+      - user-tests
 
-
-  deploy:
-    name: Deploy to EC2
-    needs: build-and-push
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Install SSH key
-        run: |
-          mkdir -p ~/.ssh
-          printf "%s" "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keygen -y -f ~/.ssh/id_rsa > /dev/null
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Deploy on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /srv/basketball
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
 
-            # 최신 이미지 Pull
-            docker compose pull
+      - name: Grant execute permission
+        run: chmod +x gradlew
 
-            # 기존 컨테이너 종료
-            docker compose down
-
-            # 새로운 컨테이너 실행
-            docker compose up -d
-
-            # 상태 확인
-            docker ps
-          EOF
+      - name: Build executable JAR
+        run: ./gradlew clean bootJar -x test

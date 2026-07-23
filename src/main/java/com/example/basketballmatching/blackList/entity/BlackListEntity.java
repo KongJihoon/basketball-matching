@@ -1,7 +1,7 @@
 package com.example.basketballmatching.blackList.entity;
 
 
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

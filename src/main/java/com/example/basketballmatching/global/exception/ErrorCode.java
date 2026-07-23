@@ -26,6 +26,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     ALREADY_VERIFIED_EMAIL(HttpStatus.CONFLICT, "이미 인증된 이메일입니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증을 먼저 진행해주세요."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "새로운 비밀번호를 입력해주세요."),
     INVALID_CODE(HttpStatus.BAD_REQUEST, "유효하지 않은 인증번호입니다."),
     LOGOUT_USER(HttpStatus.BAD_REQUEST, "로그아웃 유저입니다"),
     PROVIDER_NOT_MATCH(HttpStatus.BAD_REQUEST, "로그인 방식이 일치하지 않습니다."),
@@ -77,6 +78,7 @@ public enum ErrorCode {
     ALREADY_PRECESSED_STATUS(HttpStatus.BAD_REQUEST, "이미 변경된 상태입니다."),
     INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 상태변경입니다."),
     ALREADY_FINAL_STATUS(HttpStatus.BAD_REQUEST, "이미 적용된 상태변경입니다."),
+    INVALID_PARTICIPANT_GAME_STATUS(HttpStatus.BAD_REQUEST, "탈퇴 처리 대상이 아닌 참가 상태입니다."),
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),

@@ -1,11 +1,10 @@
 package com.example.basketballmatching.gameCreator.entity;
 
 
-import com.example.basketballmatching.gameCreator.dto.EditGameDto;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -146,6 +145,14 @@ public class GameEntity extends BaseEntity {
                 .gameStatus(GameStatus.RECRUITING)
                 .userEntity(userEntity)
                 .build();
+    }
+
+    public void cancelByCreatorWithdrawal(LocalDateTime now) {
+        if (deletedDateTime != null) {
+            return;
+        }
+
+        this.deletedDateTime = now;
     }
 
     public void setGameUserLevel(GameUserLevel gameUserLevel) {

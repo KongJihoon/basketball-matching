@@ -1,6 +1,5 @@
 package com.example.basketballmatching.user.dto;
 
-import com.example.basketballmatching.user.entity.UserEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
@@ -114,7 +113,7 @@ public class SignUpDto {
         @Schema(description = "권한", example = "USER", defaultValue = "USER")
         private UserType userType;
 
-        @Schema(description = "생성 일시", example = "2025-11-22T15:00:00:00", defaultValue = "2025-11-22T15:00:00:00")
+        @Schema(description = "생성 일시", example = "2025-11-22T15:00:00", defaultValue = "2025-11-22T15:00:00:00")
         private LocalDateTime createdAt;
 
         public static Response fromDto (UserDto userDto) {
@@ -125,6 +124,7 @@ public class SignUpDto {
                     .nickname(userDto.getNickname())
                     .birth(userDto.getBirth())
                     .phone(userDto.getPhone())
+                    .address(userDto.getAddress())
                     .position(userDto.getPosition())
                     .userType(userDto.getUserType())
                     .genderType(userDto.getGenderType())

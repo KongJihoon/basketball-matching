@@ -1,8 +1,7 @@
 package com.example.basketballmatching.user.oauth2.dto;
 
-import com.example.basketballmatching.user.dto.SignUpDto;
 import com.example.basketballmatching.user.dto.UserDto;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;

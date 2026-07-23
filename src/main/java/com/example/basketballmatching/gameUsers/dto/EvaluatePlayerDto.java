@@ -2,7 +2,7 @@ package com.example.basketballmatching.gameUsers.dto;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameUsers.entity.LevelEntity;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
