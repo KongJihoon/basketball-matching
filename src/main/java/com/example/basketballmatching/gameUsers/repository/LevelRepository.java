@@ -2,7 +2,7 @@ package com.example.basketballmatching.gameUsers.repository;
 
 import com.example.basketballmatching.gameCreator.entity.GameEntity;
 import com.example.basketballmatching.gameUsers.entity.LevelEntity;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

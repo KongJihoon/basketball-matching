@@ -2,12 +2,13 @@ package com.example.basketballmatching.auth.service.impl;
 
 import com.example.basketballmatching.auth.dto.TokenDto;
 import com.example.basketballmatching.auth.service.AuthService;
+import com.example.basketballmatching.auth.service.UserSessionRevocationService;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.dto.UserDto;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenProvider tokenProvider;
 
     private final RedisService redisService;
+    private final UserSessionRevocationService userSessionRevocationService;
 
 
     @Override
@@ -127,13 +129,7 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("[유저 로그아웃 시작] : {}", email);
 
-        if (token == null) {
-            throw new CustomException(NOT_FOUND_TOKEN);
-        }
-
-        redisService.setDataExpireMillis("logout:access:" + token, "LOGOUT",tokenProvider.getRemainingTime(token));
-
-        redisService.deleteData("refreshToken:" + email);
+        userSessionRevocationService.revokeAll(email, token);
 
 
         log.info("[유저 로그아웃 완료] : {}", email);

@@ -31,6 +31,7 @@ import java.util.Arrays;
         ),
         tags = {
                 @Tag(name = "USER", description = "회원 기능"),
+                @Tag(name = "EMAIL_VERIFICATION", description = "회원가입 이메일 인증"),
                 @Tag(name = "AUTH", description = "인증/인가"),
                 @Tag(name = "REPORT", description = "유저 신고"),
                 @Tag(name = "GAME", description = "경기 생성자 기능"),

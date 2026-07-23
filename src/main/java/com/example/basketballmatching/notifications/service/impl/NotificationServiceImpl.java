@@ -9,7 +9,7 @@ import com.example.basketballmatching.notifications.repository.NotificationQuery
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
 import com.example.basketballmatching.notifications.service.NotificationService;
 import com.example.basketballmatching.notifications.type.NotificationType;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,8 +1,7 @@
-package com.example.basketballmatching.user.entity;
+package com.example.basketballmatching.user.domain;
 
 import com.example.basketballmatching.gameUsers.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
-import com.example.basketballmatching.user.dto.EditUserDto;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
@@ -27,7 +26,7 @@ public class UserEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = true)
@@ -129,6 +128,14 @@ public class UserEntity extends BaseEntity {
                 .loginProvider(LoginProvider.LOCAL)
                 .build();
 
+    }
+
+    public void withdraw(LocalDateTime withdrawnAt) {
+        if (deletedDateTime != null) {
+            return;
+        }
+
+        this.deletedDateTime = withdrawnAt;
     }
 
 

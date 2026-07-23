@@ -1,8 +1,7 @@
 package com.example.basketballmatching.global.security;
 
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

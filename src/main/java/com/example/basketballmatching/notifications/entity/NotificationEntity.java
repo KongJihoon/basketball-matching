@@ -2,7 +2,7 @@ package com.example.basketballmatching.notifications.entity;
 
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.notifications.type.NotificationType;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

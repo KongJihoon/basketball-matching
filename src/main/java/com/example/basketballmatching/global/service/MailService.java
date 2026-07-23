@@ -1,8 +1,7 @@
 package com.example.basketballmatching.global.service;
 
-import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -88,7 +86,7 @@ public class MailService {
     @Async
     public void sendPasswordAuthCode(String email) {
 
-        UserEntity userEntity = userRepository.findByEmail(email)
+        UserEntity userEntity = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         String code = createRandomCode();
@@ -138,7 +136,7 @@ public class MailService {
 
 
     @Transactional
-    public CheckResponse verifyEmailAuth(String email, String code) {
+    public void verifyEmailAuth(String email, String code) {
 
         String data = redisService.getData(EMAIL_PREFIX + email);
 
@@ -150,7 +148,6 @@ public class MailService {
 
         redisService.setDataExpireMinutes("email:auth:verified:" + email, code, 10L);
 
-        return CheckResponse.of(true, "이메일 인증에 성공하였습니다.");
     }
 
 

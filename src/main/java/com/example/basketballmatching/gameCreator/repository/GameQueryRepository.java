@@ -8,7 +8,8 @@ import com.example.basketballmatching.gameCreator.entity.QParticipantGameEntity;
 import com.example.basketballmatching.gameCreator.type.*;
 import com.example.basketballmatching.gameUsers.dto.CurrentGameListDto;
 import com.example.basketballmatching.gameUsers.dto.LastGameListDto;
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
+import com.example.basketballmatching.user.domain.QUserEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -173,6 +174,82 @@ public class GameQueryRepository {
         return gameEntities;
     }
 
+
+    /**
+     * 생성한 예정경기 조회
+     */
+    public List<GameEntity> findFutureGamesCreatedBy(Long userId, LocalDateTime now) {
+
+        QGameEntity game = QGameEntity.gameEntity;
+
+        return jpaQueryFactory
+                .selectFrom(game)
+                .where(
+                        game.userEntity.userId.eq(userId),
+                        game.deletedDateTime.isNull(),
+                        game.startDateTime.gt(now)
+                )
+                .fetch();
+
+    }
+
+    /**
+     * 취소 경기의 활성 참가자 조회
+     */
+    public List<ParticipantGameEntity> findActiveParticipantsByGameIds(List<Long> gameIds) {
+
+        if (gameIds.isEmpty()) {
+            return List.of();
+        }
+
+        QParticipantGameEntity participantGame = QParticipantGameEntity.participantGameEntity;
+
+        QGameEntity game = QGameEntity.gameEntity;
+
+        QUserEntity user = QUserEntity.userEntity;
+
+        return jpaQueryFactory
+                .selectFrom(participantGame)
+                .join(participantGame.gameEntity, game)
+                .fetchJoin()
+                .join(participantGame.userEntity, user)
+                .fetchJoin()
+                .where(
+                        game.gameId.in(gameIds),
+                        participantGame
+                                .participantGameStatus
+                                .in(APPLY, ACCEPT)
+                )
+                .fetch();
+
+    }
+
+    /**
+     * 탈퇴자가 참가한 다른 예정 경기
+     */
+    public List<ParticipantGameEntity> findFutureParticipationExcludingCreatedGames(
+            Long userId,
+            LocalDateTime now
+    ) {
+        QParticipantGameEntity participantGame = QParticipantGameEntity.participantGameEntity;
+
+        QGameEntity game = QGameEntity.gameEntity;
+
+        return jpaQueryFactory
+                .selectFrom(participantGame)
+                .join(participantGame.gameEntity, game)
+                .fetchJoin()
+                .where(
+                        participantGame.userEntity.userId.eq(userId),
+                        participantGame
+                                .participantGameStatus.in(APPLY, ACCEPT),
+                        game.startDateTime.gt(now),
+                        game.deletedDateTime.isNull(),
+                        game.userEntity.userId.ne(userId)
+
+                )
+                .fetch();
+    }
 
 
 

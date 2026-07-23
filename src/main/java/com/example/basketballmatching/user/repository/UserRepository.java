@@ -1,6 +1,6 @@
 package com.example.basketballmatching.user.repository;
 
-import com.example.basketballmatching.user.entity.UserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -18,8 +18,6 @@ UserRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findByUserIdAndDeletedDateTimeIsNull(Long userId);
 
-    Optional<UserEntity> findByNicknameAndDeletedDateTimeIsNull(String nickname);
 
-    Optional<UserEntity> findByEmail(String email);
 
 }

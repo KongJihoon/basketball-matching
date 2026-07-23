@@ -1,39 +1,38 @@
 spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: create-drop
+
+    open-in-view: false
+
+    show-sql: false
+
     properties:
       hibernate:
         format_sql: true
-
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
+        jdbc:
+          time_zone: Asia/Seoul
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+
+    test-connection: false
+
     properties:
       mail:
         smtp:
-          auth: true
+          auth: false
           starttls:
-            enable: true
-            required: true
+            enable: false
+            required: false
+
     default-encoding: UTF-8
 
   jwt:
-    secret: ${JWT_SECRET}
+    secret: dGVzdC1qd3Qtc2VjcmV0LWtleS1mb3ItYmFza2V0YmFsbC1tYXRjaGluZw==
     access-token-expiration: 3600000
     refresh-token-expiration: 1209600000
 
@@ -42,16 +41,26 @@ spring:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: test-client-id
+            client-secret: test-client-secret
             redirect-uri: http://localhost:8080/api/oauth2/kakao
             authorization-grant-type: authorization_code
             scope:
               - profile_nickname
               - account_email
+
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
+app:
+  time-zone: Asia/Seoul
+
+logging:
+  level:
+    root: info
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
