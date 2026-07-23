@@ -1,9 +1,7 @@
 package com.example.basketballmatching.auth.controller;
 
 
-import com.example.basketballmatching.auth.dto.LoginDto;
-import com.example.basketballmatching.auth.dto.ReIssueTokenDto;
-import com.example.basketballmatching.auth.dto.TokenDto;
+import com.example.basketballmatching.auth.dto.*;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -43,12 +41,12 @@ public class AuthController {
             content = {@Content(mediaType = "application/json",
             schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse<TokenDto>> loginUser(
-            @RequestBody @Valid LoginDto.Request request
-    ) {
+    public ResponseEntity<CommonResponse<AuthTokenResponse>> loginUser(
+            @RequestBody @Valid LoginRequest request
+            ) {
 
-        TokenDto token = authService.loginUser(request.getEmail(), request.getPassword());
 
+        AuthTokenResponse token = authService.login(request.email(), request.password());
 
         return tokenResponse(token, "로그인에 성공하였습니다.");
 
@@ -64,13 +62,15 @@ public class AuthController {
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/token/reissue")
-    public ResponseEntity<CommonResponse<TokenDto>> reissue(
-            @RequestBody @Valid ReIssueTokenDto request
+    public ResponseEntity<CommonResponse<AuthTokenResponse>> reissue(
+            @RequestBody @Valid TokenRefreshRequest request
             ) {
 
-        TokenDto reissueToken = authService.reissue(request.getEmail(), request.getRefreshToken());
+        AuthTokenResponse token = authService.reissue(request.email(), request.refreshToken());
 
-        return tokenResponse(reissueToken, "토큰 재발급에 성공하였습니다.");
+
+
+        return tokenResponse(token, "토큰 재발급에 성공하였습니다.");
     }
 
     /**
@@ -98,15 +98,15 @@ public class AuthController {
     }
 
 
-    private ResponseEntity<CommonResponse<TokenDto>> tokenResponse(TokenDto tokenDto, String message) {
+    private ResponseEntity<CommonResponse<AuthTokenResponse>> tokenResponse(AuthTokenResponse token, String message) {
 
         HttpHeaders headers = new HttpHeaders();
 
-        headers.setBearerAuth(tokenDto.getAccessToken());
+        headers.setBearerAuth(token.accessToken());
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(CommonResponse.of(message, tokenDto));
+                .body(CommonResponse.of(message, token));
     }
 
     private String resolveAccessToken(

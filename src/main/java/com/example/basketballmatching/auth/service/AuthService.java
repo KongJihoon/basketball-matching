@@ -1,11 +1,9 @@
 package com.example.basketballmatching.auth.service;
 
-import com.example.basketballmatching.auth.dto.TokenDto;
-import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
-import static com.example.basketballmatching.user.type.LoginProvider.*;
+import static com.example.basketballmatching.user.type.LoginProvider.KAKAO;
+import static com.example.basketballmatching.user.type.LoginProvider.LOCAL;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class AuthService {
 
 
     @Transactional
-    public TokenDto loginUser(String email, String password) {
+    public AuthTokenResponse login(String email, String password) {
 
         log.info("[유저 로그인 시작]: {}", email);
 
@@ -58,19 +57,19 @@ public class AuthService {
         // 블랙리스트 유저 검사
         validateNotBlackList(user.getEmail());
 
+        AuthTokenResponse response = issueTokens(user);
 
-        TokenDto tokenDto = issueTokens(user);
 
         log.info("[유저 로그인 완료] email : {}", email);
 
-        return tokenDto;
+        return response;
     }
 
 
 
 
     @Transactional(readOnly = true)
-    public TokenDto kakaoLogin(String email) {
+    public AuthTokenResponse loginWithKakao(String email) {
 
         log.info("[카카오 로그인 검증 시작] email : {}", email);
 
@@ -81,36 +80,35 @@ public class AuthService {
 
         validateNotBlacklisted(email);
 
-        TokenDto token = issueTokens(user);
+        AuthTokenResponse response = issueTokens(user);
 
         log.info("[카카오 로그인 완료] email : {}", email);
 
-        return token;
+        return response;
     }
 
 
     @Transactional(readOnly = true)
-    public TokenDto reissue(String email, String refreshToken) {
+    public AuthTokenResponse reissue(String email, String refreshToken) {
 
         log.info("[토큰 재발급 시작]: {}", email);
 
-        String redisToken = redisService.getData("refreshToken:" + email);
+        String savedRefreshToken = redisService.getData("refreshToken:" + email);
 
 
         // 재발금 유효성 검사
-        validateReissue(email, refreshToken, redisToken);
+        validateReissue(email, refreshToken, savedRefreshToken);
 
         UserEntity user = getActiveUser(email);
 
         // refreshToken 검증
         tokenProvider.validateRefreshToken(refreshToken);
 
-        UserDto userDto = UserDto.fromEntity(user);
 
-        String reissuedAccessToken = issueAccessToken(userDto);
+        String accessToken = issueAccessToken(user);
 
         log.info("[토큰 재발급 완료] email={}", email);
-        return new TokenDto(reissuedAccessToken, redisToken, userDto);
+        return AuthTokenResponse.of(accessToken, savedRefreshToken, user);
     }
 
 
@@ -155,25 +153,22 @@ public class AuthService {
         }
     }
 
-    private TokenDto issueTokens(UserEntity user) {
-        UserDto userDto = UserDto.fromEntity(user);
+    private AuthTokenResponse issueTokens(UserEntity user) {
 
-        String accessToken = issueAccessToken(userDto);
+        String accessToken = issueAccessToken(user);
 
-        String refreshToken = issueRefreshToken(userDto);
+        String refreshToken = tokenProvider.createRefreshToken(user.getEmail());
 
-        return new TokenDto(accessToken, refreshToken, userDto);
+        return AuthTokenResponse.of(accessToken, refreshToken, user);
     }
 
-    private String issueAccessToken(UserDto userDto) {
+    private String issueAccessToken(UserEntity user) {
 
-        return tokenProvider.createAccessToken(userDto.getEmail(), userDto.getName(), userDto.getUserType());
+        return tokenProvider.createAccessToken(user.getEmail(), user.getName(), user.getUserType());
 
     }
 
-    private String issueRefreshToken(UserDto userDto) {
-        return tokenProvider.createRefreshToken(userDto.getEmail());
-    }
+
 
 
     private UserEntity getActiveUser(String email) {
