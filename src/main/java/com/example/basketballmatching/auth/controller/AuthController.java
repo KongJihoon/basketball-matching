@@ -24,7 +24,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/v1/user")
+@RequestMapping("api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "AUTH")
 public class AuthController {
@@ -49,13 +49,8 @@ public class AuthController {
 
         TokenDto token = authService.loginUser(request.getEmail(), request.getPassword());
 
-        HttpHeaders headers = new HttpHeaders();
 
-        headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + token.getAccessToken());
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(CommonResponse.of("로그인에 성공하였습니다.", token));
+        return tokenResponse(token, "로그인에 성공하였습니다.");
 
     }
 
@@ -68,21 +63,14 @@ public class AuthController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/reissue")
+    @PostMapping("/token/reissue")
     public ResponseEntity<CommonResponse<TokenDto>> reissue(
             @RequestBody @Valid ReIssueTokenDto request
             ) {
 
         TokenDto reissueToken = authService.reissue(request.getEmail(), request.getRefreshToken());
 
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + reissueToken.getAccessToken());
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(CommonResponse.of("토큰 재발급에 성공하였습니다.", reissueToken));
-
+        return tokenResponse(reissueToken, "토큰 재발급에 성공하였습니다.");
     }
 
     /**
@@ -99,16 +87,45 @@ public class AuthController {
             HttpServletRequest request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
 
-        String accessToken = request.getHeader("Authorization");
+        String accessToken = resolveAccessToken(request);
 
-        if (accessToken != null && accessToken.startsWith("Bearer ")) {
-            accessToken = accessToken.substring(7);
-        }
+        authService.logoutUser(userInfoDetails.getUsername(), accessToken);
 
-        CheckResponse checkResponse = authService.logoutUser(userInfoDetails.getUsername(), accessToken);
-
-        return ResponseEntity.ok(checkResponse);
+        return ResponseEntity.ok(
+                CheckResponse.of(true, "로그아웃을 완료하였습니다.")
+        );
 
     }
 
+
+    private ResponseEntity<CommonResponse<TokenDto>> tokenResponse(TokenDto tokenDto, String message) {
+
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setBearerAuth(tokenDto.getAccessToken());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(CommonResponse.of(message, tokenDto));
+    }
+
+    private String resolveAccessToken(
+            HttpServletRequest request
+    ) {
+        String authorization =
+                request.getHeader(
+                        HttpHeaders.AUTHORIZATION
+                );
+
+        if (authorization == null ||
+                !authorization.startsWith(
+                        "Bearer "
+                )) {
+            return null;
+        }
+
+        return authorization
+                .substring(7)
+                .trim();
+    }
 }
