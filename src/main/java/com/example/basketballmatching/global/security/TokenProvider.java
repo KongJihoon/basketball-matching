@@ -1,7 +1,6 @@
 package com.example.basketballmatching.global.security;
 
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.type.UserType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -29,15 +28,14 @@ public class TokenProvider {
     private String secretKey;
 
     @Value("${spring.jwt.access-token-expiration}")
-    private Long access_token_expire;
+    private Long accessTokenExpirationMillis;
 
     @Value("${spring.jwt.refresh-token-expiration}")
-    private Long refresh_token_expire;
+    private Long refreshTokenExpirationMillis;
 
 
     private final UserInfoDetailsService userInfoDetailsService;
 
-    private final RedisService redisService;
 
 
     private Key key;
@@ -52,28 +50,30 @@ public class TokenProvider {
 
     public String createAccessToken(String email, String name, UserType userType) {
 
-        log.info("accessToken 생성 시작");
+        Claims claims = Jwts.claims().setSubject(email);
 
-        String accessToken = generateAccessToken(email, name, userType, access_token_expire);
+        claims.put("name", name);
+        claims.put("userType", userType);
 
-        return accessToken;
+        return createToken(claims, accessTokenExpirationMillis);
 
 
     }
 
     public String createRefreshToken(String email) {
 
-        log.info("refreshToken 생성 시작");
 
-        String refreshToken = generateRefreshToken(email, refresh_token_expire);
-
-
-
-        redisService.setDataExpireMillis("refreshToken:" + email, refreshToken, refresh_token_expire);
-
-        return refreshToken;
+        Claims claims = Jwts.claims()
+                .setSubject(email);
 
 
+        return createToken(claims, refreshTokenExpirationMillis);
+
+
+    }
+
+    public long getRefreshTokenExpirationMillis() {
+        return refreshTokenExpirationMillis;
     }
 
     public Claims parseToken(String token) {
@@ -137,41 +137,6 @@ public class TokenProvider {
 
 
 
-    private String generateAccessToken(String email, String name, UserType userType, long access_token_expire) {
-
-        Claims claims = Jwts.claims().setSubject(email);
-
-        claims.put("name", name);
-        claims.put("userType", String.valueOf(userType));
-
-
-        return returnToken(claims, access_token_expire);
-
-    }
-
-    private String generateRefreshToken(String email, long refresh_token_expire) {
-
-        Claims claims = Jwts.claims().setSubject(email);
-
-
-        return returnToken(claims, refresh_token_expire);
-
-    }
-
-    private String returnToken(Claims claims, long expireTime) {
-
-        var now = new Date();
-
-        var expireDate = new Date(now.getTime() + expireTime);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(expireDate)
-                .signWith(key)
-                .compact();
-    }
-
     public void validateRefreshToken(String refreshToken) {
 
         if (refreshToken == null) {
@@ -192,6 +157,19 @@ public class TokenProvider {
         return parseToken(token).getExpiration().getTime() - System.currentTimeMillis();
     }
 
+
+    private String createToken(Claims claims, Long expirationMillis) {
+
+        Date issuedAt = new Date();
+        Date expiresAt = new Date(issuedAt.getTime() + expirationMillis);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiresAt)
+                .signWith(key)
+                .compact();
+    }
 
 
 
