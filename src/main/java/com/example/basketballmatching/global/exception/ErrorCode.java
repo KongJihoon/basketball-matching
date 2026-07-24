@@ -28,7 +28,7 @@ public enum ErrorCode {
     EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증을 먼저 진행해주세요."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "새로운 비밀번호를 입력해주세요."),
     INVALID_CODE(HttpStatus.BAD_REQUEST, "유효하지 않은 인증번호입니다."),
-    LOGOUT_USER(HttpStatus.BAD_REQUEST, "로그아웃 유저입니다"),
+    LOGOUT_USER(HttpStatus.UNAUTHORIZED, "로그아웃 유저입니다"),
     PROVIDER_NOT_MATCH(HttpStatus.BAD_REQUEST, "로그인 방식이 일치하지 않습니다."),
 
     // validation (입력 검증 = 400)
