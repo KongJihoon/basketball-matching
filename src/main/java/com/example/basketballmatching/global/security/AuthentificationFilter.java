@@ -1,6 +1,7 @@
 package com.example.basketballmatching.global.security;
 
 
+import com.example.basketballmatching.auth.service.AuthTokenStore;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.service.RedisService;
@@ -36,6 +37,8 @@ public class AuthentificationFilter extends OncePerRequestFilter {
 
     private final RedisService redisService;
 
+    private final AuthTokenStore authTokenStore;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
@@ -60,11 +63,9 @@ public class AuthentificationFilter extends OncePerRequestFilter {
             String email = tokenProvider.getEmailFromToken(token);
 
 
-            String logoutToken = redisService.getData("logout:access:" + token);
-
             String blackList = redisService.getData("blackList:" + email);
 
-            if (logoutToken != null) {
+            if (authTokenStore.isAccessTokenRevoked(token)) {
                 log.warn("[로그아웃 유저 접근]: {}", email);
 
                 setErrorResponse(response, LOGOUT_USER);

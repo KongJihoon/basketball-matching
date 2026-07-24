@@ -22,7 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/v1/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "AUTH")
 public class AuthController {
@@ -46,9 +46,11 @@ public class AuthController {
             ) {
 
 
-        AuthTokenResponse token = authService.login(request.email(), request.password());
+        AuthTokenResponse response = authService.login(request.email(), request.password());
 
-        return tokenResponse(token, "로그인에 성공하였습니다.");
+        return ResponseEntity.ok(
+                CommonResponse.of("로그인에 성공하였습니다.", response)
+        );
 
     }
 
@@ -61,16 +63,18 @@ public class AuthController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/token/reissue")
+    @PostMapping("/token/refresh")
     public ResponseEntity<CommonResponse<AuthTokenResponse>> reissue(
             @RequestBody @Valid TokenRefreshRequest request
             ) {
 
-        AuthTokenResponse token = authService.reissue(request.email(), request.refreshToken());
+        AuthTokenResponse response = authService.reissue(request.refreshToken());
 
 
 
-        return tokenResponse(token, "토큰 재발급에 성공하였습니다.");
+        return ResponseEntity.ok(
+                CommonResponse.of("토큰 재발급에 성공하였습니다.", response)
+        );
     }
 
     /**
@@ -81,7 +85,7 @@ public class AuthController {
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
-    @PatchMapping("/logout")
+    @PostMapping("/logout")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> logoutUser(
             HttpServletRequest request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
@@ -97,17 +101,6 @@ public class AuthController {
 
     }
 
-
-    private ResponseEntity<CommonResponse<AuthTokenResponse>> tokenResponse(AuthTokenResponse token, String message) {
-
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setBearerAuth(token.accessToken());
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(CommonResponse.of(message, token));
-    }
 
     private String resolveAccessToken(
             HttpServletRequest request

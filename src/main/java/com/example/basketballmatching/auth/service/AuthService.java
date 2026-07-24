@@ -21,9 +21,6 @@ import static com.example.basketballmatching.user.type.LoginProvider.LOCAL;
 @Slf4j
 public class AuthService {
 
-    private static final String REFRESH_TOKEN_PREFIX =
-            "refreshToken:";
-
     private static final String BLACKLIST_PREFIX =
             "blackList:";
 
@@ -34,10 +31,13 @@ public class AuthService {
     private final TokenProvider tokenProvider;
 
     private final RedisService redisService;
+
+    private final AuthTokenStore authTokenStore;
+
     private final UserSessionRevocationService userSessionRevocationService;
 
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthTokenResponse login(String email, String password) {
 
         log.info("[유저 로그인 시작]: {}", email);
@@ -55,14 +55,12 @@ public class AuthService {
         validatePassword(password, user);
 
         // 블랙리스트 유저 검사
-        validateNotBlackList(user.getEmail());
-
-        AuthTokenResponse response = issueTokens(user);
+        validateNotBlacklisted(user.getEmail());
 
 
         log.info("[유저 로그인 완료] email : {}", email);
 
-        return response;
+        return  issueTokens(user);
     }
 
 
@@ -80,30 +78,28 @@ public class AuthService {
 
         validateNotBlacklisted(email);
 
-        AuthTokenResponse response = issueTokens(user);
-
         log.info("[카카오 로그인 완료] email : {}", email);
 
-        return response;
+        return issueTokens(user);
     }
 
 
     @Transactional(readOnly = true)
-    public AuthTokenResponse reissue(String email, String refreshToken) {
+    public AuthTokenResponse reissue(String refreshToken) {
+
+        tokenProvider.validateRefreshToken(refreshToken);
+
+        String email = tokenProvider.getEmailFromToken(refreshToken);
 
         log.info("[토큰 재발급 시작]: {}", email);
 
-        String savedRefreshToken = redisService.getData("refreshToken:" + email);
 
+        String savedRefreshToken = authTokenStore.getRefreshToken(email);
 
         // 재발금 유효성 검사
-        validateReissue(email, refreshToken, savedRefreshToken);
+        validateReissue(refreshToken, savedRefreshToken);
 
         UserEntity user = getActiveUser(email);
-
-        // refreshToken 검증
-        tokenProvider.validateRefreshToken(refreshToken);
-
 
         String accessToken = issueAccessToken(user);
 
@@ -137,16 +133,6 @@ public class AuthService {
         }
     }
 
-    private void validateNotBlackList(String email) {
-
-        String data = redisService.getData("blackList:" + email);
-
-        if (data != null) {
-            throw new CustomException(BLACKLIST_USER);
-        }
-
-    }
-
     private void validatePassword(String password, UserEntity user) {
         if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
@@ -159,6 +145,8 @@ public class AuthService {
 
         String refreshToken = tokenProvider.createRefreshToken(user.getEmail());
 
+        authTokenStore.saveRefreshToken(user.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpirationMillis());
+
         return AuthTokenResponse.of(accessToken, refreshToken, user);
     }
 
@@ -170,26 +158,20 @@ public class AuthService {
 
 
 
-
     private UserEntity getActiveUser(String email) {
         return userRepository.findByEmailAndDeletedDateTimeIsNull(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
-    private void validateReissue(String email, String refreshToken, String redisToken) {
-        if (redisToken == null) {
+    private void validateReissue(String refreshToken, String savedRefreshToken) {
+        if (savedRefreshToken == null) {
             throw new CustomException(NOT_FOUND_TOKEN);
         }
 
-        if (!redisToken.equals(refreshToken)) {
+        if (!savedRefreshToken.equals(refreshToken)) {
             throw new CustomException(INVALID_TOKEN);
         }
 
-        String userEmail = tokenProvider.parseToken(refreshToken).getSubject();
-
-        if (!userEmail.equals(email)) {
-            throw new CustomException(INVALID_TOKEN);
-        }
     }
 
     private void validateNotBlacklisted(String email) {

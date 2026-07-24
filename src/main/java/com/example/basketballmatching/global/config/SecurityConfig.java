@@ -37,7 +37,7 @@ public class SecurityConfig {
                                         "/api/v1/password-resets/email-verifications",
                                         "/api/v1/password-resets/email-verifications/confirm",
                                         "/api/v1/auth/login",
-                                        "/api/v1/auth/token/reissue"
+                                        "/api/v1/auth/token/refresh"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/v1/users/availability/email",

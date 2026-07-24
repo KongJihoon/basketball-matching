@@ -1,5 +1,6 @@
 package com.example.basketballmatching.user.service;
 
+import com.example.basketballmatching.auth.service.AuthTokenStore;
 import com.example.basketballmatching.gameCreator.dto.GameCancelNotificationDto;
 import com.example.basketballmatching.gameCreator.dto.UserWithdrawalGameResultDto;
 import com.example.basketballmatching.gameCreator.service.UserWithdrawalGameService;
@@ -15,10 +16,8 @@ import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -71,6 +70,9 @@ class UserWithdrawalServiceIntegrationTest extends IntegrationTestSupport {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private AuthTokenStore authTokenStore;
 
     /*
      * 경기 정리 로직은 gameCreator 도메인의 책임이다.
@@ -132,7 +134,11 @@ class UserWithdrawalServiceIntegrationTest extends IntegrationTestSupport {
 
         String refreshToken = tokenProvider.createRefreshToken(WITHDRAWAL_EMAIL);
 
-
+        authTokenStore.saveRefreshToken(
+                WITHDRAWAL_EMAIL,
+                refreshToken,
+                tokenProvider.getRefreshTokenExpirationMillis()
+        );
         String refreshTokenKey =
                 REFRESH_TOKEN_PREFIX + WITHDRAWAL_EMAIL;
 
