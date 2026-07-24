@@ -1,6 +1,6 @@
 package com.example.basketballmatching.global.config;
 
-import com.example.basketballmatching.global.security.AuthentificationFilter;
+import com.example.basketballmatching.global.security.AuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-    private final AuthentificationFilter authentificationFilter;
+    private final AuthenticationFilter authenticationFilter;
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
@@ -58,7 +58,7 @@ public class SecurityConfig {
                                 ).permitAll()
                                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(authentificationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
