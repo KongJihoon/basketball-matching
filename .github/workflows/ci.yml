@@ -19,8 +19,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  user-tests:
-    name: User Unit & Integration Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: |
+          ./gradlew clean test --no-daemon \
+            --tests "com.example.basketballmatching.user.service.UserServiceUnitTest" \
+            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceTest" \
+            --tests "com.example.basketballmatching.auth.service.AuthServiceUnitTest" \
+            --tests "com.example.basketballmatching.auth.service.UserSessionRevocationServiceUnitTest" \
+            --tests "com.example.basketballmatching.global.security.AuthenticationFilterUnitTest"
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: build/reports/tests/test/
+          if-no-files-found: ignore
+
+  integration-tests:
+    name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -38,26 +74,25 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Run User tests
+      - name: Run integration tests
         run: |
-          ./gradlew clean test \
-            --tests "com.example.basketballmatching.user.service.UserServiceUnitTest" \
-            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceTest" \
+          ./gradlew clean test --no-daemon \
             --tests "com.example.basketballmatching.user.service.UserServiceIntegrationTest" \
             --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest"
 
-      - name: Upload test report
+      - name: Upload integration test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: user-test-report
+          name: integration-test-report
           path: build/reports/tests/test/
           if-no-files-found: ignore
 
   build:
     name: Build Application
     needs:
-      - user-tests
+      - unit-tests
+      - integration-tests
 
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -77,4 +112,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build executable JAR
-        run: ./gradlew clean bootJar -x test
+        run: ./gradlew clean bootJar -x test --no-daemon
