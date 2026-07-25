@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -49,7 +49,7 @@ jobs:
 
       - name: Upload unit test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: unit-test-report
           path: build/reports/tests/test/
@@ -78,7 +78,8 @@ jobs:
         run: |
           ./gradlew clean test --no-daemon \
             --tests "com.example.basketballmatching.user.service.UserServiceIntegrationTest" \
-            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest"
+            --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest" \
+            --tests "com.example.basketballmatching.auth.service.AuthServiceIntegrationTest"
 
       - name: Upload integration test report
         if: always()
