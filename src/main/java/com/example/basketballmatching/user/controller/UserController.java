@@ -5,11 +5,7 @@ import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
-import com.example.basketballmatching.user.dto.ChangePasswordDto;
-import com.example.basketballmatching.user.dto.EditUserDto;
-import com.example.basketballmatching.user.dto.SignUpDto;
-import com.example.basketballmatching.user.dto.SignUpDto.Response;
-import com.example.basketballmatching.user.dto.UserDto;
+import com.example.basketballmatching.user.dto.*;
 import com.example.basketballmatching.user.service.UserService;
 import com.example.basketballmatching.user.service.UserWithdrawalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,11 +47,11 @@ public class UserController {
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/signup")
-    public ResponseEntity<CommonResponse<Response>> signup(
-            @RequestBody @Valid SignUpDto.Request request
+    public ResponseEntity<CommonResponse<SignUpResponse>> signup(
+            @RequestBody @Valid SignUpRequest request
             ) {
 
-        Response response = userService.signUp(request);
+        SignUpResponse response = userService.signUp(request);
 
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -118,12 +114,14 @@ public class UserController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @GetMapping("/mypage")
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<CommonResponse<UserDto>> getUserInfo(@AuthenticationPrincipal UserInfoDetails userInfoDetails) {
+    public ResponseEntity<CommonResponse<UserProfileResponse>> getUserInfo(@AuthenticationPrincipal UserInfoDetails userInfoDetails) {
 
-        UserDto userDto = userService.getUserInfo(userInfoDetails.getUserEntity().getUserId());
+        Long userId = userInfoDetails.getUserEntity().getUserId();
+
+        UserProfileResponse response = userService.getUserInfo(userId);
 
         return ResponseEntity.ok(
-                    CommonResponse.of("회원정보 조회에 성공하였습니다.", userDto)
+                    CommonResponse.of("회원정보 조회에 성공하였습니다.", response)
         );
 
     }
@@ -135,15 +133,16 @@ public class UserController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PatchMapping("/mypage")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<UserDto>> editUserInfo(@AuthenticationPrincipal UserInfoDetails userInfoDetails, @RequestBody @Valid EditUserDto editUserDto) {
+    public ResponseEntity<CommonResponse<UserProfileResponse>> editUserInfo(@AuthenticationPrincipal UserInfoDetails userInfoDetails, @RequestBody @Valid UpdateUserRequest request) {
 
         Long userId = userInfoDetails.getUserEntity().getUserId();
 
 
-        UserDto userDto = userService.editUserInfo(userId, editUserDto);
+        UserProfileResponse response = userService.editUserInfo(userId, request);
+
 
         return ResponseEntity.ok(
-                CommonResponse.of("회원정보 수정이 완료되었습니다.", userDto)
+                CommonResponse.of("회원정보 수정이 완료되었습니다.", response)
         );
 
     }
@@ -164,10 +163,12 @@ public class UserController {
     @PreAuthorize("hasAnyRole('USER')")
     @PatchMapping("/mypage/password")
     public ResponseEntity<CheckResponse> changePassword(
-            @RequestBody @Valid ChangePasswordDto request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
+            @RequestBody @Valid ChangePasswordRequest request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
 
-        userService.changePassword(userInfoDetails.getUserEntity().getUserId(), request);
+        Long userId = userInfoDetails.getUserEntity().getUserId();
+
+        userService.changePassword(userId, request);
 
         return ResponseEntity.ok(
                 CheckResponse.of(true, "비밀번호 변경을 완료하였습니다.")

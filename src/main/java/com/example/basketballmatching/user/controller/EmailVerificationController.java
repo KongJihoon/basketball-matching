@@ -4,7 +4,7 @@ import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.service.MailService;
 import com.example.basketballmatching.user.dto.ConfirmEmailVerificationRequest;
-import com.example.basketballmatching.user.dto.SendEmailVerificationDto;
+import com.example.basketballmatching.user.dto.SendEmailVerificationRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,7 +42,7 @@ public class EmailVerificationController {
                     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping
     public ResponseEntity<CheckResponse> sendMailAuth(
-            @RequestBody @Valid SendEmailVerificationDto request
+            @RequestBody @Valid SendEmailVerificationRequest request
             ) {
         mailService.sendAuthMail(request.email());
 

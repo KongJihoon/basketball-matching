@@ -4,8 +4,9 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.support.IntegrationTestSupport;
 import com.example.basketballmatching.user.domain.UserEntity;
-import com.example.basketballmatching.user.dto.EditUserDto;
-import com.example.basketballmatching.user.dto.SignUpDto;
+import com.example.basketballmatching.user.dto.SignUpRequest;
+import com.example.basketballmatching.user.dto.SignUpResponse;
+import com.example.basketballmatching.user.dto.UpdateUserRequest;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
@@ -80,22 +81,22 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
 
         saveRedis(verifiedKey, "123456", 10L);
 
-        SignUpDto.Request request = SignUpDto.Request.builder()
-                .email(email)
-                .password("Signup1234!")
-                .checkPassword("Signup1234!")
-                .nickname("가입회원")
-                .name("가입회원")
-                .birth(LocalDate.of(2000, 1, 1))
-                .phone("010-2222-3333")
-                .address("서울특별시 송파구")
-                .position(Position.FORWARD)
-                .genderType(GenderType.FEMALE)
-                .build();
+        SignUpRequest request = new SignUpRequest(
+                email,
+                "Signup1234!",
+                "Signup1234!",
+                "testNickname",
+                "테스트 사용자",
+                LocalDate.of(1997, 1, 1),
+                "010-1111-0000",
+                "서울특별시 강남구",
+                Position.GUARD,
+                GenderType.MALE
+        );
 
         // when
 
-        SignUpDto.Response response = userService.signUp(request);
+        SignUpResponse response = userService.signUp(request);
 
         /**
          * 영속성 컨택스트의 캐시를 비운 후
@@ -107,11 +108,11 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
         UserEntity savedUser = userRepository.findByEmailAndDeletedDateTimeIsNull(email)
                 .orElseThrow();
 
-        assertEquals(email, response.getEmail());
+        assertEquals(email, response.email());
 
-        assertEquals("가입회원", response.getNickname());
+        assertEquals("testNickname", response.nickname());
 
-        assertNotNull(response.getCreatedAt());
+        assertNotNull(response.createdAt());
 
         assertEquals(email, savedUser.getEmail());
 
@@ -187,14 +188,14 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
 
         Long userId = user.getUserId();
 
-        EditUserDto request =
-                EditUserDto.builder()
-                        .nickname("수정후닉네임")
-                        .phone("010-9999-9999")
-                        .address("서울특별시 마포구")
-                        .genderType(GenderType.FEMALE)
-                        .position(Position.CENTER)
-                        .build();
+        UpdateUserRequest request =
+                new UpdateUserRequest(
+                        "변경닉네임",
+                        "010-2222-3333",
+                        "서울특별시 송파구",
+                        GenderType.FEMALE,
+                        Position.CENTER
+                );
 
 
         // when
@@ -211,17 +212,17 @@ class UserServiceIntegrationTest extends IntegrationTestSupport {
 
 
         assertEquals(
-                "수정후닉네임",
+                "변경닉네임",
                 updatedUser.getNickname()
         );
 
         assertEquals(
-                "010-9999-9999",
+                "010-2222-3333",
                 updatedUser.getPhone()
         );
 
         assertEquals(
-                "서울특별시 마포구",
+                "서울특별시 송파구",
                 updatedUser.getAddress()
         );
 

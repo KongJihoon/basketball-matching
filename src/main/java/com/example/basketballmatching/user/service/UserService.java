@@ -6,10 +6,7 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.domain.UserEntity;
-import com.example.basketballmatching.user.dto.ChangePasswordDto;
-import com.example.basketballmatching.user.dto.EditUserDto;
-import com.example.basketballmatching.user.dto.SignUpDto;
-import com.example.basketballmatching.user.dto.UserDto;
+import com.example.basketballmatching.user.dto.*;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +45,9 @@ public class UserService {
      */
 
     @Transactional
-    public SignUpDto.Response signUp(SignUpDto.Request request) {
+    public SignUpResponse signUp(SignUpRequest request) {
 
-        log.info("유저 회원가입 시작 : {}", request.getEmail());
+        log.info("유저 회원가입 시작 : {}", request.email());
 
 
         // 유저 유효성 검사
@@ -59,31 +56,30 @@ public class UserService {
         // 이메일 인증 여부 확인(Redis)
         confirmEmailAuth(request);
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        String encodedPassword = passwordEncoder.encode(request.password());
 
         UserEntity userEntity = UserEntity.create(
-                request.getEmail(),
+                request.email(),
                 encodedPassword,
-                request.getNickname(),
-                request.getName(),
-                request.getBirth(),
-                request.getPhone(),
-                request.getAddress(),
-                request.getPosition(),
-                request.getGenderType()
+                request.nickname(),
+                request.name(),
+                request.birth(),
+                request.phone(),
+                request.address(),
+                request.position(),
+                request.genderType()
         );
 
 
         userEntity.setEmailAuth();
 
 
-        userRepository.save(userEntity);
+        UserEntity savedUserEntity = userRepository.save(userEntity);
 
-        UserDto userDto = UserDto.fromEntity(userEntity);
 
         log.info("유저 회원가입 완료");
 
-        return SignUpDto.Response.fromDto(userDto);
+        return SignUpResponse.fromEntity(savedUserEntity);
     }
 
 
@@ -121,15 +117,14 @@ public class UserService {
      * 회원 정보 조회
      */
     @Transactional(readOnly = true)
-    public UserDto getUserInfo(Long userId) {
+    public UserProfileResponse getUserInfo(Long userId) {
 
         log.info("[유저 정보 조회 시작] userId : {}", userId);
 
         UserEntity userEntity = getUser(userId);
 
-        UserDto userDto = UserDto.fromEntity(userEntity);
 
-        return userDto;
+        return UserProfileResponse.fromEntity(userEntity);
 
     }
 
@@ -141,33 +136,33 @@ public class UserService {
      */
 
     @Transactional
-    public UserDto editUserInfo(Long userId, EditUserDto editUserDto) {
+    public UserProfileResponse editUserInfo(Long userId, UpdateUserRequest request) {
 
         log.info("[유저 회원정보 수정 시작 : {}]", userId);
 
         UserEntity userEntity = getUser(userId);
 
 
-        if (editUserDto.getNickname() != null) {
-            boolean exists = userRepository.existsByNicknameAndUserIdNot(editUserDto.getNickname(), userEntity.getUserId());
+        if (request.nickname() != null) {
+            boolean exists = userRepository.existsByNicknameAndUserIdNot(request.nickname(), userEntity.getUserId());
+
             if (exists) {
                 throw new CustomException(ALREADY_EXIST_NICKNAME);
             }
         }
 
         userEntity.editUserInfo(
-                editUserDto.getNickname(),
-                editUserDto.getPhone(),
-                editUserDto.getAddress(),
-                editUserDto.getGenderType(),
-                editUserDto.getPosition()
+                request.nickname(),
+                request.phone(),
+                request.address(),
+                request.genderType(),
+                request.position()
         );
 
-        UserDto userDto = UserDto.fromEntity(userEntity);
 
         log.info("[유저 회원정보 수정 완료 : {}]", true);
 
-        return userDto;
+        return UserProfileResponse.fromEntity(userEntity);
     }
 
 
@@ -233,25 +228,25 @@ public class UserService {
      */
 
     @Transactional
-    public void changePassword(Long userId, ChangePasswordDto request) {
+    public void changePassword(Long userId, ChangePasswordRequest request) {
 
         log.info("[비밀번호 변경 시작] userId : {}", userId);
 
         UserEntity userEntity = getUser(userId);
 
-        if (!passwordEncoder.matches(request.getCurrentPassword(), userEntity.getPassword())) {
+        if (!passwordEncoder.matches(request.currentPassword(), userEntity.getPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
 
-        if (!request.getNewPassword().equals(request.getNewCheckPassword())) {
+        if (!request.newPassword().equals(request.newCheckPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
 
-        if (passwordEncoder.matches(request.getNewPassword(), userEntity.getPassword())) {
+        if (passwordEncoder.matches(request.newPassword(), userEntity.getPassword())) {
             throw new CustomException(SAME_AS_OLD_PASSWORD);
         }
 
-        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
 
         userEntity.setPassword(encodedPassword);
 
@@ -275,10 +270,10 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
-    private void validationByUser(SignUpDto.Request request) {
-        boolean existsByEmail = userRepository.existsByEmail(request.getEmail());
+    private void validationByUser(SignUpRequest request) {
+        boolean existsByEmail = userRepository.existsByEmail(request.email());
 
-        boolean existsByNickname = userRepository.existsByNickname(request.getNickname());
+        boolean existsByNickname = userRepository.existsByNickname(request.nickname());
 
         if (existsByEmail) {
             throw new CustomException(ALREADY_EXIST_EMAIL);
@@ -288,18 +283,21 @@ public class UserService {
             throw new CustomException(ALREADY_EXIST_NICKNAME);
         }
 
-        if (!request.getPassword().equals(request.getCheckPassword())) {
+        if (!request.password().equals(request.checkPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
     }
 
-    private void confirmEmailAuth(SignUpDto.Request request) {
-        String data = redisService.getData(EMAIL_VERIFIED_PREFIX + request.getEmail());
+    private void confirmEmailAuth(SignUpRequest request) {
+
+        String key = EMAIL_VERIFIED_PREFIX + request.email();
+
+        String data = redisService.getData(key);
 
         if (data == null) {
             throw new CustomException(EMAIL_NOT_VERIFIED);
         }
 
-        redisService.deleteData(EMAIL_VERIFIED_PREFIX + request.getEmail());
+        redisService.deleteData(key);
     }
 }
