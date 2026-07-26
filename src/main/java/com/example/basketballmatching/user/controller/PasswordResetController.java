@@ -5,7 +5,7 @@ import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.service.MailService;
 import com.example.basketballmatching.user.dto.ConfirmEmailVerificationRequest;
 import com.example.basketballmatching.user.dto.ResetPasswordRequest;
-import com.example.basketballmatching.user.dto.SendEmailVerificationDto;
+import com.example.basketballmatching.user.dto.SendEmailVerificationRequest;
 import com.example.basketballmatching.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -66,7 +66,7 @@ public class PasswordResetController {
     })
     @PostMapping("/email-verifications")
     public ResponseEntity<CheckResponse> sendPasswordAuthCode(
-            @RequestBody @Valid SendEmailVerificationDto request
+            @RequestBody @Valid SendEmailVerificationRequest request
             ) {
 
         mailService.sendPasswordAuthCode(request.email());

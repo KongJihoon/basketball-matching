@@ -4,10 +4,7 @@ package com.example.basketballmatching.user.service;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.domain.UserEntity;
-import com.example.basketballmatching.user.dto.ChangePasswordDto;
-import com.example.basketballmatching.user.dto.EditUserDto;
-import com.example.basketballmatching.user.dto.SignUpDto;
-import com.example.basketballmatching.user.dto.UserDto;
+import com.example.basketballmatching.user.dto.*;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
@@ -84,7 +81,7 @@ class UserServiceUnitTest {
         void signupTest_success() {
             // given
 
-            SignUpDto.Request request = createSignUpRequest(
+            SignUpRequest request = createSignUpRequest(
                     EMAIL,
                     NICKNAME,
                     CURRENT_PASSWORD,
@@ -110,7 +107,7 @@ class UserServiceUnitTest {
             ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
             // when
 
-            SignUpDto.Response response = userService.signUp(request);
+            SignUpResponse response = userService.signUp(request);
 
             // then
 
@@ -128,9 +125,9 @@ class UserServiceUnitTest {
 
             assertTrue(savedUser.isEmailAuth());
 
-            assertEquals(EMAIL, response.getEmail());
-            assertEquals(NICKNAME, response.getNickname());
-            assertEquals("서울특별시 강남구", response.getAddress());
+            assertEquals(EMAIL, response.email());
+            assertEquals(NICKNAME, response.nickname());
+            assertEquals("서울특별시 강남구", response.address());
 
         }
 
@@ -139,7 +136,7 @@ class UserServiceUnitTest {
         void signupTest_fail_alreadyExistsEmail() {
             // given
 
-            SignUpDto.Request request = createDefaultSignUpRequest();
+            SignUpRequest request = createDefaultSignUpRequest();
 
             when(userRepository.existsByEmail(EMAIL))
                     .thenReturn(true);
@@ -167,7 +164,7 @@ class UserServiceUnitTest {
         void signupTest_fail_alreadyExistsNickname() {
             // given
 
-            SignUpDto.Request request = createDefaultSignUpRequest();
+            SignUpRequest request = createDefaultSignUpRequest();
 
             when(userRepository.existsByEmail(EMAIL))
                     .thenReturn(false);
@@ -194,7 +191,7 @@ class UserServiceUnitTest {
         void signupTest_fail_passwordNotMatch() {
             // given
 
-            SignUpDto.Request request = createSignUpRequest(
+            SignUpRequest request = createSignUpRequest(
                     EMAIL, NICKNAME, CURRENT_PASSWORD, "DifferentPassword1234!"
             );
 
@@ -227,7 +224,7 @@ class UserServiceUnitTest {
         void signupTest_fail_emailIsNotVerified() {
             // given
 
-            SignUpDto.Request request = createDefaultSignUpRequest();
+            SignUpRequest request = createDefaultSignUpRequest();
 
             when(userRepository.existsByEmail(EMAIL))
                     .thenReturn(false);
@@ -357,13 +354,13 @@ class UserServiceUnitTest {
 
             // when
 
-            UserDto response = userService.getUserInfo(USER_ID);
+            UserProfileResponse response = userService.getUserInfo(USER_ID);
 
             // then
-            assertEquals(USER_ID, response.getUserId());
-            assertEquals(EMAIL, response.getEmail());
-            assertEquals(NICKNAME, response.getNickname());
-            assertEquals(Position.GUARD, response.getPosition());
+            assertEquals(USER_ID, response.userId());
+            assertEquals(EMAIL, response.email());
+            assertEquals(NICKNAME, response.nickname());
+            assertEquals(Position.GUARD, response.position());
 
             verify(userRepository)
                     .findByUserIdAndDeletedDateTimeIsNull(
@@ -406,13 +403,14 @@ class UserServiceUnitTest {
 
             UserEntity user = createUser();
 
-            EditUserDto request = EditUserDto.builder()
-                    .nickname("변경닉네임")
-                    .phone("010-2222-3333")
-                    .address("서울특별시 송파구")
-                    .genderType(GenderType.FEMALE)
-                    .position(Position.CENTER)
-                    .build();
+            UpdateUserRequest request =
+                    new UpdateUserRequest(
+                            "변경닉네임",
+                            "010-2222-3333",
+                            "서울특별시 송파구",
+                            GenderType.FEMALE,
+                            Position.CENTER
+                    );
 
             when(userRepository.findByUserIdAndDeletedDateTimeIsNull(USER_ID))
                     .thenReturn(Optional.of(user));
@@ -423,7 +421,7 @@ class UserServiceUnitTest {
 
             // when
 
-            UserDto response = userService.editUserInfo(USER_ID, request);
+            UserProfileResponse response = userService.editUserInfo(USER_ID, request);
 
 
             // then
@@ -455,7 +453,7 @@ class UserServiceUnitTest {
 
             assertEquals(
                     "변경닉네임",
-                    response.getNickname()
+                    response.nickname()
             );
 
             verify(userRepository)
@@ -482,16 +480,19 @@ class UserServiceUnitTest {
 
             UserEntity user = createUser();
 
-            EditUserDto request =
-                    EditUserDto.builder()
-                            .nickname("중복닉네임")
-                            .position(Position.CENTER)
-                            .build();
+            UpdateUserRequest request =
+                    new UpdateUserRequest(
+                            "변경닉네임",
+                            "010-2222-3333",
+                            "서울특별시 송파구",
+                            GenderType.FEMALE,
+                            Position.CENTER
+                    );
 
             when(userRepository.findByUserIdAndDeletedDateTimeIsNull(USER_ID))
                     .thenReturn(Optional.of(user));
 
-            when(userRepository.existsByNicknameAndUserIdNot("중복닉네임", USER_ID))
+            when(userRepository.existsByNicknameAndUserIdNot("변경닉네임", USER_ID))
                     .thenReturn(true);
 
             // when
@@ -713,7 +714,7 @@ class UserServiceUnitTest {
         }
     }
 
-    private SignUpDto.Request createDefaultSignUpRequest() {
+    private SignUpRequest createDefaultSignUpRequest() {
 
         return createSignUpRequest(
                 EMAIL,
@@ -734,7 +735,7 @@ class UserServiceUnitTest {
 
             UserEntity user = createUser();
 
-            ChangePasswordDto request =
+            ChangePasswordRequest request =
                     createChangePasswordRequest(
                             CURRENT_PASSWORD,
                             NEW_PASSWORD,
@@ -778,7 +779,7 @@ class UserServiceUnitTest {
             // given
             UserEntity user = createUser();
 
-            ChangePasswordDto request =
+            ChangePasswordRequest request =
                     createChangePasswordRequest(
                             "WrongPassword1234!",
                             NEW_PASSWORD,
@@ -832,7 +833,7 @@ class UserServiceUnitTest {
             // given
             UserEntity user = createUser();
 
-            ChangePasswordDto request =
+            ChangePasswordRequest request =
                     createChangePasswordRequest(
                             CURRENT_PASSWORD,
                             NEW_PASSWORD,
@@ -890,39 +891,38 @@ class UserServiceUnitTest {
 
     }
 
-    private SignUpDto.Request createSignUpRequest(
+    private SignUpRequest createSignUpRequest(
             String email,
             String nickname,
             String password,
             String checkPassword
     ) {
 
-        return SignUpDto.Request.builder()
-                .email(email)
-                .password(password)
-                .checkPassword(checkPassword)
-                .nickname(nickname)
-                .name("테스트 사용자")
-                .birth(LocalDate.of(1997, 1, 1))
-                .phone("010-1111-0000")
-                .address("서울특별시 강남구")
-                .position(Position.GUARD)
-                .genderType(GenderType.MALE)
-                .build();
+        return new SignUpRequest(
+                email,
+                password,
+                checkPassword,
+                nickname,
+                "테스트 사용자",
+                LocalDate.of(1997, 1, 1),
+                "010-1111-0000",
+                "서울특별시 강남구",
+                Position.GUARD,
+                GenderType.MALE
+        );
     }
 
 
-    private ChangePasswordDto createChangePasswordRequest(
+    private ChangePasswordRequest createChangePasswordRequest(
             String currentPassword,
             String newPassword,
             String newCheckPassword
     ) {
-
-        return ChangePasswordDto.builder()
-                .currentPassword(currentPassword)
-                .newPassword(newPassword)
-                .newCheckPassword(newCheckPassword)
-                .build();
+        return new ChangePasswordRequest(
+                currentPassword,
+                newPassword,
+                newCheckPassword
+        );
     }
 
     private UserEntity createUser() {

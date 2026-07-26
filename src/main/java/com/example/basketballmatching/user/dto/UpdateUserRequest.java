@@ -1,0 +1,53 @@
+package com.example.basketballmatching.user.dto;
+
+import com.example.basketballmatching.user.type.GenderType;
+import com.example.basketballmatching.user.type.Position;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+public record UpdateUserRequest(
+        @Schema(
+                description = "닉네임",
+                example = "커리"
+        )
+        @Size(
+                min = 2,
+                max = 12,
+                message = "닉네임은 2~12자여야 합니다."
+        )
+        @Pattern(
+                regexp = "^(?!\\s*$).+",
+                message = "닉네임은 공백만 입력할 수 없습니다."
+        )
+        String nickname,
+
+        @Schema(
+                description = "휴대폰 번호",
+                example = "010-1111-0000"
+        )
+        @Pattern(
+                regexp = "^01[016789]-\\d{3,4}-\\d{4}$",
+                message = "휴대폰 번호 형식이 올바르지 않습니다."
+        )
+        String phone,
+
+        @Schema(
+                description = "주소",
+                example = "서울특별시 강남구"
+        )
+        String address,
+
+        @Schema(
+                description = "성별",
+                example = "MALE"
+        )
+        GenderType genderType,
+
+        @Schema(
+                description = "포지션",
+                example = "GUARD"
+        )
+        Position position
+) {
+}
