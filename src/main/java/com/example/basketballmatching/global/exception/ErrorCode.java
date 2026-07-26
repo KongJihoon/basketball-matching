@@ -38,11 +38,16 @@ public enum ErrorCode {
     FUTURE_DATE(HttpStatus.BAD_REQUEST, "현재 시각 이후로 입력해주세요."),
 
     // OAuth2(입력 검증 = 400, 외부 연동 실패 = 502)
-    OAUTH_CODE_NOT_FOUND(HttpStatus.BAD_REQUEST, "OAUTH2 토큰이 존재하지 않습니다."),
-    OAUTH_STATE_INVALID(HttpStatus.BAD_REQUEST, "요청 검증 상태가 유효하지 않습니다."),
+    OAUTH_CODE_NOT_FOUND(HttpStatus.BAD_REQUEST, "OAuth 인가 코드가 존재하지 않습니다."),
+    OAUTH_STATE_INVALID(HttpStatus.BAD_REQUEST, "OAuth 요청 상태가 유효하지 않습니다."),
+    OAUTH_TICKET_INVALID(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 OAuth Ticket입니다."),
+    OAUTH_PROVIDER_ID_NOT_FOUND(HttpStatus.BAD_GATEWAY, "소셜 로그인 사용자 식별자를 확인할 수 없습니다."),
+    OAUTH_ACCOUNT_LINK_REQUIRED(HttpStatus.CONFLICT, "동일한 이메일의 기존 계정이 있습니다. 기존 계정 로그인 후 소셜 계정을 연결해주세요."),
+    OAUTH_WITHDRAWN_USER(HttpStatus.CONFLICT, "탈퇴한 계정입니다. 재가입 절차를 진행해주세요."),
     OAUTH_TOKEN_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "카카오 토큰 발급에 실패하였습니다."),
     OAUTH_USERINFO_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "카카오 사용자 정보 요청에 실패하였습니다."),
     OAUTH_USERINFO_RESPONSE_PARSE_ERROR(HttpStatus.BAD_GATEWAY, "카카오 사용자 정보 응답 파싱에 실패하였습니다."),
+
 
     // game (입력 검증 = 400/ 리소스 없음 = 404/ 권한 부족 =  403/ 중복 = 409)
     INVALID_GAME_TIME(HttpStatus.BAD_REQUEST, "시작/종료 시간이 유효하지 않습니다."),
@@ -100,8 +105,7 @@ public enum ErrorCode {
 
     // friend
     ALREADY_EXIST_FRIEND(HttpStatus.BAD_REQUEST, "이미 친구목록에 존재하는 유저입니다."),
-    INVALID_FRIEND_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 친구요청입니다.")
-    ;
+    INVALID_FRIEND_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 친구요청입니다.");
 
 
 

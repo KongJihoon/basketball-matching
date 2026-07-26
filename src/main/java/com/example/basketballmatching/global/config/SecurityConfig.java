@@ -47,7 +47,9 @@ public class SecurityConfig {
                                         "/api/v1/password-resets"
                                 ).permitAll()
                                 .requestMatchers(
-                                        "/api/oauth2/**",
+                                        "/",
+                                        "/index.html",
+                                        "/api/v1/auth/oauth2/**",
                                         "/api/v1/game/details",
                                         "/api/v1/game/search",
                                         "/swagger-ui.html",
