@@ -1,4 +1,4 @@
-package com.example.basketballmatching.user.oauth2.dto;
+package com.example.basketballmatching.auth.oauth2.dto;
 
 import com.example.basketballmatching.user.dto.UserDto;
 import com.example.basketballmatching.user.domain.UserEntity;
