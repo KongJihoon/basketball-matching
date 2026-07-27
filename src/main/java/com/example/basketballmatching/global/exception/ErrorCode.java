@@ -47,6 +47,7 @@ public enum ErrorCode {
     OAUTH_TOKEN_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "카카오 토큰 발급에 실패하였습니다."),
     OAUTH_USERINFO_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "카카오 사용자 정보 요청에 실패하였습니다."),
     OAUTH_USERINFO_RESPONSE_PARSE_ERROR(HttpStatus.BAD_GATEWAY, "카카오 사용자 정보 응답 파싱에 실패하였습니다."),
+    OAUTH_EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "카카오 계정의 이메일 제공 동의가 필요합니다."),
 
 
     // game (입력 검증 = 400/ 리소스 없음 = 404/ 권한 부족 =  403/ 중복 = 409)

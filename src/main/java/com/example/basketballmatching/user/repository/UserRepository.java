@@ -18,6 +18,9 @@ UserRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findByUserIdAndDeletedDateTimeIsNull(Long userId);
 
+    Optional<UserEntity> findByEmail(String email);
+
+
 
 
 }
