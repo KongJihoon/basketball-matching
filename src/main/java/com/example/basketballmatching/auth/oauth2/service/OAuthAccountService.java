@@ -1,19 +1,20 @@
 package com.example.basketballmatching.auth.oauth2.service;
 
 import com.example.basketballmatching.auth.oauth2.domain.OAuthAccountEntity;
-import com.example.basketballmatching.auth.oauth2.dto.KakaoDto;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthAccountDecision;
 import com.example.basketballmatching.auth.oauth2.repository.OAuthAccountRepository;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
 import static com.example.basketballmatching.auth.oauth2.type.OAuthProvider.KAKAO;
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
 import static com.example.basketballmatching.user.type.LoginProvider.LOCAL;
 
 @Service
@@ -25,7 +26,7 @@ public class OAuthAccountService {
     private final UserRepository userRepository;
 
     @Transactional
-    public String findOrCreateKakaoUserEmail(Long kakaoUserId, String email, String nickname) {
+    public OAuthAccountDecision resolveKakaoAccount(Long kakaoUserId, String email) {
 
         validateKakaoUserId(kakaoUserId);
 
@@ -36,47 +37,36 @@ public class OAuthAccountService {
         if (oAuthAccount.isPresent()) {
             UserEntity user = validateActiveUser(oAuthAccount.get().getUserEntity());
 
-            return user.getEmail();
+            return OAuthAccountDecision.login(user.getEmail());
         }
 
-        UserEntity user = linkOrCreateKakaoUser(providerUserId, email, nickname);
+        validateEmail(email);
 
-        return user.getEmail();
+        Optional<UserEntity> existingUser = userRepository.findByEmail(email);
+
+        if (existingUser.isEmpty()) {
+            return OAuthAccountDecision.signup(email);
+        }
+
+        UserEntity user = validateLinkableUser(existingUser.get());
+
+        OAuthAccountEntity newOAuthAccount = OAuthAccountEntity.create(
+                user, KAKAO, providerUserId
+        );
+
+        oAuthAccountRepository.save(newOAuthAccount);
+
+        return OAuthAccountDecision.login(user.getEmail());
 
     }
 
-    private UserEntity linkOrCreateKakaoUser(String providerUserId, String email, String nickname) {
 
-        UserEntity user = userRepository.findByEmail(email)
-                .map(this::validateLinkableUser)
-                .orElseGet(() -> createTemporaryKakaoUser(email, nickname));
-
-        OAuthAccountEntity oAuthAccount = OAuthAccountEntity.create(user, KAKAO, providerUserId);
-
-
-        oAuthAccountRepository.save(oAuthAccount);
-
-        return user;
-    }
-
-    private UserEntity createTemporaryKakaoUser(String email, String nickname) {
-
-        KakaoDto.Request request = KakaoDto.Request.builder()
-                .email(email)
-                .name(nickname)
-                .nickname(nickname)
-                .build();
-
-        UserEntity user = KakaoDto.Request.toEntity(request);
-
-        return userRepository.save(user);
-    }
 
     private UserEntity validateLinkableUser(UserEntity userEntity) {
         validateActiveUser(userEntity);
 
         if (userEntity.getLoginProvider().equals(LOCAL)) {
-            throw new CustomException(ErrorCode.OAUTH_ACCOUNT_LINK_REQUIRED);
+            throw new CustomException(OAUTH_ACCOUNT_LINK_REQUIRED);
         }
 
         return userEntity;
@@ -85,7 +75,7 @@ public class OAuthAccountService {
     private UserEntity validateActiveUser(UserEntity userEntity) {
 
         if (userEntity.getDeletedDateTime() != null) {
-            throw new CustomException(ErrorCode.OAUTH_WITHDRAWN_USER);
+            throw new CustomException(OAUTH_WITHDRAWN_USER);
         }
 
         return userEntity;
@@ -93,9 +83,17 @@ public class OAuthAccountService {
     }
 
 
+
     private void validateKakaoUserId(Long kakaoUserId) {
         if (kakaoUserId == null) {
-            throw new CustomException(ErrorCode.OAUTH_PROVIDER_ID_NOT_FOUND);
+            throw new CustomException(OAUTH_PROVIDER_ID_NOT_FOUND);
         }
     }
+
+    private void validateEmail(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new CustomException(OAUTH_EMAIL_NOT_FOUND);
+        }
+    }
+
 }

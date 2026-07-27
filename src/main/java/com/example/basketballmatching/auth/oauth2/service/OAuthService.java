@@ -3,16 +3,21 @@ package com.example.basketballmatching.auth.oauth2.service;
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.auth.oauth2.client.KakaoOAuthClient;
 import com.example.basketballmatching.auth.oauth2.client.dto.KakaoUserInfoResponse;
-import com.example.basketballmatching.auth.oauth2.dto.KakaoDto;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthAccountDecision;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthCallbackResponse;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthTicketPayload;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthTicketRequest;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import static com.example.basketballmatching.global.exception.ErrorCode.*;
+import static com.example.basketballmatching.auth.oauth2.type.OAuthFlowType.LOGIN;
+import static com.example.basketballmatching.auth.oauth2.type.OAuthProvider.KAKAO;
+import static com.example.basketballmatching.global.exception.ErrorCode.OAUTH_CODE_NOT_FOUND;
+import static com.example.basketballmatching.global.exception.ErrorCode.OAUTH_USERINFO_RESPONSE_PARSE_ERROR;
 
 @Slf4j
 @Service
@@ -23,8 +28,7 @@ public class OAuthService {
 
     private final OAuthAccountService oAuthAccountService;
 
-    private final UserRepository userRepository;
-
+    private final OAuthTicketStore oAuthTicketStore;
     private final AuthService authService;
 
     public String createKakaoAuthorizationUrl() {
@@ -34,7 +38,7 @@ public class OAuthService {
 
 
 
-    public AuthTokenResponse kakaoLogin(String authorizationCode) {
+    public OAuthCallbackResponse kakaoCallback(String authorizationCode) {
 
         validateAuthorizationCode(authorizationCode);
 
@@ -42,24 +46,35 @@ public class OAuthService {
 
         KakaoUserInfoResponse.KakaoAccount account = requireKakaoAccount(kakaoUserInfo);
 
+        OAuthAccountDecision decision = oAuthAccountService.resolveKakaoAccount(kakaoUserInfo.id(), account.email());
 
-        String email = requireEmail(account);
-        String nickname= requireNickname(account);
+        if (decision.flowType() == LOGIN) {
+            OAuthTicketPayload payload = OAuthTicketPayload.login(decision.email());
 
-        String loginEmail = oAuthAccountService.findOrCreateKakaoUserEmail(kakaoUserInfo.id(), email, nickname);
+            String ticket = oAuthTicketStore.issue(payload);
 
-
-        return authService.loginWithKakao(loginEmail);
-    }
-
-    private String requireEmail(KakaoUserInfoResponse.KakaoAccount account) {
-
-        if (!StringUtils.hasText(account.email())) {
-            throw new CustomException(OAUTH_EMAIL_NOT_FOUND);
+            return OAuthCallbackResponse.login(ticket);
         }
 
-        return account.email();
+
+        String nickname= requireNickname(account);
+
+        OAuthTicketPayload payload = OAuthTicketPayload.signup(KAKAO, String.valueOf(kakaoUserInfo.id()), decision.email());
+
+        String ticket = oAuthTicketStore.issue(payload);
+
+
+        return OAuthCallbackResponse.signup(ticket, decision.email(), nickname);
     }
+
+    public AuthTokenResponse exchangeLoginTicket(OAuthTicketRequest request) {
+        OAuthTicketPayload payload = oAuthTicketStore.consume(request.ticket(), LOGIN);
+
+        return authService.loginWithKakao(payload.email());
+    }
+
+
+
 
     private static String requireNickname(KakaoUserInfoResponse.KakaoAccount account) {
 
@@ -84,15 +99,6 @@ public class OAuthService {
         }
     }
 
-    private String extractNickname(KakaoUserInfoResponse.KakaoAccount account) {
-
-        if (account.profile() == null || account.profile().nickname() == null || account.profile().nickname().isBlank()) {
-
-            throw new CustomException(OAUTH_USERINFO_RESPONSE_PARSE_ERROR);
-        }
-
-        return account.profile().nickname();
-    }
 
 
 
