@@ -23,4 +23,7 @@ public interface OAuthAccountRepository extends JpaRepository<OAuthAccountEntity
             @Param("providerUserId") String providerUserId
     );
 
+    boolean existsByProviderAndProviderUserId(OAuthProvider provider, String providerUserId);
+
+
 }

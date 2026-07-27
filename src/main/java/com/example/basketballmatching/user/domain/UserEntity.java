@@ -130,6 +130,24 @@ public class UserEntity extends BaseEntity {
 
     }
 
+    public static UserEntity createOAuth(String email, String nickname, String name, LocalDate birth, String phone, String address, Position position, GenderType genderType, LoginProvider loginProvider) {
+
+        return UserEntity.builder()
+                .email(email)
+                .password(null)
+                .nickname(nickname)
+                .name(name)
+                .birth(birth)
+                .phone(phone)
+                .address(address)
+                .position(position)
+                .userType(UserType.USER)
+                .genderType(genderType)
+                .loginProvider(loginProvider)
+                .emailAuth(true)
+                .build();
+    }
+
     public void withdraw(LocalDateTime withdrawnAt) {
         if (deletedDateTime != null) {
             return;
