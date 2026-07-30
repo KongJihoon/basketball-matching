@@ -45,7 +45,10 @@ jobs:
             --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceTest" \
             --tests "com.example.basketballmatching.auth.service.AuthServiceUnitTest" \
             --tests "com.example.basketballmatching.auth.service.UserSessionRevocationServiceUnitTest" \
-            --tests "com.example.basketballmatching.global.security.AuthenticationFilterUnitTest"
+            --tests "com.example.basketballmatching.global.security.AuthenticationFilterUnitTest" \
+          --tests "com.example.basketballmatching.auth.oauth2.service.OAuthTicketStoreUnitTest" \
+          --tests "com.example.basketballmatching.auth.oauth2.service.OAuthAccountServiceUnitTest" \
+          --tests "com.example.basketballmatching.auth.oauth2.service.OAuthServiceUnitTest"
 
       - name: Upload unit test report
         if: always()
@@ -79,7 +82,8 @@ jobs:
           ./gradlew clean test --no-daemon \
             --tests "com.example.basketballmatching.user.service.UserServiceIntegrationTest" \
             --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest" \
-            --tests "com.example.basketballmatching.auth.service.AuthServiceIntegrationTest"
+            --tests "com.example.basketballmatching.auth.service.AuthServiceIntegrationTest" \
+            --tests "com.example.basketballmatching.auth.oauth2.service.OAuthServiceIntegrationTest"
 
       - name: Upload integration test report
         if: always()
