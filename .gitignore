@@ -1,5 +1,6 @@
 HELP.md
 .gradle
+
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -36,8 +37,16 @@ out/
 ### VS Code ###
 .vscode/
 
-# 민감한 설정 파일
-src/main/resources/application.yml
+### Secret configuration ###
+/src/main/resources/application-seed.yml
+/src/test/resources/application-test-only.yml
+
+.env
+.env.local
+.env.performance
+
+### Performance test result ###
+/performance/results/
 
 # macOS
 .DS_Store
@@ -48,8 +57,3 @@ src/main/resources/application.yml
 
 # Local Gradle environment
 /gradle.properties
-
-# Local configuration with secrets
-/src/main/resources/application-local.yml
-/src/main/resources/application-seed.yml
-/src/test/resources/application-test-only.yml
