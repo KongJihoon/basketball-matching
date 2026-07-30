@@ -1,0 +1,59 @@
+name: basketball-local
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${LOCAL_DB_NAME}
+      MYSQL_USER: ${LOCAL_DB_USERNAME}
+      MYSQL_PASSWORD: ${LOCAL_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${LOCAL_DB_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+
+    ports:
+      - "3307:3306"
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+    volumes:
+      - local_mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
+    ports:
+      - "6380:6379"
+
+    volumes:
+      - local_redis_data:/data
+
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  local_mysql_data:
+  local_redis_data:

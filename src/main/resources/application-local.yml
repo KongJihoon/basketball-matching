@@ -1,0 +1,78 @@
+spring:
+  datasource:
+    url: ${LOCAL_DB_URL:jdbc:mysql://localhost:3307/basketball?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${LOCAL_DB_USERNAME:basketball}
+    password: ${LOCAL_DB_PASSWORD:basketball-local-password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    open-in-view: false
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+
+  data:
+    redis:
+      host: ${LOCAL_REDIS_HOST:localhost}
+      port: ${LOCAL_REDIS_PORT:6380}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:local@example.com}
+    password: ${MAIL_PASSWORD:local-password}
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+    test-connection: false
+    default-encoding: UTF-8
+
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiration: 3600000
+    refresh-token-expiration: 1209600000
+
+app:
+  time-zone: Asia/Seoul
+
+  oauth2:
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:local-client-id}
+      client-secret: ${KAKAO_CLIENT_SECRET:local-client-secret}
+      authorization-uri: https://kauth.kakao.com/oauth/authorize
+      token-uri: https://kauth.kakao.com/oauth/token
+      user-info-uri: https://kapi.kakao.com/v2/user/me
+      redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/v1/auth/oauth2/kakao/callback}
+      connect-timeout: 3s
+      read-timeout: 5s
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
