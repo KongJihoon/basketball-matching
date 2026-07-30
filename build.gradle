@@ -56,6 +56,10 @@ dependencies {
     // redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.24.3'
 
+    // monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
     // Testcontainers
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'
