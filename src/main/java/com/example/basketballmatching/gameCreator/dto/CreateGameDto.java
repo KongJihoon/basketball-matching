@@ -22,42 +22,42 @@ public class CreateGameDto {
     public static class Request {
 
 
-        @Schema(name = "경기 제목", example = "서울 xx체육관 3vs3 경기 인원 모집")
+        @Schema(name = "title", example = "서울 xx체육관 3vs3 경기 인원 모집")
         @NotBlank(message = "제목을 입력해주세요.")
         private String title;
 
-        @Schema(name = "경기 상세 내용", example = "3대3경기 인원 모집입니다.")
+        @Schema(name = "content", example = "3대3경기 인원 모집입니다.")
         @NotBlank(message = "내용을 입력해주세요.")
         private String content;
 
-        @Schema(name = "경기 인원 수", example = "6")
+        @Schema(name = "headCount", example = "6")
         @NotNull(message = "인원수를 입력해주세요.")
         @Min(value = 6, message = "최소 6명이상입니다.")
         private Integer headCount;
 
-        @Schema(name = "경기 실내외", example = "INDOOR")
+        @Schema(name = "fieldStatus", example = "INDOOR")
         @NotNull(message = "실내외를 입력해주세요.")
         private FieldStatus fieldStatus;
 
-        @Schema(name = "경기 형식", example = "THREE_ON_THREE")
+        @Schema(name = "matchFormat", example = "THREE_ON_THREE")
         @NotNull(message = "경기형식을 입력해주세요.")
         private MatchFormat matchFormat;
 
-        @Schema(name = "경기 시작 날짜", example = "2025-11-22T15:00:00:00")
+        @Schema(name = "startDateTime", example = "2025-11-22T15:00:00:00")
         @NotNull(message = "시작 날짜를 입력해주세요.")
         @Future(message = "시작 시간은 현재 시각 이후여야 합니다.")
         private LocalDateTime startDateTime;
 
-        @Schema(name = "경기 종료 날짜", example = "2025-11-22T17:00:00:00")
+        @Schema(name = "endDateTime", example = "2025-11-22T17:00:00:00")
         @NotNull(message = "종료 날짜를 입력해주세요.")
         @Future(message = "종료 시간은 현재 시각 이후여야 합니다.")
         private LocalDateTime endDateTime;
 
-        @Schema(name = "경기 장소", example = "서울 xx 체육관")
+        @Schema(name = "placeName", example = "서울 xx 체육관")
         @NotBlank(message = "장소 이름을 입력해주세요.")
         private String placeName;
 
-        @Schema(name = "경기 주소", example = "서울특별시 강남구..")
+        @Schema(name = "address", example = "서울특별시 강남구..")
         @NotBlank(message = "주소를 입력해주세요.")
         private String address;
 
@@ -66,7 +66,7 @@ public class CreateGameDto {
 
         private Double longitude;
 
-        @Schema(name = "경기 성별 유형", example = "MALE_ONLY")
+        @Schema(name = "matchGenderType", example = "MALE_ONLY")
         @NotNull(message = "성별을 입력해주세요.")
         private MatchGenderType matchGenderType;
 
