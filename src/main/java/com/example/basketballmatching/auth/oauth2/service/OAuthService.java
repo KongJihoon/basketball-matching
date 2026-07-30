@@ -3,10 +3,7 @@ package com.example.basketballmatching.auth.oauth2.service;
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.auth.oauth2.client.KakaoOAuthClient;
 import com.example.basketballmatching.auth.oauth2.client.dto.KakaoUserInfoResponse;
-import com.example.basketballmatching.auth.oauth2.dto.OAuthAccountDecision;
-import com.example.basketballmatching.auth.oauth2.dto.OAuthCallbackResponse;
-import com.example.basketballmatching.auth.oauth2.dto.OAuthTicketPayload;
-import com.example.basketballmatching.auth.oauth2.dto.OAuthTicketRequest;
+import com.example.basketballmatching.auth.oauth2.dto.*;
 import com.example.basketballmatching.auth.service.AuthService;
 import com.example.basketballmatching.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import static com.example.basketballmatching.auth.oauth2.type.OAuthFlowType.LOGIN;
+import static com.example.basketballmatching.auth.oauth2.type.OAuthFlowType.SIGNUP;
 import static com.example.basketballmatching.auth.oauth2.type.OAuthProvider.KAKAO;
 import static com.example.basketballmatching.global.exception.ErrorCode.OAUTH_CODE_NOT_FOUND;
 import static com.example.basketballmatching.global.exception.ErrorCode.OAUTH_USERINFO_RESPONSE_PARSE_ERROR;
@@ -71,6 +69,16 @@ public class OAuthService {
         OAuthTicketPayload payload = oAuthTicketStore.consume(request.ticket(), LOGIN);
 
         return authService.loginWithKakao(payload.email());
+    }
+
+    public AuthTokenResponse signUp(OAuthSignUpRequest request) {
+
+        OAuthTicketPayload payload = oAuthTicketStore.consume(request.ticket(), SIGNUP);
+
+        String email = oAuthAccountService.completeSignUp(payload, request);
+
+
+        return authService.loginWithKakao(email);
     }
 
 

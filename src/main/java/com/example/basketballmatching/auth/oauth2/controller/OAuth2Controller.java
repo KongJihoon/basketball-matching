@@ -3,6 +3,7 @@ package com.example.basketballmatching.auth.oauth2.controller;
 
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.auth.oauth2.dto.OAuthCallbackResponse;
+import com.example.basketballmatching.auth.oauth2.dto.OAuthSignUpRequest;
 import com.example.basketballmatching.auth.oauth2.dto.OAuthTicketRequest;
 import com.example.basketballmatching.auth.oauth2.service.OAuthService;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,5 +71,26 @@ public class OAuth2Controller {
         return ResponseEntity.ok(
                 CommonResponse.of("OAuth 로그인에 성공하였습니다.", response)
         );
+    }
+
+    @Operation(summary = "OAuth 추가정보 회원가입")
+    @ApiResponse(responseCode = "200", description = "OAuth 회원가입 및 서비스 토큰 발급 성공")
+    @ApiResponse(responseCode = "400", description = "회원가입 입력값 오류",
+    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "유효하지 않거나 만료된 OAuth Ticket",
+    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "409", description = "이메일, 닉네임 또는 OAuth 계정 중복",
+    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @PostMapping("/signup")
+    public ResponseEntity<CommonResponse<AuthTokenResponse>> signup(
+            @Valid @RequestBody OAuthSignUpRequest request
+            ) {
+
+        AuthTokenResponse response = oAuthService.signUp(request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(
+                        CommonResponse.of("OAuth 회원가입이 완료되었습니다.", response)
+                );
     }
 }
