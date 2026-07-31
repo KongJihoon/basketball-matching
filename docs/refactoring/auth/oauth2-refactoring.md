@@ -380,6 +380,30 @@ Testcontainers를 이용해 실제 MySQL과 Redis로 검증한다.
 
 ---
 
+## 11. 후속 OAuth State 보안 강화
+
+OAuth 계정 식별과 일회용 Ticket 구조를 완성한 뒤,
+인가 요청을 시작한 브라우저와 Callback을 연결하기 위해 OAuth State 검증을 추가했다.
+
+```text
+OAuth State
+→ 인가 요청부터 Callback까지 보호
+
+OAuth Ticket
+→ Callback 완료부터 JWT 발급 또는 추가 회원가입까지 보호
+```
+
+State는 브라우저의 HttpOnly 쿠키 및 Redis 데이터와 함께 검증하며,
+Redis `GETDEL`을 사용해 한 번만 소비한다.
+
+상세한 결정과 구현 과정은 다음 문서에 분리했다.
+
+- [OAuth State CSRF 방어 ADR](../../adr/auth/oauth-state-csrf-protection.md)
+- [OAuth State 검증 보안 리팩터링](./oauth-state-validation-refactoring.md)
+- [OAuth State와 MockMvc 통합 테스트 학습 노트](../../learning/auth/oauth-state-and-mockmvc.md)
+
+---
+
 ## 💡성과
 
 - 이메일 대신 카카오 고유 ID 기반 계정 식별 구조를 추가했다.
@@ -392,3 +416,4 @@ Testcontainers를 이용해 실제 MySQL과 Redis로 검증한다.
 - User와 OAuthAccount를 하나의 DB 트랜잭션으로 저장했다.
 - 동일 이메일 LOCAL 계정의 자동 연결을 차단했다.
 - 단위 테스트와 실제 MySQL·Redis 통합 테스트를 구성했다.
+- OAuth State와 브라우저 쿠키를 연결해 Login CSRF 방어를 추가했다.

@@ -28,17 +28,24 @@ public class OAuthService {
 
     private final OAuthTicketStore oAuthTicketStore;
     private final AuthService authService;
+    private final OAuthStateStore oAuthStateStore;
 
-    public String createKakaoAuthorizationUrl() {
-        return kakaoOAuthClient
-                .createAuthorizationUrl();
+    public OAuthAuthorizationResult createKakaoAuthorization() {
+        String state = oAuthStateStore.issue();
+
+        String authorizationUrl = kakaoOAuthClient.createAuthorizationUrl(state);
+
+        return new OAuthAuthorizationResult(authorizationUrl, state);
     }
 
 
 
-    public OAuthCallbackResponse kakaoCallback(String authorizationCode) {
+    public OAuthCallbackResponse kakaoCallback(
+            String authorizationCode, String returnedState, String cookieState) {
 
         validateAuthorizationCode(authorizationCode);
+
+        oAuthStateStore.consume(returnedState, cookieState);
 
         KakaoUserInfoResponse kakaoUserInfo = kakaoOAuthClient.getUserInfo(authorizationCode);
 

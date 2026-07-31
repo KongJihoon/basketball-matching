@@ -41,6 +41,8 @@ app:
   time-zone: Asia/Seoul
 
   oauth2:
+    security:
+      state-expiration: 3m
     kakao:
       client-id: ${KAKAO_CLIENT_ID}
       client-secret: ${KAKAO_CLIENT_SECRET}
