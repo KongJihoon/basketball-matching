@@ -34,7 +34,7 @@ public class KakaoOAuthClient {
         this.properties = properties;
     }
 
-    public String createAuthorizationUrl() {
+    public String createAuthorizationUrl(String state) {
         return UriComponentsBuilder
                 .fromUri(
                         properties.authorizationUri()
@@ -50,7 +50,11 @@ public class KakaoOAuthClient {
                 .queryParam(
                         "response_type",
                         "code"
-                ).build()
+                )
+                .queryParam(
+                        "state", state
+                )
+                .build()
                 .toUriString();
     }
 

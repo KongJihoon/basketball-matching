@@ -48,6 +48,14 @@ class OAuthServiceUnitTest {
 
     private static final String REFRESH_TOKEN = "refresh-token";
 
+    private static final String STATE = "oauth-state";
+
+    private static final String AUTHORIZATION_URL =
+            "https://kauth.kakao.com/oauth/authorize";
+
+    @Mock
+    private OAuthStateStore oAuthStateStore;
+
     @Mock
     private KakaoOAuthClient kakaoOAuthClient;
 
@@ -87,7 +95,7 @@ class OAuthServiceUnitTest {
             ArgumentCaptor<OAuthTicketPayload> payloadCaptor = ArgumentCaptor.forClass(OAuthTicketPayload.class);
             // when
 
-            OAuthCallbackResponse response = oAuthService.kakaoCallback(AUTHORIZATION_CODE);
+            OAuthCallbackResponse response = oAuthService.kakaoCallback(AUTHORIZATION_CODE, STATE, STATE);
 
             // then
 
@@ -102,6 +110,11 @@ class OAuthServiceUnitTest {
                     () -> assertNull(response.nickname()),
                     () -> assertEquals(LOGIN, payload.flowType()),
                     () -> assertEquals(EMAIL, payload.email())
+            );
+
+            verify(oAuthStateStore).consume(
+                    STATE,
+                    STATE
             );
 
         }
@@ -126,7 +139,7 @@ class OAuthServiceUnitTest {
 
             // when
 
-            OAuthCallbackResponse response = oAuthService.kakaoCallback(AUTHORIZATION_CODE);
+            OAuthCallbackResponse response = oAuthService.kakaoCallback(AUTHORIZATION_CODE, STATE, STATE);
 
             // then
 
@@ -163,6 +176,46 @@ class OAuthServiceUnitTest {
                     )
             );
 
+            verify(oAuthStateStore).consume(
+                    STATE,
+                    STATE
+            );
+
+        }
+
+        @Test
+        @DisplayName("OAuth State를 포함한 카카오 인가 URL 생성")
+        void createKakaoAuthorization_success() {
+            // given
+
+            when(oAuthStateStore.issue())
+                    .thenReturn(STATE);
+
+            when(kakaoOAuthClient.createAuthorizationUrl(STATE))
+                    .thenReturn(AUTHORIZATION_URL);
+
+            // when
+
+            OAuthAuthorizationResult result = oAuthService.createKakaoAuthorization();
+
+            // then
+            assertAll(
+                    () -> assertEquals(
+                            STATE,
+                            result.state()
+                    ),
+                    () -> assertEquals(
+                            AUTHORIZATION_URL,
+                            result.authorizationUrl()
+                    )
+            );
+
+            verify(oAuthStateStore).issue();
+
+            verify(kakaoOAuthClient)
+                    .createAuthorizationUrl(STATE);
+
+
         }
 
         @Test
@@ -172,14 +225,14 @@ class OAuthServiceUnitTest {
 
             // when
 
-            CustomException exception = assertThrows(CustomException.class, () -> oAuthService.kakaoCallback(" "));
+            CustomException exception = assertThrows(CustomException.class, () -> oAuthService.kakaoCallback(" ", STATE, STATE));
 
             // then
 
             assertEquals(OAUTH_CODE_NOT_FOUND, exception.getErrorCode());
 
             verifyNoInteractions(
-                    kakaoOAuthClient, oAuthAccountService, oAuthTicketStore, authService
+                    kakaoOAuthClient, oAuthAccountService, oAuthTicketStore, authService, oAuthStateStore
             );
 
         }

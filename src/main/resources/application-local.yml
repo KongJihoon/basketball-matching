@@ -54,6 +54,8 @@ app:
   time-zone: Asia/Seoul
 
   oauth2:
+    security:
+      secure-cookie: false
     kakao:
       client-id: ${KAKAO_CLIENT_ID:local-client-id}
       client-secret: ${KAKAO_CLIENT_SECRET:local-client-secret}

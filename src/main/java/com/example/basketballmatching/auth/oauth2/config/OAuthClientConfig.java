@@ -12,7 +12,8 @@ import java.net.http.HttpClient;
 
 @Configuration
 @EnableConfigurationProperties(
-        KakaoOAuthProperties.class
+        {KakaoOAuthProperties.class,
+        OAuthSecurityProperties.class}
 )
 public class OAuthClientConfig {
 
