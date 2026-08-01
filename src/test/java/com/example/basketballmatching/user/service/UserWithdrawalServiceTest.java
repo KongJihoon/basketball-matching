@@ -1,10 +1,9 @@
 package com.example.basketballmatching.user.service;
 
-import com.example.basketballmatching.gameCreator.dto.GameCancelNotificationDto;
-import com.example.basketballmatching.gameCreator.dto.UserWithdrawalGameResultDto;
-import com.example.basketballmatching.gameCreator.service.UserWithdrawalGameService;
+import com.example.basketballmatching.game.dto.GameCancelNotificationDto;
+import com.example.basketballmatching.game.dto.UserWithdrawalGameResultDto;
+import com.example.basketballmatching.game.service.UserWithdrawalGameService;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.event.UserWithdrawnEvent;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -17,7 +16,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 

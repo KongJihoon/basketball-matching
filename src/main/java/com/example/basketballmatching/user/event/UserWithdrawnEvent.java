@@ -1,6 +1,6 @@
 package com.example.basketballmatching.user.event;
 
-import com.example.basketballmatching.gameCreator.dto.GameCancelNotificationDto;
+import com.example.basketballmatching.game.dto.GameCancelNotificationDto;
 
 import java.util.List;
 

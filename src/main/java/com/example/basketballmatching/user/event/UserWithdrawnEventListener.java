@@ -1,7 +1,7 @@
 package com.example.basketballmatching.user.event;
 
 import com.example.basketballmatching.auth.service.UserSessionRevocationService;
-import com.example.basketballmatching.gameCreator.dto.GameCancelNotificationDto;
+import com.example.basketballmatching.game.dto.GameCancelNotificationDto;
 import com.example.basketballmatching.notifications.service.NotificationService;
 import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.domain.UserEntity;

@@ -1,7 +1,7 @@
 package com.example.basketballmatching.notifications.redis.listener;
 
 
-import com.example.basketballmatching.gameCreator.dto.GameCreatedEventDto;
+import com.example.basketballmatching.game.dto.GameCreatedEventDto;
 import com.example.basketballmatching.notifications.dto.GameCreateSuccessSseDto;
 import com.example.basketballmatching.notifications.type.RedisTopic;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,6 +1,6 @@
 package com.example.basketballmatching.user.domain;
 
-import com.example.basketballmatching.gameUsers.type.GameUserLevel;
+import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;

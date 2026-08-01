@@ -5,9 +5,9 @@ import com.example.basketballmatching.blackList.dto.BlackListDto;
 import com.example.basketballmatching.blackList.entity.BlackListEntity;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.blackList.service.BlackListService;
-import com.example.basketballmatching.gameCreator.entity.ParticipantGameEntity;
-import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.gameCreator.type.ParticipantGameStatus;
+import com.example.basketballmatching.game.domain.ParticipantGameEntity;
+import com.example.basketballmatching.game.repository.ParticipantGameRepository;
+import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -26,8 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.ACCEPT;
-import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service

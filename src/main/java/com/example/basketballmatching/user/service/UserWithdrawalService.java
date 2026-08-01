@@ -1,7 +1,7 @@
 package com.example.basketballmatching.user.service;
 
-import com.example.basketballmatching.gameCreator.dto.UserWithdrawalGameResultDto;
-import com.example.basketballmatching.gameCreator.service.UserWithdrawalGameService;
+import com.example.basketballmatching.game.dto.UserWithdrawalGameResultDto;
+import com.example.basketballmatching.game.service.UserWithdrawalGameService;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.event.UserWithdrawnEvent;

@@ -2,12 +2,12 @@ package com.example.basketballmatching.blackList.service.impl;
 
 import com.example.basketballmatching.blackList.entity.BlackListEntity;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
-import com.example.basketballmatching.gameCreator.dto.CreateGameDto;
-import com.example.basketballmatching.gameCreator.entity.GameEntity;
-import com.example.basketballmatching.gameCreator.repository.GameRepository;
-import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
-import com.example.basketballmatching.gameCreator.type.*;
-import com.example.basketballmatching.gameUsers.type.GameUserLevel;
+import com.example.basketballmatching.game.dto.CreateGameDto;
+import com.example.basketballmatching.game.domain.GameEntity;
+import com.example.basketballmatching.game.repository.GameRepository;
+import com.example.basketballmatching.game.repository.ParticipantGameRepository;
+import com.example.basketballmatching.game.type.*;
+import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.report.dto.CreateReportDto;
@@ -35,7 +35,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.basketballmatching.gameCreator.type.ParticipantGameStatus.APPLY;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
