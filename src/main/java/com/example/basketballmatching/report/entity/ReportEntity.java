@@ -1,7 +1,7 @@
 package com.example.basketballmatching.report.entity;
 
 
-import com.example.basketballmatching.gameCreator.entity.GameEntity;
+import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.report.dto.CreateReportDto;
 import com.example.basketballmatching.report.type.ReportType;
 import com.example.basketballmatching.user.domain.UserEntity;

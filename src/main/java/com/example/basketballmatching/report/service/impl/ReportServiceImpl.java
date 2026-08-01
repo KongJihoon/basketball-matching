@@ -1,8 +1,8 @@
 package com.example.basketballmatching.report.service.impl;
 
-import com.example.basketballmatching.gameCreator.entity.GameEntity;
-import com.example.basketballmatching.gameCreator.repository.GameRepository;
-import com.example.basketballmatching.gameCreator.repository.ParticipantGameRepository;
+import com.example.basketballmatching.game.domain.GameEntity;
+import com.example.basketballmatching.game.repository.GameRepository;
+import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.CustomException;
