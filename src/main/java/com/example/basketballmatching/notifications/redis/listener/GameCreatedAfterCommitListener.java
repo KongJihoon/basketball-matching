@@ -1,7 +1,7 @@
 package com.example.basketballmatching.notifications.redis.listener;
 
 
-import com.example.basketballmatching.game.dto.GameCreatedEventDto;
+import com.example.basketballmatching.game.event.GameCreateEvent;
 import com.example.basketballmatching.notifications.dto.GameCreateSuccessSseDto;
 import com.example.basketballmatching.notifications.type.RedisTopic;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,13 +21,13 @@ public class GameCreatedAfterCommitListener {
     private final ObjectMapper objectMapper;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handle(GameCreatedEventDto event) {
+    public void handle(GameCreateEvent event) {
 
         // 커밋 성공한 경우에만 실행
-        GameCreateSuccessSseDto gameCreateSuccessSseDto = GameCreateSuccessSseDto.of(event.getCreatedUserId(), event.getGameId(), event.getTitle());
+        GameCreateSuccessSseDto notification = GameCreateSuccessSseDto.of(event.creatorId(), event.gameId(), event.title());
 
         try {
-            String json = objectMapper.writeValueAsString(gameCreateSuccessSseDto);
+            String json = objectMapper.writeValueAsString(notification);
 
             stringRedisTemplate.convertAndSend(RedisTopic.Game_CREATED.getValue(),json);
 

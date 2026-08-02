@@ -2,13 +2,21 @@ package com.example.basketballmatching.game.domain;
 
 
 import com.example.basketballmatching.game.type.*;
-import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
+import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+
+import static com.example.basketballmatching.global.exception.ErrorCode.*;
+
 // 중복 생성 방지 DB Unique 인덱스
 @Table(
         name = "game_entity",
@@ -26,9 +34,7 @@ import java.time.LocalDateTime;
 )
 @Entity
 @Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GameEntity extends BaseEntity {
 
     @Id
@@ -44,9 +50,8 @@ public class GameEntity extends BaseEntity {
     @Column(nullable = false)
     private int headCount;
 
-    @Builder.Default
     @Column(nullable = false)
-    private int participantCount = 0;
+    private int participantCount;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -59,7 +64,7 @@ public class GameEntity extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime startDateTime;
 
-    @Column
+    @Column(nullable = false)
     private LocalDateTime endDateTime;
 
 
@@ -120,18 +125,45 @@ public class GameEntity extends BaseEntity {
         }
 
 
+    }
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private GameEntity(String title, String content, Integer headCount, Integer participantCount, FieldStatus fieldStatus, MatchFormat matchFormat,GameStatus gameStatus, GameUserLevel gameUserLevel
+            , MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, String placeName, String address, CityName cityName, Double latitude, Double longitude, UserEntity userEntity) {
+
+        this.title = title;
+        this.content = content;
+        this.headCount = headCount;
+        this.participantCount = participantCount;
+        this.fieldStatus = fieldStatus;
+        this.matchFormat = matchFormat;
+        this.gameStatus = gameStatus;
+        this.gameUserLevel = gameUserLevel;
+        this.matchGenderType = matchGenderType;
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
+        this.placeName = placeName;
+        this.address = address;
+        this.cityName = cityName;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.userEntity = userEntity;
 
 
     }
 
     public static GameEntity create(String title, String content, Integer headCount, FieldStatus fieldStatus, MatchFormat matchFormat
-    , MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, String placeName, String address, CityName cityName, Double latitude, Double longitude, UserEntity userEntity) {
+    , MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, String placeName, String address, CityName cityName, Double latitude, Double longitude, UserEntity creator, LocalDateTime now) {
+
+        validateSchedule(startDateTime, endDateTime, now);
+
+        matchFormat.validateHeadCount(headCount);
 
         return GameEntity.builder()
                 .title(title)
                 .content(content)
                 .headCount(headCount)
+                .participantCount(0)
                 .fieldStatus(fieldStatus)
                 .matchGenderType(matchGenderType)
                 .startDateTime(startDateTime)
@@ -143,8 +175,27 @@ public class GameEntity extends BaseEntity {
                 .cityName(cityName)
                 .matchFormat(matchFormat)
                 .gameStatus(GameStatus.RECRUITING)
-                .userEntity(userEntity)
+                .gameUserLevel(creator.getGameUserLevel())
+                .userEntity(creator)
                 .build();
+    }
+
+    private static void validateSchedule(LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
+
+
+        if (startDateTime == null || endDateTime == null || now == null
+        || !startDateTime.isAfter(now) || !endDateTime.isAfter(startDateTime)) {
+            throw new CustomException(INVALID_GAME_TIME);
+        }
+
+        long durationMinutes = Duration.between(
+                startDateTime, endDateTime
+        ).toMinutes();
+
+        if (durationMinutes < 60 || durationMinutes > 120) {
+            throw new CustomException(GAME_TIME_OUT_OF_RANGE);
+        }
+
     }
 
     public void cancelByCreatorWithdrawal(LocalDateTime now) {
