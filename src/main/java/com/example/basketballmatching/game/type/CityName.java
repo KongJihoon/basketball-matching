@@ -1,10 +1,15 @@
 package com.example.basketballmatching.game.type;
 
-import lombok.AllArgsConstructor;
+import com.example.basketballmatching.global.exception.CustomException;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
+
+import static com.example.basketballmatching.global.exception.ErrorCode.UNSUPPORTED_CITY;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public enum CityName {
 
     SEOUL("서울특별시"),
@@ -21,29 +26,34 @@ public enum CityName {
     BUSAN("부산광역시"),
     ULSAN("울산광역시"),
     GWANGJU("광주광역시"),
-    JEONNAM("전남특별자치도"),
+    JEONNAM("전라남도"),
     JEONBUK("전북특별자치도"),
     JEJU("제주특별자치도");
 
-    private String cityName;
+    private final String cityName;
 
-
-    public static CityName getCityName(String address) {
-
-        String[] parts = address.split(" ");
-
-        String cityName = parts[0];
-
-        for (CityName cityNames : CityName.values()) {
-
-            if (cityNames.getCityName().equals(cityName)) {
-                return cityNames;
-            }
-
+    public static CityName fromAddress(
+            String address
+    ) {
+        if (address == null || address.isBlank()) {
+            throw new CustomException(
+                    UNSUPPORTED_CITY
+            );
         }
 
+        String cityPrefix = address
+                .trim()
+                .split("\\s+")[0];
 
-        return null;
+        return Arrays.stream(values())
+                .filter(city ->
+                        city.cityName.equals(cityPrefix)
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new CustomException(
+                                UNSUPPORTED_CITY
+                        )
+                );
     }
-
 }

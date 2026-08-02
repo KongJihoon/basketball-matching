@@ -1,11 +1,12 @@
 package com.example.basketballmatching.game.controller;
 
-import com.example.basketballmatching.game.dto.CreateGameDto;
 import com.example.basketballmatching.game.dto.EditGameDto;
 import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.SearchGameDto;
-import com.example.basketballmatching.game.type.*;
+import com.example.basketballmatching.game.dto.request.CreateGameRequest;
+import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.service.GameService;
+import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
@@ -23,11 +24,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/game")
+@RequestMapping("/api/v1/games")
 @RequiredArgsConstructor
 @Tag(name = "GAME")
 public class GameController {
@@ -38,21 +41,31 @@ public class GameController {
      * 경기 생성
      */
     @Operation(summary = "경기 생성")
-    @ApiResponse(responseCode = "200", description = "경기 생성 성공")
+    @ApiResponse(responseCode = "201", description = "경기 생성 성공")
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/create")
+    @ApiResponse(responseCode = "409", description = "동일 장소의 경기 시간 중복",
+    content = {@Content(mediaType = "application/json",
+    schema = @Schema(implementation = ErrorResponse.class))})
+    @PostMapping
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<CreateGameDto.Response>> createGame(
-            @RequestBody @Valid CreateGameDto.Request request,
+    public ResponseEntity<CommonResponse<CreateGameResponse>> createGame(
+            @RequestBody @Valid CreateGameRequest request,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
 
-        CommonResponse<CreateGameDto.Response> game = gameService.createGame(userInfoDetails.getUserEntity().getUserId(), request);
 
+        CreateGameResponse response = gameService.createGame(userInfoDetails.getUserEntity().getUserId(), request);
 
-        return ResponseEntity.ok(game);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{gameId}")
+                .buildAndExpand(response.gameId())
+                .toUri();
+
+        return ResponseEntity.created(location)
+                .body(CommonResponse.of("경기 생성이 완료되었습니다.", response));
 
     }
 

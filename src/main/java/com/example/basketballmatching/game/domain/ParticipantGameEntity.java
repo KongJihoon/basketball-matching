@@ -67,7 +67,7 @@ public class ParticipantGameEntity extends BaseEntity {
     }
 
     public static ParticipantGameEntity createCreator(
-            GameEntity gameEntity, UserEntity userEntity
+            GameEntity gameEntity, UserEntity userEntity, LocalDateTime createdAt
     ) {
 
         ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
@@ -75,7 +75,7 @@ public class ParticipantGameEntity extends BaseEntity {
                 .userEntity(userEntity)
                 .build();
 
-        participantGameEntity.transitionTo(ACCEPT, LocalDateTime.now());
+        participantGameEntity.transitionTo(ACCEPT, createdAt);
         return participantGameEntity;
     }
 
