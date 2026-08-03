@@ -6,6 +6,7 @@ import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.*;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
+import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.event.GameCreateEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
@@ -107,18 +108,18 @@ public class GameService {
      * 경기 상세조회
      */
     @Transactional(readOnly = true)
-    public CommonResponse<GameDto> detailGame(Long gameId) {
+    public GameDetailResponse getGameDetail(Long gameId) {
 
         log.info("[경기 상세 조회 시작] gameId : {}", gameId);
 
         GameEntity gameEntity = getGame(gameId);
 
 
-        GameDto gameDto = GameDto.fromEntity(gameEntity);
+        GameDetailResponse response = GameDetailResponse.fromEntity(gameEntity);
 
         log.info("[경기 상세조회 완료] gameId : {}", gameId);
 
-        return CommonResponse.of("경기 상세조회에 성공하였습니다.", gameDto);
+        return response;
     }
 
 

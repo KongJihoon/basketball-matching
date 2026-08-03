@@ -5,6 +5,7 @@ import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.SearchGameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
+import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.service.GameService;
 import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -74,18 +75,20 @@ public class GameController {
      */
     @Operation(summary = "경기 상세 조회")
     @ApiResponse(responseCode = "200", description = "경기 상세 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
+    @ApiResponse(responseCode = "404", description = "경기를 찾을 수 없음",
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
-    @GetMapping("/details")
-    public ResponseEntity<CommonResponse<GameDto>> detailGame(
-            @Parameter(name = "gameId", example = "1")
-            @RequestParam Long gameId
+    @GetMapping("/{gameId}")
+    public ResponseEntity<CommonResponse<GameDetailResponse>> detailGame(
+            @Parameter(name = "gameId", example = "1", required = true)
+            @PathVariable("gameId") Long gameId
     ) {
 
-        CommonResponse<GameDto> gameDto = gameService.detailGame(gameId);
+        GameDetailResponse response = gameService.getGameDetail(gameId);
 
-        return ResponseEntity.ok(gameDto);
+        return ResponseEntity.ok(
+                CommonResponse.of("경기 상세 조회에 성공하였습니다.", response)
+        );
     }
 
     /**
