@@ -127,13 +127,21 @@ public class GameService {
     @Transactional(readOnly = true)
     public Page<GameListResponse> getGames(GameListCondition condition, Pageable pageable) {
 
-        log.info("[경기 검색 정렬 시작] date={}, page={}, size={}", condition.date(), pageable.getPageNumber(), pageable.getPageSize());
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        log.info(
+                "[경기 목록 조회 시작] date={}, keyword={}, sortType={}, page={}, size={}",
+                condition.date(),
+                condition.keyword(),
+                condition.sortType(),
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+
+        Page<GameListResponse> response = gameQueryRepository.findGames(condition, pageable, now)
+                .map(GameListResponse::fromEntity);
 
 
-        Page<GameEntity> games = gameQueryRepository.findGames(condition, pageable);
-
-
-        Page<GameListResponse> response = games.map(GameListResponse::fromEntity);
 
 
         log.info("[경기 검색 정렬 완료] totalElements={}", response.getTotalElements());
