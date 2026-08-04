@@ -3,32 +3,32 @@ package com.example.basketballmatching.game.service;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.*;
+import com.example.basketballmatching.game.dto.EditGameDto;
+import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
+import com.example.basketballmatching.game.dto.request.GameListCondition;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
+import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.event.GameCreateEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
-import com.example.basketballmatching.game.service.impl.GameSearchCacheService;
-import com.example.basketballmatching.game.type.*;
+import com.example.basketballmatching.game.repository.query.GameQueryRepository;
+import com.example.basketballmatching.game.type.CityName;
+import com.example.basketballmatching.game.type.MatchFormat;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -42,12 +42,10 @@ public class GameService {
     private final GameRepository gameRepository;
     private final ParticipantGameRepository participantGameRepository;
 
-    private final GameSearchCacheService cacheService;
-
     private final ApplicationEventPublisher eventPublisher;
 
     private final Clock clock;
-
+    private final GameQueryRepository gameQueryRepository;
 
 
     /**
@@ -127,29 +125,27 @@ public class GameService {
      * 경기 검색 정렬
      */
     @Transactional(readOnly = true)
-    public CommonResponse<Page<SearchGameDto>> searchGame(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, Pageable pageable) {
+    public Page<GameListResponse> getGames(GameListCondition condition, Pageable pageable) {
 
-        log.info("[경기 검색 정렬 시작] date : {}", date);
+        log.info("[경기 검색 정렬 시작] date={}, page={}, size={}", condition.date(), pageable.getPageNumber(), pageable.getPageSize());
 
 
-        GameSearchCacheDto<SearchGameDto> searchGameCached = cacheService.searchGameCached(
-                date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageable
-        );
+        Page<GameEntity> games = gameQueryRepository.findGames(condition, pageable);
 
-        if (searchGameCached.getContent().isEmpty()) {
-            return CommonResponse.of("경기 검색결과가 없습니다.", new PageImpl<>(searchGameCached.getContent(), pageable, searchGameCached.getTotalElement()));
-        }
 
-        log.info("[경기 검색 정렬 완료] date : {}", date);
+        Page<GameListResponse> response = games.map(GameListResponse::fromEntity);
 
-        return CommonResponse.of("경기 검색이 완료되었습니다.", new PageImpl<>(searchGameCached.getContent(), pageable, searchGameCached.getTotalElement()));
+
+        log.info("[경기 검색 정렬 완료] totalElements={}", response.getTotalElements());
+
+
+        return response;
     }
 
     /**
      * 경기 수정
      */
     @Transactional
-    @CacheEvict(value = "gameSearch", allEntries = true)
     public CommonResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
 
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);

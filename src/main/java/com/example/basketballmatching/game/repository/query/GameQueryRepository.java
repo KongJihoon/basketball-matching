@@ -2,14 +2,13 @@ package com.example.basketballmatching.game.repository.query;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.CurrentGameListDto;
-import com.example.basketballmatching.game.dto.LastGameListDto;
-import com.example.basketballmatching.game.dto.SearchGameDto;
-import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.game.domain.QGameEntity;
 import com.example.basketballmatching.game.domain.QParticipantGameEntity;
-import com.example.basketballmatching.user.domain.UserEntity;
+import com.example.basketballmatching.game.dto.CurrentGameListDto;
+import com.example.basketballmatching.game.dto.LastGameListDto;
+import com.example.basketballmatching.game.dto.request.GameListCondition;
 import com.example.basketballmatching.user.domain.QUserEntity;
+import com.example.basketballmatching.user.domain.UserEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +17,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 
 @Repository
 @RequiredArgsConstructor
@@ -34,38 +32,31 @@ public class GameQueryRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
 
-    public Page<SearchGameDto> searchByKeyword(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, Pageable pageable) {
+    public Page<GameEntity> findGames(GameListCondition condition, Pageable pageable) {
 
+        QGameEntity game = QGameEntity.gameEntity;
 
-        QGameEntity qGameEntity = QGameEntity.gameEntity;
+        BooleanBuilder builder = createGameListCondition(condition, game);
 
-        BooleanBuilder builder = new BooleanBuilder();
-
-        validationSearch(date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, builder, qGameEntity);
-
-        List<GameEntity> gameEntities = jpaQueryFactory
-                .select(qGameEntity)
-                .from(qGameEntity)
+        List<GameEntity> content = jpaQueryFactory
+                .selectFrom(game)
                 .where(builder)
-                .orderBy(qGameEntity.startDateTime.asc())
+                .orderBy(game.startDateTime.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        List<SearchGameDto> searchGames = gameEntities.stream()
-                .map(SearchGameDto::fromEntity)
-                .toList();
-
         Long total = Optional.ofNullable(
                 jpaQueryFactory
-                        .select(qGameEntity.count())
-                        .from(qGameEntity)
+                        .select(game.count())
+                        .from(game)
                         .where(builder)
                         .fetchOne()
         ).orElse(0L);
 
+        return new PageImpl<>(content, pageable, total);
 
-        return new PageImpl<>(searchGames, pageable, total);
+
     }
 
     public List<Long> findRecent10GamesByUser(UserEntity userEntity) {
@@ -153,28 +144,6 @@ public class GameQueryRepository {
     }
 
 
-    public List<ParticipantGameEntity> getParticipantUsers(Long gameId, LocalDateTime now) {
-
-        QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
-
-
-        BooleanBuilder builder = new BooleanBuilder();
-
-        builder.and(participantGameEntity.gameEntity.gameId.eq(gameId));
-        builder.and(participantGameEntity.participantGameStatus.in(ACCEPT, APPLY));
-        builder.and(participantGameEntity.gameEntity.startDateTime.after(now));
-
-
-        List<ParticipantGameEntity> gameEntities = jpaQueryFactory.
-                select(participantGameEntity)
-                .from(participantGameEntity)
-                .where(builder)
-                .fetch();
-
-        return gameEntities;
-    }
-
-
     /**
      * 생성한 예정경기 조회
      */
@@ -251,36 +220,52 @@ public class GameQueryRepository {
                 .fetch();
     }
 
+    private BooleanBuilder createGameListCondition(GameListCondition condition, QGameEntity game) {
 
+        LocalDateTime startOfDay = condition.date().atStartOfDay();
 
-    private static void validationSearch(LocalDate date, CityName cityName, MatchFormat matchFormat, FieldStatus fieldStatus, MatchGenderType matchGenderType, GameStatus gameStatus, BooleanBuilder builder, QGameEntity qGameEntity) {
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+        LocalDateTime nextDay = condition.date().plusDays(1)
+                .atStartOfDay();
 
-        builder.and(qGameEntity.startDateTime.between(startOfDay, endOfDay));
+        BooleanBuilder builder = new BooleanBuilder();
 
-        builder.and(qGameEntity.deletedDateTime.isNull());
+        builder.and(game.deletedDateTime.isNull());
+        builder.and(game.startDateTime.goe(startOfDay));
+        builder.and(game.startDateTime.lt(nextDay));
 
-        if (cityName != null) {
-            builder.and(qGameEntity.cityName.eq(cityName));
+        if (condition.cityName() != null) {
+            builder.and(game.cityName.eq(condition.cityName()));
         }
 
-        if (gameStatus != null) {
-            builder.and(qGameEntity.gameStatus.eq(gameStatus));
+        if (condition.matchFormat() != null) {
+            builder.and(game.matchFormat.eq(condition.matchFormat()));
         }
 
-        if (fieldStatus != null) {
-            builder.and(qGameEntity.fieldStatus.eq(fieldStatus));
+        if (condition.fieldStatus() != null) {
+            builder.and(
+                    game.fieldStatus.eq(condition.fieldStatus())
+            );
         }
 
-        if (matchFormat != null) {
-            builder.and(qGameEntity.matchFormat.eq(matchFormat));
+        if (condition.matchGenderType() != null) {
+            builder.and(
+                    game.matchGenderType.eq(
+                            condition.matchGenderType()
+                    )
+            );
         }
 
-        if (matchGenderType != null) {
-            builder.and(qGameEntity.matchGenderType.eq(matchGenderType));
+        if (condition.gameStatus() != null) {
+            builder.and(
+                    game.gameStatus.eq(condition.gameStatus())
+            );
         }
+
+
+        return builder;
     }
+
+
 
 
 }

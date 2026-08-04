@@ -1,14 +1,14 @@
 package com.example.basketballmatching.game.service.impl;
 
-import com.example.basketballmatching.game.dto.AcceptGameUserListDto;
-import com.example.basketballmatching.game.dto.ApplyGameUserListDto;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
+import com.example.basketballmatching.game.dto.AcceptGameUserListDto;
+import com.example.basketballmatching.game.dto.ApplyGameUserListDto;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.service.ParticipantGameService;
-import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.game.type.GameUserLevel;
+import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -18,7 +18,6 @@ import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,8 +29,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.example.basketballmatching.game.type.GameStatus.CLOSED;
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -268,7 +267,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
      */
     @Override
     @Transactional
-    @CacheEvict(value = "gameSearch", allEntries = true)
     public CheckResponse deleteGame(Long userId, Long gameId) {
 
         log.info("[경기 삭제 시작] userId : {}, gameId : {}", userId, gameId);

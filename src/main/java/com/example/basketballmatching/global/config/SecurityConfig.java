@@ -41,7 +41,10 @@ public class SecurityConfig {
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET,
                                         "/api/v1/users/availability/email",
-                                        "/api/v1/users/availability/nickname"
+                                        "/api/v1/users/availability/nickname",
+                                        "/api/v1/games",
+                                        "/api/v1/games/{gameId}"
+
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.PATCH,
                                         "/api/v1/password-resets"
@@ -50,8 +53,6 @@ public class SecurityConfig {
                                         "/",
                                         "/index.html",
                                         "/api/v1/auth/oauth2/**",
-                                        "/api/v1/game/details",
-                                        "/api/v1/game/search",
                                         "/swagger-ui.html",
                                         "/swagger-ui/**",
                                         "/v3/api-docs/**",
