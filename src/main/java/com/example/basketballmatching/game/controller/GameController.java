@@ -2,10 +2,11 @@ package com.example.basketballmatching.game.controller;
 
 import com.example.basketballmatching.game.dto.EditGameDto;
 import com.example.basketballmatching.game.dto.GameDto;
-import com.example.basketballmatching.game.dto.SearchGameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
+import com.example.basketballmatching.game.dto.request.GameListCondition;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
+import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.service.GameService;
 import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -92,45 +93,26 @@ public class GameController {
     }
 
     /**
-     * 경기 검색 정렬
+     * 경기 목록 조회
      */
-    @Operation(summary = "경기 검색 정렬 ")
-    @ApiResponse(responseCode = "200", description = "경기 검색 정렬 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
-    @GetMapping("/search")
-    public ResponseEntity<CommonResponse<Page<SearchGameDto>>> searchGame(
-            @Parameter(name = "date", example = "2025-12-02", required = true)
-            @RequestParam @Valid LocalDate date,
+    @Operation(summary = "경기 목록 조회 ")
+    @ApiResponse(responseCode = "200", description = "경기 목록 조회 성공")
+    @GetMapping
+    public ResponseEntity<CommonResponse<Page<GameListResponse>>> getGames(
+            @Valid @ModelAttribute GameListCondition condition,
 
-            @Parameter(name = "cityName", example = "INCHEON")
-            @RequestParam(required = false) CityName cityName,
-
-            @Parameter(name = "matchFormat", example = "THREE_ON_THREE")
-            @RequestParam(required = false) MatchFormat matchFormat,
-
-            @Parameter(name = "fieldStatus", example = "INDOOR")
-            @RequestParam(required = false) FieldStatus fieldStatus,
-
-            @Parameter(name = "matchGenderType", example = "MALE_ONLY")
-            @RequestParam(required = false) MatchGenderType matchGenderType,
-
-            @Parameter(name = "gameStatus", example = "RECRUITING")
-            @RequestParam(required = false) GameStatus gameStatus,
-
-            @Parameter(name = "page", example = "0")
             @RequestParam(defaultValue = "0") int page,
 
-            @Parameter(name = "size", example = "10")
             @RequestParam(defaultValue = "10") int size
-    ) {
+            ) {
 
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        CommonResponse<Page<SearchGameDto>> searchGame = gameService.searchGame(date, cityName, matchFormat, fieldStatus, matchGenderType, gameStatus, pageRequest);
+        Page<GameListResponse> response = gameService.getGames(condition, pageRequest);
 
-        return ResponseEntity.ok(searchGame);
+        return ResponseEntity.ok(
+                CommonResponse.of("경기 목록 조회에 성공하였습니다.", response)
+        );
     }
 
     /**
