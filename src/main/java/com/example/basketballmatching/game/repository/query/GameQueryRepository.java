@@ -7,20 +7,24 @@ import com.example.basketballmatching.game.domain.QParticipantGameEntity;
 import com.example.basketballmatching.game.dto.CurrentGameListDto;
 import com.example.basketballmatching.game.dto.LastGameListDto;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
+import com.example.basketballmatching.game.type.GameSortType;
 import com.example.basketballmatching.user.domain.QUserEntity;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.example.basketballmatching.game.type.GameSortType.*;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 
@@ -32,16 +36,18 @@ public class GameQueryRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
 
-    public Page<GameEntity> findGames(GameListCondition condition, Pageable pageable) {
+    public Page<GameEntity> findGames(GameListCondition condition, Pageable pageable, LocalDateTime now) {
 
         QGameEntity game = QGameEntity.gameEntity;
 
-        BooleanBuilder builder = createGameListCondition(condition, game);
+        BooleanBuilder builder = createGameListCondition(condition, game, now);
 
         List<GameEntity> content = jpaQueryFactory
                 .selectFrom(game)
                 .where(builder)
-                .orderBy(game.startDateTime.asc())
+                .orderBy(resolveOrderSpecifiers(
+                        condition.sortType(), game
+                ))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -220,18 +226,36 @@ public class GameQueryRepository {
                 .fetch();
     }
 
-    private BooleanBuilder createGameListCondition(GameListCondition condition, QGameEntity game) {
-
-        LocalDateTime startOfDay = condition.date().atStartOfDay();
-
-        LocalDateTime nextDay = condition.date().plusDays(1)
-                .atStartOfDay();
+    private BooleanBuilder createGameListCondition(GameListCondition condition, QGameEntity game, LocalDateTime now) {
 
         BooleanBuilder builder = new BooleanBuilder();
 
         builder.and(game.deletedDateTime.isNull());
-        builder.and(game.startDateTime.goe(startOfDay));
-        builder.and(game.startDateTime.lt(nextDay));
+
+        if (condition.date() != null) {
+            LocalDateTime startOfDay = condition.date().atStartOfDay();
+
+            LocalDateTime nextDay = condition.date().plusDays(1).atStartOfDay();
+
+            builder.and(game.startDateTime.goe(startOfDay));
+
+            builder.and(game.startDateTime.lt(nextDay));
+        } else {
+            builder.and(game.startDateTime.goe(now));
+        }
+
+        if (StringUtils.hasText(condition.keyword())) {
+            String keyword = condition.keyword().trim();
+
+
+            builder.and(
+                    game.title.containsIgnoreCase(keyword)
+                            .or(game.placeName.containsIgnoreCase(keyword))
+            );
+
+        }
+
+
 
         if (condition.cityName() != null) {
             builder.and(game.cityName.eq(condition.cityName()));
@@ -263,6 +287,24 @@ public class GameQueryRepository {
 
 
         return builder;
+    }
+
+    private OrderSpecifier<?>[] resolveOrderSpecifiers(GameSortType sortType, QGameEntity game) {
+
+
+        GameSortType resolveSortType = sortType == null ? START_TIME_ASC : sortType;
+
+        return switch (resolveSortType) {
+            case START_TIME_ASC -> new OrderSpecifier[]{
+                    game.startDateTime.asc(),
+                    game.gameId.asc()
+            };
+            case LATEST -> new OrderSpecifier[]{
+                    game.createdAt.desc(),
+                    game.gameId.desc()
+            };
+        };
+
     }
 
 
