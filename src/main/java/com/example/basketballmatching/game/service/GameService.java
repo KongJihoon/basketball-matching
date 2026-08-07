@@ -10,10 +10,12 @@ import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.event.GameCreateEvent;
+import com.example.basketballmatching.game.event.UpdateGameEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.CityName;
+import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -27,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -169,9 +173,13 @@ public class GameService {
 
         validateUpdateScheduleOverlap(game, request);
 
+        boolean actuallyChanged = isActuallyChanged(game, request);
 
         game.updateGame(request.title(), request.content(), request.headCount(), request.matchFormat(), request.matchGenderType(), request.startDateTime(), request.endDateTime(), now);
 
+        if (actuallyChanged) {
+            publishUpdateGameEvent(game, userId);
+        }
 
         GameDetailResponse response = GameDetailResponse.fromEntity(game);
 
@@ -257,6 +265,59 @@ public class GameService {
         if (exists) {
             throw new CustomException(PLACE_SCHEDULE_OVERLAP);
         }
+
+    }
+
+    private boolean isActuallyChanged(GameEntity game, UpdateGameRequest request) {
+
+        boolean titleChanged = request.title() != null && !Objects.equals(request.title(), game.getTitle());
+
+        boolean contentChanged = request.content() != null && !Objects.equals(request.content(), game.getContent());
+
+        boolean headCountChanged = request.headCount() != null && request.headCount() != game.getHeadCount();
+
+        boolean matchFormatChanged = request.matchFormat() != null && request.matchFormat() != game.getMatchFormat();
+
+        boolean genderChanged = request.matchGenderType() != null && request.matchGenderType() != game.getMatchGenderType();
+
+        boolean startDateTimeChanged = request.startDateTime() != null && !Objects.equals(request.startDateTime(), game.getStartDateTime());
+
+        boolean endDateTimeChanged = request.endDateTime() != null && !Objects.equals(request.endDateTime(), game.getEndDateTime());
+
+        return titleChanged
+                || contentChanged
+                || headCountChanged
+                || matchFormatChanged
+                || genderChanged
+                || startDateTimeChanged
+                || endDateTimeChanged;
+
+    }
+
+    private void publishUpdateGameEvent(GameEntity game, Long creatorId) {
+
+        List<Long> receiverIds = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(
+                        List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY), game.getGameId()
+                ).stream()
+                .map(participant -> participant.getUserEntity().getUserId())
+                .filter(receiverId -> !receiverId.equals(creatorId))
+                .distinct()
+                .toList();
+
+        if (receiverIds.isEmpty()) {
+            return;
+        }
+
+
+        eventPublisher.publishEvent(
+                new UpdateGameEvent(
+                        game.getGameId(),
+                        game.getTitle(),
+                        game.getStartDateTime(),
+                        game.getEndDateTime(),
+                        receiverIds
+                )
+        );
 
     }
 
