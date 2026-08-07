@@ -88,6 +88,11 @@ public enum ErrorCode {
     INVALID_PARTICIPANT_GAME_STATUS(HttpStatus.BAD_REQUEST, "탈퇴 처리 대상이 아닌 참가 상태입니다."),
     GAME_CREATION_TIME_TOO_SOON(HttpStatus.BAD_REQUEST, "경기 생성은 24시간 전에만 생성 가능합니다."),
     GAME_UPDATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "경기 수정이 불가능합니다."),
+    GAME_SCHEDULE_TOO_SOON(HttpStatus.BAD_REQUEST, "경기 시작 시각은 현재보다 최소 24시간 이후여야 합니다."),
+
+    GAME_SCHEDULE_REQUIRED_TOGETHER(HttpStatus.BAD_REQUEST, "경기 시작 시각과 종료 시각을 함께 입력해주세요."),
+
+    NO_GAME_UPDATE_FIELDS(HttpStatus.BAD_REQUEST, "수정할 경기 정보를 입력해주세요."),
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),

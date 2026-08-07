@@ -129,16 +129,21 @@ public class GameController {
             content = @Content(mediaType = "application/json",
                     schema = @Schema(
                             implementation = ErrorResponse.class)))
-    @Parameter(
-            description = "수정할 경기 ID",
-            example = "1",
-            required = true
-    )
+    @ApiResponse(responseCode = "409", description = "동일 장소의 다른 경기와 일정이 겹침",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class)))
+
     @PatchMapping("/{gameId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<CommonResponse<GameDetailResponse>> updateGame(
             @RequestBody @Valid UpdateGameRequest request,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
+            @Parameter(
+                    description = "수정할 경기 ID",
+                    example = "1",
+                    required = true
+            )
             @PathVariable("gameId") Long gameId
     ) {
 

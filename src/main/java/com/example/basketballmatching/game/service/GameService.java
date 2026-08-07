@@ -14,7 +14,6 @@ import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.CityName;
-import com.example.basketballmatching.game.type.MatchFormat;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -166,14 +165,57 @@ public class GameService {
         // 경기 수정 사항 유효성 검사
         validateUpdateGame(game, userId, now);
 
+        validateUpdateRequest(request);
 
-        game.updateGame(request.title(), request.content(), request.headCount(), request.matchFormat(), request.matchGenderType());
+        validateUpdateScheduleOverlap(game, request);
+
+
+        game.updateGame(request.title(), request.content(), request.headCount(), request.matchFormat(), request.matchGenderType(), request.startDateTime(), request.endDateTime(), now);
+
 
         GameDetailResponse response = GameDetailResponse.fromEntity(game);
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 
         return response;
+    }
+
+    private void validateUpdateRequest(UpdateGameRequest request) {
+
+        if (!request.hasAnyChange()) {
+            throw new CustomException(NO_GAME_UPDATE_FIELDS);
+        }
+
+        if (request.hasIncompleteSchedule()) {
+            throw new CustomException(GAME_SCHEDULE_REQUIRED_TOGETHER);
+        }
+    }
+
+    private void validateUpdateScheduleOverlap(GameEntity game, UpdateGameRequest request) {
+
+        if (!request.hasScheduleInput()) {
+            return;
+        }
+
+        boolean scheduleChanged = !request.startDateTime().equals(game.getStartDateTime())
+                || !request.endDateTime().equals(game.getEndDateTime());
+
+        if (!scheduleChanged) {
+            return;
+        }
+
+        boolean exists = gameRepository.existsOverlappingGameExcludeCurrent(
+                game.getGameId(),
+                game.getPlaceName(),
+                game.getAddress(),
+                request.startDateTime(),
+                request.endDateTime()
+        );
+
+        if (exists) {
+            throw new CustomException(PLACE_SCHEDULE_OVERLAP);
+        }
+
     }
 
     private void validateUpdateGame(
