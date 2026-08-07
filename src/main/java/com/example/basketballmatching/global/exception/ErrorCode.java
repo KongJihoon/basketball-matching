@@ -58,9 +58,8 @@ public enum ErrorCode {
     INVALID_HEADCOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 인원수입니다."),
     GAME_NOT_FOUND(HttpStatus.NOT_FOUND, "경기를 찾을 수 없습니다."),
     NOT_GAME_CREATOR(HttpStatus.FORBIDDEN, "경기 생성자가 아닙니다."),
-    UPDATE_GAME_HEAD_COUNT(HttpStatus.BAD_REQUEST, "경기 인원 수를 변경해주세요."),
-    LOCK_BY_GAME(HttpStatus.BAD_REQUEST, "잠시 후에 다시 시도해주세요."),
     UNSUPPORTED_CITY(HttpStatus.BAD_REQUEST, "지원하지 않는 경기 지역입니다."),
+    UPDATE_NOT_ALLOWED_AT_THIS_TIME(HttpStatus.BAD_REQUEST, "경기 수정은 경기 시작 24시간 전까지만 가능합니다."),
 
     // participant (입력 검증 = 400/ 리소스 없음 = 404/ 권한 부족 =  403/ 중복 = 409)
     ALREADY_APPLY_GAME_USER(HttpStatus.CONFLICT, "이미 참가 신청한 유저입니다."),
@@ -87,6 +86,8 @@ public enum ErrorCode {
     INVALID_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 상태변경입니다."),
     ALREADY_FINAL_STATUS(HttpStatus.BAD_REQUEST, "이미 적용된 상태변경입니다."),
     INVALID_PARTICIPANT_GAME_STATUS(HttpStatus.BAD_REQUEST, "탈퇴 처리 대상이 아닌 참가 상태입니다."),
+    GAME_CREATION_TIME_TOO_SOON(HttpStatus.BAD_REQUEST, "경기 생성은 24시간 전에만 생성 가능합니다."),
+    GAME_UPDATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "경기 수정이 불가능합니다."),
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),

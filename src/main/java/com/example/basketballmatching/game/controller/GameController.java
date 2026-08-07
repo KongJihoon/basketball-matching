@@ -1,14 +1,12 @@
 package com.example.basketballmatching.game.controller;
 
-import com.example.basketballmatching.game.dto.EditGameDto;
-import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
+import com.example.basketballmatching.game.dto.request.UpdateGameRequest;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.service.GameService;
-import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
@@ -29,7 +27,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/games")
@@ -122,20 +119,36 @@ public class GameController {
     @ApiResponse(responseCode = "200", description = "경기 수정 성공")
     @ApiResponse(responseCode = "400", description = "잘못된 요청",
     content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
-    @PatchMapping("/edit")
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<GameDto>> editGame(
-            @RequestBody @Valid EditGameDto request,
+                    schema = @Schema(
+                            implementation = ErrorResponse.class))})
+    @ApiResponse(responseCode = "403", description = "경기 수정 권한 없음",
+    content = {@Content(mediaType = "application/json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class))})
+    @ApiResponse(responseCode = "404", description = "경기를 찾을 수 없음",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class)))
+    @Parameter(
+            description = "수정할 경기 ID",
+            example = "1",
+            required = true
+    )
+    @PatchMapping("/{gameId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CommonResponse<GameDetailResponse>> updateGame(
+            @RequestBody @Valid UpdateGameRequest request,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "gameId", example = "1")
-            @RequestParam Long gameId
+            @PathVariable("gameId") Long gameId
     ) {
 
-        CommonResponse<GameDto> editGame = gameService.editGame(request, gameId, userInfoDetails.getUserEntity().getUserId());
+
+        GameDetailResponse response = gameService.updateGame(request, gameId, userInfoDetails.getUserEntity().getUserId());
 
 
-        return ResponseEntity.ok(editGame);
+        return ResponseEntity.ok(
+                CommonResponse.of("경기 수정에 성공하였습니다.", response)
+        );
     }
 
 

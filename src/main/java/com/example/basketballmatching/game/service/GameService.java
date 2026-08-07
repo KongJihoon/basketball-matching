@@ -3,10 +3,9 @@ package com.example.basketballmatching.game.service;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.EditGameDto;
-import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
+import com.example.basketballmatching.game.dto.request.UpdateGameRequest;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
@@ -16,7 +15,6 @@ import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.CityName;
 import com.example.basketballmatching.game.type.MatchFormat;
-import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -154,63 +152,51 @@ public class GameService {
      * 경기 수정
      */
     @Transactional
-    public CommonResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
+    public GameDetailResponse updateGame(UpdateGameRequest request, Long gameId, Long userId) {
 
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);
 
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = getUser(userId);
+        GameEntity game = getGame(gameId);
+
+
 
         // 경기 수정 사항 유효성 검사
-        validateEditGame(request, gameEntity, userEntity);
+        validateUpdateGame(game, userId, now);
 
 
-        gameEntity.editGameInfo(request.getTitle(), request.getContent(), request.getHeadCount(), request.getMatchFormat(), request.getMatchGenderType());
+        game.updateGame(request.title(), request.content(), request.headCount(), request.matchFormat(), request.matchGenderType());
 
+        GameDetailResponse response = GameDetailResponse.fromEntity(game);
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 
-        return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
+        return response;
     }
 
-    private void validateEditGame(EditGameDto request, GameEntity gameEntity, UserEntity userEntity) {
-        if (!gameEntity.getUserEntity().getUserId().equals(userEntity.getUserId())) {
-            throw new CustomException(NOT_GAME_CREATOR);
+    private void validateUpdateGame(
+            GameEntity game,
+            Long userId,
+            LocalDateTime now
+    ) {
+        if (!game.getUserEntity()
+                .getUserId()
+                .equals(userId)) {
+            throw new CustomException(
+                    NOT_GAME_CREATOR
+            );
         }
 
-        if (request.getMatchFormat() != null && request.getHeadCount() == 0) {
-            throw new CustomException(UPDATE_GAME_HEAD_COUNT);
-        }
+        LocalDateTime limitUpdateTime =
+                game.getStartDateTime()
+                        .minusDays(1);
 
-
-        if (request.getHeadCount() > 0) {
-
-            if (request.getHeadCount() < gameEntity.getParticipantCount()) {
-                throw new CustomException(INVALID_HEADCOUNT);
-            }
-
-
-            MatchFormat matchFormat = (request.getMatchFormat() != null) ? request.getMatchFormat() : gameEntity.getMatchFormat();
-
-            switch (matchFormat) {
-                case THREE_ON_THREE -> {
-
-                    if (request.getHeadCount() < 6 || request.getHeadCount() > 9) {
-                        throw new CustomException(INVALID_HEADCOUNT);
-                    }
-
-                }
-                case FIVE_ON_FIVE -> {
-                    if (request.getHeadCount() < 10 || request.getHeadCount() > 15) {
-                        throw new CustomException(INVALID_HEADCOUNT);
-                    }
-                }
-
-            }
-
-
+        if (!now.isBefore(limitUpdateTime)) {
+            throw new CustomException(
+                    UPDATE_NOT_ALLOWED_AT_THIS_TIME
+            );
         }
     }
 
