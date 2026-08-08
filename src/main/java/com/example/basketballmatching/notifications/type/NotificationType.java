@@ -11,7 +11,6 @@ public enum NotificationType {
     ACCEPT_GAME("경기 참가 수락"),
     REJECT_GAME("경기 참가 거절"),
     DELETE_GAME("경기 삭제"),
-    UPDATE_GAME("경기 정보 수정"),
 
     REQUEST_FRIEND("친구 요청");
 

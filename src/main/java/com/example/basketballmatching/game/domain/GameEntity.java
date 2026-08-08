@@ -102,8 +102,30 @@ public class GameEntity extends BaseEntity {
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
 
+    public void editGameInfo(String title, String content, Integer headCount, MatchFormat matchFormat, MatchGenderType matchGenderType) {
 
-    private static final int CREATOR_COUNT = 1;
+        if (title != null) {
+            this.title = title;
+        }
+
+        if (content != null) {
+            this.content = content;
+        }
+
+        if (headCount > 0) {
+            this.headCount = headCount;
+        }
+
+        if (matchFormat != null) {
+            this.matchFormat = matchFormat;
+        }
+
+        if (matchGenderType != null) {
+            this.matchGenderType = matchGenderType;
+        }
+
+
+    }
 
     @Builder(access = AccessLevel.PRIVATE)
     private GameEntity(String title, String content, Integer headCount, Integer participantCount, FieldStatus fieldStatus, MatchFormat matchFormat,GameStatus gameStatus, GameUserLevel gameUserLevel
@@ -223,20 +245,11 @@ public class GameEntity extends BaseEntity {
 
     private static void validateSchedule(LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
 
-        if (startDateTime == null || endDateTime == null || now == null) {
+
+        if (startDateTime == null || endDateTime == null || now == null
+        || !startDateTime.isAfter(now) || !endDateTime.isAfter(startDateTime)) {
             throw new CustomException(INVALID_GAME_TIME);
         }
-
-        LocalDateTime minimumStartDateTime = now.plusHours(24);
-
-        if (startDateTime.isBefore(minimumStartDateTime)) {
-            throw new CustomException(GAME_SCHEDULE_TOO_SOON);
-        }
-
-        if (!endDateTime.isAfter(startDateTime)) {
-            throw new CustomException(INVALID_GAME_TIME);
-        }
-
 
         long durationMinutes = Duration.between(
                 startDateTime, endDateTime
@@ -247,50 +260,6 @@ public class GameEntity extends BaseEntity {
         }
 
     }
-
-    private void validateUpdateHeadCount(MatchFormat finalMatchFormat, int finalHeadCount) {
-
-        if (finalHeadCount < participantCount) {
-            throw new CustomException(INVALID_HEADCOUNT);
-        }
-
-        finalMatchFormat.validateHeadCount(finalHeadCount);
-
-    }
-
-    private void validateMatchConditionChange(MatchFormat matchFormat, MatchGenderType matchGenderType) {
-
-        if (!existsOtherParticipants()) {
-            return;
-        }
-
-        boolean matchFormatChanged = matchFormat != null && matchFormat != this.matchFormat;
-
-        boolean matchGenderTypeChanged = matchGenderType != null && matchGenderType != this.matchGenderType;
-
-        if (matchFormatChanged || matchGenderTypeChanged) {
-
-            throw new CustomException(GAME_UPDATE_NOT_ALLOWED);
-        }
-
-    }
-
-    private boolean existsOtherParticipants() {
-        return participantCount > CREATOR_COUNT;
-    }
-
-
-    private void updateRecruitmentStatus(int headCount) {
-
-        if (headCount == participantCount) {
-            this.gameStatus = GameStatus.CLOSED;
-            return;
-        }
-
-        this.gameStatus = GameStatus.RECRUITING;
-
-    }
-
 
     public void cancelByCreatorWithdrawal(LocalDateTime now) {
         if (deletedDateTime != null) {
