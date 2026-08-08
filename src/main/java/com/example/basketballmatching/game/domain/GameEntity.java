@@ -180,6 +180,69 @@ public class GameEntity extends BaseEntity {
                 .build();
     }
 
+    public void updateGame(String title, String content, Integer headCount, MatchFormat matchFormat, MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
+
+        validateMatchConditionChange(matchFormat, matchGenderType);
+
+        validateScheduleChange(startDateTime, endDateTime, now);
+
+
+        MatchFormat finalMatchFormat = matchFormat != null ? matchFormat : this.matchFormat;
+
+        int finalHeadCount = headCount != null ? headCount : this.headCount;
+
+        validateUpdateHeadCount(finalMatchFormat, finalHeadCount);
+
+
+        if (title != null) {
+            this.title = title;
+        }
+
+        if (content != null) {
+            this.content = content;
+        }
+
+        if (headCount != null) {
+            this.headCount = headCount;
+
+            updateRecruitmentStatus(headCount);
+        }
+
+        if (matchFormat != null) {
+            this.matchFormat = matchFormat;
+        }
+
+        if (matchGenderType != null) {
+            this.matchGenderType = matchGenderType;
+
+
+        }
+
+        if (startDateTime != null) {
+            this.startDateTime =
+                    startDateTime;
+
+            this.endDateTime =
+                    endDateTime;
+        }
+
+
+    }
+
+    private void validateScheduleChange(LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
+
+        if (startDateTime == null && endDateTime == null) {
+            return;
+        }
+
+        if (startDateTime == null || endDateTime == null) {
+            throw new CustomException(GAME_SCHEDULE_REQUIRED_TOGETHER);
+        }
+
+        validateSchedule(startDateTime, endDateTime, now);
+
+    }
+
     private static void validateSchedule(LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
 
 
