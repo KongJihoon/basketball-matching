@@ -114,7 +114,8 @@ class MailServiceUnitTest {
 
         // when
 
-//        CheckResponse checkResponse = mailService.verifyEmailAuth(email, code);
+
+        mailService.verifyEmailAuth(email, code);
         // then
 
         ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
@@ -126,9 +127,6 @@ class MailServiceUnitTest {
         verify(redisService).setDataExpireMinutes(keyCaptor.capture(), valueCaptor.capture(), ttlCaptor.capture());
 
 
-
-//        assertTrue(checkResponse.isSuccess());
-//        assertEquals("이메일 인증에 성공하였습니다.", checkResponse.getMessage());
 
         assertEquals("email:auth:verified:" + email, keyCaptor.getValue());
         assertEquals(code, valueCaptor.getValue());

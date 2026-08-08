@@ -3,20 +3,19 @@ package com.example.basketballmatching.game.service;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.EditGameDto;
-import com.example.basketballmatching.game.dto.GameDto;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
+import com.example.basketballmatching.game.dto.request.UpdateGameRequest;
 import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.event.GameCreateEvent;
+import com.example.basketballmatching.game.event.UpdateGameEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.CityName;
-import com.example.basketballmatching.game.type.MatchFormat;
-import com.example.basketballmatching.global.dto.CommonResponse;
+import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -30,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -154,63 +155,98 @@ public class GameService {
      * 경기 수정
      */
     @Transactional
-    public CommonResponse<GameDto> editGame(EditGameDto request, Long gameId, Long userId) {
+    public GameDetailResponse updateGame(UpdateGameRequest request, Long gameId, Long userId) {
 
         log.info("[경기 수정 시작] loginId : {}, gameId : {}", userId, gameId);
 
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        GameEntity gameEntity = getGame(gameId);
 
-        UserEntity userEntity = getUser(userId);
+        GameEntity game = getGame(gameId);
+
+
 
         // 경기 수정 사항 유효성 검사
-        validateEditGame(request, gameEntity, userEntity);
+        validateUpdateGame(game, userId, now);
 
+        validateUpdateRequest(request);
 
-        gameEntity.editGameInfo(request.getTitle(), request.getContent(), request.getHeadCount(), request.getMatchFormat(), request.getMatchGenderType());
+        validateUpdateScheduleOverlap(game, request);
 
+        boolean actuallyChanged = isActuallyChanged(game, request);
+
+        game.updateGame(request.title(), request.content(), request.headCount(), request.matchFormat(), request.matchGenderType(), request.startDateTime(), request.endDateTime(), now);
+
+        if (actuallyChanged) {
+            publishUpdateGameEvent(game, userId);
+        }
+
+        GameDetailResponse response = GameDetailResponse.fromEntity(game);
 
         log.info("[경기 수정 완료] gameId : {}", gameId);
 
-        return CommonResponse.of("경기 수정이 완료되었습니다.", GameDto.fromEntity(gameEntity));
+        return response;
     }
 
-    private void validateEditGame(EditGameDto request, GameEntity gameEntity, UserEntity userEntity) {
-        if (!gameEntity.getUserEntity().getUserId().equals(userEntity.getUserId())) {
-            throw new CustomException(NOT_GAME_CREATOR);
+    private void validateUpdateRequest(UpdateGameRequest request) {
+
+        if (!request.hasAnyChange()) {
+            throw new CustomException(NO_GAME_UPDATE_FIELDS);
         }
 
-        if (request.getMatchFormat() != null && request.getHeadCount() == 0) {
-            throw new CustomException(UPDATE_GAME_HEAD_COUNT);
+        if (request.hasIncompleteSchedule()) {
+            throw new CustomException(GAME_SCHEDULE_REQUIRED_TOGETHER);
+        }
+    }
+
+    private void validateUpdateScheduleOverlap(GameEntity game, UpdateGameRequest request) {
+
+        if (!request.hasScheduleInput()) {
+            return;
         }
 
+        boolean scheduleChanged = !request.startDateTime().equals(game.getStartDateTime())
+                || !request.endDateTime().equals(game.getEndDateTime());
 
-        if (request.getHeadCount() > 0) {
+        if (!scheduleChanged) {
+            return;
+        }
 
-            if (request.getHeadCount() < gameEntity.getParticipantCount()) {
-                throw new CustomException(INVALID_HEADCOUNT);
-            }
+        boolean exists = gameRepository.existsOverlappingGameExcludeCurrent(
+                game.getGameId(),
+                game.getPlaceName(),
+                game.getAddress(),
+                request.startDateTime(),
+                request.endDateTime()
+        );
 
+        if (exists) {
+            throw new CustomException(PLACE_SCHEDULE_OVERLAP);
+        }
 
-            MatchFormat matchFormat = (request.getMatchFormat() != null) ? request.getMatchFormat() : gameEntity.getMatchFormat();
+    }
 
-            switch (matchFormat) {
-                case THREE_ON_THREE -> {
+    private void validateUpdateGame(
+            GameEntity game,
+            Long userId,
+            LocalDateTime now
+    ) {
+        if (!game.getUserEntity()
+                .getUserId()
+                .equals(userId)) {
+            throw new CustomException(
+                    NOT_GAME_CREATOR
+            );
+        }
 
-                    if (request.getHeadCount() < 6 || request.getHeadCount() > 9) {
-                        throw new CustomException(INVALID_HEADCOUNT);
-                    }
+        LocalDateTime limitUpdateTime =
+                game.getStartDateTime()
+                        .minusDays(1);
 
-                }
-                case FIVE_ON_FIVE -> {
-                    if (request.getHeadCount() < 10 || request.getHeadCount() > 15) {
-                        throw new CustomException(INVALID_HEADCOUNT);
-                    }
-                }
-
-            }
-
-
+        if (!now.isBefore(limitUpdateTime)) {
+            throw new CustomException(
+                    UPDATE_NOT_ALLOWED_AT_THIS_TIME
+            );
         }
     }
 
@@ -229,6 +265,59 @@ public class GameService {
         if (exists) {
             throw new CustomException(PLACE_SCHEDULE_OVERLAP);
         }
+
+    }
+
+    private boolean isActuallyChanged(GameEntity game, UpdateGameRequest request) {
+
+        boolean titleChanged = request.title() != null && !Objects.equals(request.title(), game.getTitle());
+
+        boolean contentChanged = request.content() != null && !Objects.equals(request.content(), game.getContent());
+
+        boolean headCountChanged = request.headCount() != null && request.headCount() != game.getHeadCount();
+
+        boolean matchFormatChanged = request.matchFormat() != null && request.matchFormat() != game.getMatchFormat();
+
+        boolean genderChanged = request.matchGenderType() != null && request.matchGenderType() != game.getMatchGenderType();
+
+        boolean startDateTimeChanged = request.startDateTime() != null && !Objects.equals(request.startDateTime(), game.getStartDateTime());
+
+        boolean endDateTimeChanged = request.endDateTime() != null && !Objects.equals(request.endDateTime(), game.getEndDateTime());
+
+        return titleChanged
+                || contentChanged
+                || headCountChanged
+                || matchFormatChanged
+                || genderChanged
+                || startDateTimeChanged
+                || endDateTimeChanged;
+
+    }
+
+    private void publishUpdateGameEvent(GameEntity game, Long creatorId) {
+
+        List<Long> receiverIds = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(
+                        List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY), game.getGameId()
+                ).stream()
+                .map(participant -> participant.getUserEntity().getUserId())
+                .filter(receiverId -> !receiverId.equals(creatorId))
+                .distinct()
+                .toList();
+
+        if (receiverIds.isEmpty()) {
+            return;
+        }
+
+
+        eventPublisher.publishEvent(
+                new UpdateGameEvent(
+                        game.getGameId(),
+                        game.getTitle(),
+                        game.getStartDateTime(),
+                        game.getEndDateTime(),
+                        receiverIds
+                )
+        );
 
     }
 
