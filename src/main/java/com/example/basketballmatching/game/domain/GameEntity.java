@@ -192,6 +192,16 @@ public class GameEntity extends BaseEntity {
 
         if (matchGenderType != null) {
             this.matchGenderType = matchGenderType;
+
+
+        }
+
+        if (startDateTime != null) {
+            this.startDateTime =
+                    startDateTime;
+
+            this.endDateTime =
+                    endDateTime;
         }
 
 
