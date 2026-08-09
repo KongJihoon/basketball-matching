@@ -6,10 +6,7 @@ import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -17,9 +14,7 @@ import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class ParticipantGameEntity extends BaseEntity {
 
@@ -53,15 +48,24 @@ public class ParticipantGameEntity extends BaseEntity {
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
 
-    public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity) {
-        ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
-                .gameEntity(gameEntity)
-                .userEntity(userEntity)
+    @Builder(access = AccessLevel.PRIVATE)
+    private ParticipantGameEntity(GameEntity game, UserEntity applicant) {
+        this.gameEntity = game;
+        this.userEntity = applicant;
+    }
+
+
+    public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity, LocalDateTime appliedAt) {
+
+        ParticipantGameEntity participation = ParticipantGameEntity.builder()
+                .game(gameEntity)
+                .applicant(userEntity)
                 .build();
 
-        participantGameEntity.transitionTo(APPLY, LocalDateTime.now());
 
-        return participantGameEntity;
+        participation.transitionTo(APPLY, appliedAt);
+
+        return participation;
 
 
     }
@@ -71,17 +75,18 @@ public class ParticipantGameEntity extends BaseEntity {
     ) {
 
         ParticipantGameEntity participantGameEntity = ParticipantGameEntity.builder()
-                .gameEntity(gameEntity)
-                .userEntity(userEntity)
+                .game(gameEntity)
+                .applicant(userEntity)
                 .build();
 
         participantGameEntity.transitionTo(ACCEPT, createdAt);
         return participantGameEntity;
     }
 
-    public void reApply() {
+    public void reapply(LocalDateTime appliedAt) {
+        transitionTo(APPLY, appliedAt);
+
         this.canceledDateTime = null;
-        transitionTo(APPLY, LocalDateTime.now());
 
     }
 
@@ -138,7 +143,7 @@ public class ParticipantGameEntity extends BaseEntity {
 
 
     private boolean isOccupied(ParticipantGameStatus status) {
-        return status == APPLY || status == ACCEPT;
+        return status == ACCEPT;
     }
 
     private void validateTransition(ParticipantGameStatus oldStatue, ParticipantGameStatus newStatus) {
@@ -183,8 +188,5 @@ public class ParticipantGameEntity extends BaseEntity {
 
 
 
-
-
-
-
 }
+

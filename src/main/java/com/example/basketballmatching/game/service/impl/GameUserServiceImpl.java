@@ -45,59 +45,7 @@ public class GameUserServiceImpl implements GameUserService {
     private final GameQueryRepository gameQueryRepository;
     private final RedisService redisService;
 
-    /**
-     * 경기 참가 신청
-     */
-    @Override
-    @Transactional
-    public CommonResponse<ApplyGameUserDto> applyGame(Long gameId, Long userId) {
-        log.info("[경기 참가 신청 시작] gameId : {} userId : {}", gameId, userId);
 
-
-        UserEntity userEntity = getUser(userId);
-
-        GameEntity gameEntity = getGameWithLock(gameId);
-
-        String data = redisService.getData("blackList:" + userEntity.getEmail());
-
-        if (data != null) {
-            throw new CustomException(BLACKLIST_USER);
-        }
-
-        if (gameEntity.getGameStatus().equals(GameStatus.CLOSED)) {
-            throw new CustomException(CLOSED_GAME);
-        }
-
-        ParticipantGameEntity participantGameEntity = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
-                .orElse(null);
-
-        validateParticipantInfo(userEntity, gameEntity, participantGameEntity);
-
-        if (participantGameEntity == null) {
-
-            participantGameEntity = ParticipantGameEntity.createApply(gameEntity, userEntity);
-
-
-            participantGameRepository.save(participantGameEntity);
-
-
-            if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
-                gameEntity.setStatue(GameStatus.CLOSED);
-            }
-
-
-        } else if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {
-
-            participantGameEntity.reApply();
-        }
-
-        ApplyGameUserDto participantDto = ApplyGameUserDto.fromEntity(participantGameEntity);
-
-
-        log.info("[경기 참가 신청 완료] gameId : {}, participantId : {}", gameId, participantGameEntity.getParticipantGameId());
-
-        return CommonResponse.of("경기 신청이 완료되었습니다.", participantDto);
-    }
 
 
     /**

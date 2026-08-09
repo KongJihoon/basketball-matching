@@ -13,7 +13,6 @@ import java.util.List;
 public interface GameUserService {
 
 
-    CommonResponse<ApplyGameUserDto> applyGame(Long gameId, Long UserId);
 
     CheckResponse cancelGame(Long userId, Long gameId);
 

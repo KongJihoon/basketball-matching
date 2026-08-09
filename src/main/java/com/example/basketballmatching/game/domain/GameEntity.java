@@ -6,6 +6,7 @@ import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.domain.UserEntity;
+import com.example.basketballmatching.user.type.GenderType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -299,6 +301,47 @@ public class GameEntity extends BaseEntity {
 
         this.deletedDateTime = now;
     }
+
+    public void validateApply(UserEntity applicant, LocalDateTime now) {
+        validateNotCreator(applicant);
+        validateRecruiting();
+        validateApplyDeadline(now);
+        validateApplicantGender(applicant.getGenderType());
+
+
+    }
+
+    private void validateNotCreator(UserEntity applicant) {
+
+        if (Objects.equals(userEntity.getUserId(), applicant.getUserId())) {
+            throw new CustomException(NOT_APPLY_GAME_CREATOR);
+        }
+    }
+
+    private void validateRecruiting() {
+        if (gameStatus == GameStatus.CLOSED || participantCount >= headCount) {
+            throw new CustomException(FULL_HEADCOUNT_GAME);
+        }
+    }
+
+    private void validateApplyDeadline(LocalDateTime now) {
+        LocalDateTime deadline = startDateTime.minusMinutes(30);
+
+        if (!now.isBefore(deadline)) {
+            throw new CustomException(NOT_ALLOWED_TO_JOIN);
+        }
+    }
+
+    private void validateApplicantGender(GenderType genderType) {
+        if (matchGenderType == MatchGenderType.FEMALE_ONLY && genderType == GenderType.MALE) {
+            throw new CustomException(ONLY_FEMALE_GAME);
+        }
+
+        if (matchGenderType == MatchGenderType.MALE_ONLY && genderType == GenderType.FEMALE) {
+            throw new CustomException(ONLY_MALE_GAME);
+        }
+    }
+
 
     public void setGameUserLevel(GameUserLevel gameUserLevel) {
         this.gameUserLevel = gameUserLevel;
