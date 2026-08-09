@@ -31,7 +31,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameEntityUnitTest {
 
 
-    private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 8, 12, 0);
+    private static final LocalDateTime NOW =
+            LocalDateTime.of(
+                    2026,
+                    8,
+                    8,
+                    12,
+                    0
+            );
 
     private UserEntity creator;
 
@@ -60,7 +67,9 @@ class GameEntityUnitTest {
 
             UserEntity participant = createUser(2L, "participant@test.com", "참가자");
 
-            ParticipantGameEntity.createApply(game, participant);
+            ParticipantGameEntity participation = ParticipantGameEntity.createApply(game, participant, NOW);
+
+            participation.accept(NOW);
 
             // when
 
@@ -93,10 +102,14 @@ class GameEntityUnitTest {
                             "참가자"
                     );
 
-            ParticipantGameEntity.createApply(
+            ParticipantGameEntity participation = ParticipantGameEntity.createApply(
                     game,
-                    participant
+                    participant,
+                    NOW
             );
+
+            participation.accept(NOW);
+
 
             // when
             CustomException exception =

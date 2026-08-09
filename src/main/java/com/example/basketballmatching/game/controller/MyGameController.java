@@ -34,27 +34,7 @@ public class MyGameController {
     private final GameUserService gameUserService;
     private final EvaluationService evaluationService;
 
-    /**
-     * 경기 참가
-     */
-    @Operation(summary = "경기 참가")
-    @ApiResponse(responseCode = "200", description = "경기 참가 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/apply")
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<ApplyGameUserDto>> applyGame(
-            @Parameter(name = "gameId", example = "1")
-            @RequestParam Long gameId,
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails
-            ) {
 
-        CommonResponse<ApplyGameUserDto> applyGame = gameUserService.applyGame(gameId, userInfoDetails.getUserEntity().getUserId());
-
-        return ResponseEntity.ok(applyGame);
-
-    }
     /**
      * 참가 경기 취소
      */
