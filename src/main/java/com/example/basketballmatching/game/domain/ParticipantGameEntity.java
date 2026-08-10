@@ -83,6 +83,18 @@ public class ParticipantGameEntity extends BaseEntity {
         return participantGameEntity;
     }
 
+    public void cancelApply(LocalDateTime canceledAt) {
+
+        switch (participantGameStatus) {
+            case APPLY -> transitionTo(CANCEL, canceledAt);
+            case CANCEL -> throw new CustomException(ALREADY_CANCELED_USER);
+            case ACCEPT -> throw new CustomException(NOT_APPLY_USER);
+            case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
+            case REJECT, DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
+        }
+
+    }
+
     public void reapply(LocalDateTime appliedAt) {
         transitionTo(APPLY, appliedAt);
 
