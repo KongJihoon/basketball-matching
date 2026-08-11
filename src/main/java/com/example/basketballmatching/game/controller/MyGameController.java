@@ -35,29 +35,6 @@ public class MyGameController {
     private final EvaluationService evaluationService;
 
 
-    /**
-     * 참가 경기 취소
-     */
-    @Operation(summary = "참가 경기 취소")
-    @ApiResponse(responseCode = "200", description = "참가 경기 취소 성공",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = CheckResponse.class))})
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
-    @PatchMapping("/cancel")
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CheckResponse> cancelGame(
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "gameId", example = "1")
-            @RequestParam Long gameId
-    ) {
-
-        CheckResponse checkResponse = gameUserService.cancelGame(userInfoDetails.getUserEntity().getUserId(), gameId);
-
-
-        return ResponseEntity.ok(checkResponse);
-    }
 
     /**
      * 현재 예정 경기 조회

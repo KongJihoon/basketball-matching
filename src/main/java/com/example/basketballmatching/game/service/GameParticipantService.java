@@ -59,6 +59,35 @@ public class GameParticipantService {
         return GameApplyResponse.fromEntity(participation);
     }
 
+    @Transactional
+    public void cancelApply(Long gameId, Long userId) {
+
+        log.info("[경기 참가 취소 시작] gameId={}, userId={}", gameId, userId);
+
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        getActiveUser(userId);
+
+        GameEntity game = getActiveGame(gameId);
+
+        ParticipantGameEntity participation = getParticipation(gameId, userId);
+
+
+        game.validateParticipantCancel(now);
+
+        participation.cancelApply(now);
+
+        log.info("[경기 참가 신청 취소 완료] gameId={}, userId={}", gameId, userId);
+
+
+    }
+
+    private ParticipantGameEntity getParticipation(Long gameId, Long userId) {
+        return participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(
+                gameId, userId
+        ).orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
+    }
+
     private ParticipantGameEntity applyOrReapply(GameEntity game, UserEntity applicant, ParticipantGameEntity existingParticipation, LocalDateTime now) {
 
         if (existingParticipation == null) {

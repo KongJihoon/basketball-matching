@@ -208,6 +208,13 @@ public class GameEntity extends BaseEntity {
 
 
     }
+    public void validateParticipantCancel(LocalDateTime now) {
+        LocalDateTime cancelDeadline = startDateTime.minusMinutes(30);
+
+        if (!now.isBefore(cancelDeadline)) {
+            throw new CustomException(NOT_ALLOWED_CANCEL);
+        }
+    }
 
     private void validateScheduleChange(LocalDateTime startDateTime, LocalDateTime endDateTime, LocalDateTime now) {
 
@@ -280,6 +287,8 @@ public class GameEntity extends BaseEntity {
     private boolean existsOtherParticipants() {
         return participantCount > CREATOR_COUNT;
     }
+
+
 
 
     private void updateRecruitmentStatus(int headCount) {
