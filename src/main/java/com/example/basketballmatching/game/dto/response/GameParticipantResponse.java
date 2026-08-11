@@ -6,27 +6,27 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-public record GameApplyResponse(
+public record GameParticipantResponse(
         @Schema(description = "경기 참가 관계 ID", example = "1")
         Long participationId,
 
         @Schema(description = "경기 ID", example = "1")
         Long gameId,
 
-        @Schema(description = "참가 상태", example = "APPLY")
+        @Schema(description = "참가 상태", example = "ACCEPT")
         ParticipantGameStatus status,
 
-        @Schema(description = "신청 시각", example = "2026-08-09T15:00:00")
-        LocalDateTime appliedAt
+        @Schema(description = "참가 확정 시각", example = "2026-08-09T15:00:00")
+        LocalDateTime joinedAt
 ) {
 
-    public static GameApplyResponse fromEntity(ParticipantGameEntity participation) {
+    public static GameParticipantResponse fromEntity(ParticipantGameEntity participation) {
 
-        return new GameApplyResponse(
+        return new GameParticipantResponse(
                 participation.getParticipantGameId(),
                 participation.getGameEntity().getGameId(),
                 participation.getParticipantGameStatus(),
-                participation.getApplyDateTime()
+                participation.getAcceptDateTime()
         );
     }
 

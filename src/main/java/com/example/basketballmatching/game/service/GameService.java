@@ -297,7 +297,7 @@ public class GameService {
     private void publishUpdateGameEvent(GameEntity game, Long creatorId) {
 
         List<Long> receiverIds = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(
-                        List.of(ParticipantGameStatus.ACCEPT, ParticipantGameStatus.APPLY), game.getGameId()
+                        List.of(ParticipantGameStatus.ACCEPT), game.getGameId()
                 ).stream()
                 .map(participant -> participant.getUserEntity().getUserId())
                 .filter(receiverId -> !receiverId.equals(creatorId))

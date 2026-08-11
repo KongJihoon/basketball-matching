@@ -4,7 +4,6 @@ package com.example.basketballmatching.game.domain;
 import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import jakarta.persistence.*;
@@ -208,11 +207,20 @@ public class GameEntity extends BaseEntity {
 
 
     }
-    public void validateParticipantCancel(LocalDateTime now) {
+    public void validateParticipantCancel(UserEntity participant, LocalDateTime now) {
+
+        validateNotCreatorCancel(participant);
+
         LocalDateTime cancelDeadline = startDateTime.minusMinutes(30);
 
         if (!now.isBefore(cancelDeadline)) {
             throw new CustomException(NOT_ALLOWED_CANCEL);
+        }
+    }
+
+    private void validateNotCreatorCancel(UserEntity participant) {
+        if (Objects.equals(userEntity.getUserId(), participant.getUserId())) {
+            throw new CustomException(NOT_CANCEL_GAME_CREATOR);
         }
     }
 
@@ -293,7 +301,7 @@ public class GameEntity extends BaseEntity {
 
     private void updateRecruitmentStatus(int headCount) {
 
-        if (headCount == participantCount) {
+        if (headCount <= participantCount) {
             this.gameStatus = GameStatus.CLOSED;
             return;
         }
@@ -311,11 +319,11 @@ public class GameEntity extends BaseEntity {
         this.deletedDateTime = now;
     }
 
-    public void validateApply(UserEntity applicant, LocalDateTime now) {
-        validateNotCreator(applicant);
+    public void validateJoin(UserEntity participant, LocalDateTime now) {
+        validateNotCreator(participant);
         validateRecruiting();
-        validateApplyDeadline(now);
-        validateApplicantGender(applicant.getGenderType());
+        validateJoinDeadline(now);
+        validateApplicantGender(participant.getGenderType());
 
 
     }
@@ -333,7 +341,7 @@ public class GameEntity extends BaseEntity {
         }
     }
 
-    private void validateApplyDeadline(LocalDateTime now) {
+    private void validateJoinDeadline(LocalDateTime now) {
         LocalDateTime deadline = startDateTime.minusMinutes(30);
 
         if (!now.isBefore(deadline)) {
@@ -359,10 +367,16 @@ public class GameEntity extends BaseEntity {
 
     public void increaseParticipantCount() {
         this.participantCount++;
+
+        updateRecruitmentStatus(headCount);
     }
+
+
 
     public void decreaseParticipantCount() {
         this.participantCount--;
+
+        updateRecruitmentStatus(headCount);
     }
 
     public void setStatue(GameStatus status) {

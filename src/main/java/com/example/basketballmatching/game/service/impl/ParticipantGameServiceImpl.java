@@ -3,7 +3,6 @@ package com.example.basketballmatching.game.service.impl;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.AcceptGameUserListDto;
-import com.example.basketballmatching.game.dto.ApplyGameUserListDto;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.service.ParticipantGameService;
@@ -28,7 +27,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-import static com.example.basketballmatching.game.type.GameStatus.CLOSED;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -50,33 +48,6 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
-    /**
-     * 경기 참가 신청자 조회
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public CommonResponse<List<ApplyGameUserListDto>> getApplyParticipantList(Long gameId, Long userId, Pageable pageable) {
-
-        log.info("[경기 참가 신청자 조회 시작] gameId : {}, userId : {}", gameId, userId);
-
-        GameEntity gameEntity = getGame(gameId);
-
-        UserEntity userEntity = getUser(userId);
-
-        // 경기 개설자인지 조회
-        validateGameCreator(gameEntity, userEntity);
-
-        // 지원자 목록 조회 (엔티티 기준)
-        Page<ParticipantGameEntity> pages = getParticipantGameList(pageable, gameEntity, APPLY);
-
-
-        // DTO 변환
-        List<ApplyGameUserListDto> participantGameList = pages.stream().map(ApplyGameUserListDto::fromEntity).toList();
-
-        log.info("[경기 참가 신청자 조회 완료] gameId : {}, userId : {}", gameId, userId);
-
-        return CommonResponse.of("경기 신청자 조회가 완료되었습니다.", participantGameList);
-    }
 
 
 
@@ -113,101 +84,12 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
 
-    /**
-     * 경기 수락
-     */
-    @Override
-    @Transactional
-    public CheckResponse acceptGameUser(Long participantUserId, Long userId, Long gameId) {
-
-        log.info("[참가자 경기 수락 시작] participantId : {}, gameId : {}", participantUserId, gameId);
-
-        GameEntity gameEntity = getGame(gameId);
-
-        UserEntity userEntity = getUser(userId);
-
-        // 경기 개설자인지 조회
-        validateGameCreator(gameEntity, userEntity);
-
-
-
-        if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount() || gameEntity.getGameStatus().equals(CLOSED)) {
-            throw new CustomException(FULL_HEADCOUNT_GAME);
-        }
-
-        LocalDateTime now = validateStartDateTime(gameEntity);
-
-
-
-
-        ParticipantGameEntity participantGameEntity = getParticipantGame(gameEntity, participantUserId);
-
-        // 경기 참가자 상태 유효성 검사
-        validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
-
-
-        participantGameEntity.accept(now);
-
-        updateGameUserLevel(gameEntity);
-
-        notificationService.send(NotificationType.ACCEPT_GAME, participantGameEntity.getUserEntity(),
-                participantGameEntity.getGameEntity().getTitle() + "에 참가가 수락되었습니다.");
-
-
-
-
-        log.info("[참가자 경기 수락 완료] participantId : {}, gameId : {}", participantUserId, gameId);
-
-        return CheckResponse.of(true, "경기 수락이 완료되었습니다.");
-    }
 
 
 
 
 
-    /**
-     * 경기 거절
-     */
-    @Override
-    @Transactional
-    public CheckResponse rejectGameUser(Long participantUserId, Long userId, Long gameId) {
 
-        log.info("[경기 참가자 거절 시작] participantId : {}, gameId : {}", participantUserId, gameId);
-
-        GameEntity gameEntity = getGame(gameId);
-
-        UserEntity userEntity = getUser(userId);
-
-        if (!Objects.equals(gameEntity.getUserEntity().getUserId(), userEntity.getUserId())) {
-            throw new CustomException(NOT_GAME_CREATOR);
-        }
-
-
-        ParticipantGameEntity participantGameEntity = getParticipantGame(gameEntity, participantUserId);
-
-        // 경기 참가자 상태 유효성 검사
-        validateGameStatusInAcceptAndReject(participantGameEntity.getParticipantGameStatus());
-
-
-        // 경기 생성자는 거절할 수 없음.
-        if (participantGameEntity.getUserEntity().getUserId().equals(gameEntity.getUserEntity().getUserId())) {
-            throw new CustomException(NOT_REJECT_CREATOR);
-        }
-
-        LocalDateTime now = validateStartDateTime(gameEntity);
-
-
-
-        participantGameEntity.reject(now);
-
-        notificationService.send(NotificationType.REJECT_GAME, participantGameEntity.getUserEntity(), participantGameEntity.getGameEntity().getTitle() + "에 참가가 거절되었습니다.");
-
-
-
-        log.info("[경기 참가자 거절 완료] participantId : {}, gameId : {}", participantUserId, gameId);
-
-        return CheckResponse.of(true, "경기 거절을 완료하였습니다.");
-    }
 
 
 
