@@ -1,6 +1,6 @@
 package com.example.basketballmatching.game.controller;
 
-import com.example.basketballmatching.game.dto.response.GameApplyResponse;
+import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
 import com.example.basketballmatching.game.service.GameParticipantService;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -29,14 +29,14 @@ public class GameParticipantController {
 
     private final GameParticipantService gameParticipantService;
 
-    @Operation(summary = "경기 참가 신청")
-    @ApiResponse(responseCode = "201", description = "경기 참가 신청 성공")
+    @Operation(summary = "경기 선착순 참가 ")
+    @ApiResponse(responseCode = "201", description = "경기 참가 성공")
     @ApiResponse(responseCode = "400", description = "잘못된 참가 신청",
             content = {@Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorResponse.class))})
-    @PostMapping("/{gameId}/applications")
+    @PostMapping("/{gameId}/participations")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<CommonResponse<GameApplyResponse>> apply(
+    public ResponseEntity<CommonResponse<GameParticipantResponse>> join(
             @Parameter(description = "경기 ID", example = "1", required = true)
             @PathVariable("gameId")
             Long gameId,
@@ -44,7 +44,7 @@ public class GameParticipantController {
             UserInfoDetails userInfoDetails
     ) {
 
-        GameApplyResponse response = gameParticipantService.apply(gameId, userInfoDetails.getUserEntity().getUserId());
+        GameParticipantResponse response = gameParticipantService.join(gameId, userInfoDetails.getUserEntity().getUserId());
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -53,7 +53,7 @@ public class GameParticipantController {
                         response.participationId()
                 ).toUri();
         return ResponseEntity.created(location)
-                .body(CommonResponse.of("경기 참가 신청이 완료되었습니다.", response));
+                .body(CommonResponse.of("경기 참가가 완료되었습니다.", response));
     }
 
     @Operation(summary = "경기 참가 신청 취소")
@@ -61,18 +61,18 @@ public class GameParticipantController {
     @ApiResponse(responseCode = "400", description = "잘못된 경기 참가 취소",
     content = @Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class)))
-    @PatchMapping("/{gameId}/applications/me/cancel")
+    @PatchMapping("/{gameId}/participations/me/cancel")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<CheckResponse> cancelApply(
+    public ResponseEntity<CheckResponse> cancelParticipation(
             @Parameter(description = "경기 ID", example = "1", required = true)
             @PathVariable("gameId") Long gameId,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {
 
-        gameParticipantService.cancelApply(gameId, userInfoDetails.getUserEntity().getUserId());
+        gameParticipantService.cancelParticipation(gameId, userInfoDetails.getUserEntity().getUserId());
 
         return ResponseEntity.ok(
-                CheckResponse.of(true, "경기 참가 신청 취소가 완료되었습니다.")
+                CheckResponse.of(true, "경기 참가 취소가 완료되었습니다.")
         );
 
     }

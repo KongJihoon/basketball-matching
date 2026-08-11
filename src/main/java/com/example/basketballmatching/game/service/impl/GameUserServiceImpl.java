@@ -2,17 +2,14 @@ package com.example.basketballmatching.game.service.impl;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.repository.query.GameQueryRepository;
-import com.example.basketballmatching.game.repository.GameRepository;
-import com.example.basketballmatching.game.repository.ParticipantGameRepository;
-import com.example.basketballmatching.game.type.GameStatus;
-import com.example.basketballmatching.game.type.MatchGenderType;
-import com.example.basketballmatching.game.dto.ApplyGameUserDto;
 import com.example.basketballmatching.game.dto.CurrentGameListDto;
 import com.example.basketballmatching.game.dto.GameUserLevelDto;
 import com.example.basketballmatching.game.dto.LastGameListDto;
+import com.example.basketballmatching.game.repository.GameRepository;
+import com.example.basketballmatching.game.repository.ParticipantGameRepository;
+import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.service.GameUserService;
-import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.game.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
@@ -48,46 +45,6 @@ public class GameUserServiceImpl implements GameUserService {
 
 
 
-    /**
-     * 경기 참가 취소
-     */
-    @Override
-    @Transactional
-    public CheckResponse cancelGame(Long userId, Long gameId) {
-
-        GameEntity gameEntity = getGameWithLock(gameId);
-
-        ParticipantGameEntity participantGameEntity = getParticipantGame(userId, gameId);
-
-
-        LocalDateTime now = LocalDateTime.now();
-
-        if (now.isAfter(gameEntity.getStartDateTime().minusMinutes(30))) {
-            throw new CustomException(NOT_ALLOWED_CANCEL);
-        }
-
-        if (participantGameEntity.getParticipantGameStatus().equals(CANCEL)) {
-            throw new CustomException(ALREADY_CANCELED_USER);
-        }
-
-        if (participantGameEntity.getParticipantGameStatus().equals(KICKOUT)) {
-            throw new CustomException(ALREADY_KICKOUT_USER);
-        }
-
-
-        if (!participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-            throw new CustomException(NOT_ACCEPT_USER);
-        }
-
-
-        participantGameEntity.cancel(now);
-
-
-
-
-
-        return CheckResponse.of(true, "경기 취소가 완료되었습니다.");
-    }
 
 
     /**

@@ -55,7 +55,7 @@ public class ParticipantGameEntity extends BaseEntity {
     }
 
 
-    public static ParticipantGameEntity createApply(GameEntity gameEntity, UserEntity userEntity, LocalDateTime appliedAt) {
+    public static ParticipantGameEntity createParticipation(GameEntity gameEntity, UserEntity userEntity, LocalDateTime appliedAt) {
 
         ParticipantGameEntity participation = ParticipantGameEntity.builder()
                 .game(gameEntity)
@@ -63,7 +63,7 @@ public class ParticipantGameEntity extends BaseEntity {
                 .build();
 
 
-        participation.transitionTo(APPLY, appliedAt);
+        participation.transitionTo(ACCEPT, appliedAt);
 
         return participation;
 
@@ -83,12 +83,28 @@ public class ParticipantGameEntity extends BaseEntity {
         return participantGameEntity;
     }
 
-    public void cancelApply(LocalDateTime canceledAt) {
+    public void join(LocalDateTime joinedAt) {
+        switch (participantGameStatus) {
+            case APPLY, CANCEL-> {
+                transitionTo(ACCEPT, joinedAt);
+
+                this.canceledDateTime = null;
+            }
+
+            case ACCEPT -> throw new CustomException(ALREADY_ACCEPT_USER);
+
+            case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
+
+            case REJECT, DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
+
+        }
+    }
+
+    public void cancelParticipation(LocalDateTime canceledAt) {
 
         switch (participantGameStatus) {
-            case APPLY -> transitionTo(CANCEL, canceledAt);
+            case APPLY, ACCEPT -> transitionTo(CANCEL, canceledAt);
             case CANCEL -> throw new CustomException(ALREADY_CANCELED_USER);
-            case ACCEPT -> throw new CustomException(NOT_APPLY_USER);
             case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
             case REJECT, DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
         }
@@ -176,7 +192,7 @@ public class ParticipantGameEntity extends BaseEntity {
                 }
             }
             case CANCEL -> {
-                if (newStatus != APPLY && newStatus != DELETE) {
+                if (newStatus != ACCEPT && newStatus != DELETE) {
                     throw new CustomException(INVALID_STATUS_TRANSITION);
                 }
             }

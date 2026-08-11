@@ -67,9 +67,8 @@ class GameEntityUnitTest {
 
             UserEntity participant = createUser(2L, "participant@test.com", "참가자");
 
-            ParticipantGameEntity participation = ParticipantGameEntity.createApply(game, participant, NOW);
+            ParticipantGameEntity participation = ParticipantGameEntity.createParticipation(game, participant, NOW);
 
-            participation.accept(NOW);
 
             // when
 
@@ -102,13 +101,12 @@ class GameEntityUnitTest {
                             "참가자"
                     );
 
-            ParticipantGameEntity participation = ParticipantGameEntity.createApply(
+            ParticipantGameEntity participation = ParticipantGameEntity.createParticipation(
                     game,
                     participant,
                     NOW
             );
 
-            participation.accept(NOW);
 
 
             // when

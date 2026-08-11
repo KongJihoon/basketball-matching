@@ -106,7 +106,7 @@ public class GameQueryRepository {
 //                .fetchJoin()
                 .where(
                         participantGame.userEntity.userId.eq(userId),
-                        participantGame.participantGameStatus.in(ACCEPT, APPLY),
+                        participantGame.participantGameStatus.in(ACCEPT),
                         participantGame.gameEntity.startDateTime.after(now))
                 .orderBy(gameEntity.startDateTime.asc())
                 .offset(pageable.getOffset())

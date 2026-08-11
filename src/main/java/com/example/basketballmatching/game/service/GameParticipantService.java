@@ -3,7 +3,7 @@ package com.example.basketballmatching.game.service;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.response.GameApplyResponse;
+import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -33,13 +32,13 @@ public class GameParticipantService {
     private final Clock clock;
 
     @Transactional
-    public GameApplyResponse apply(Long gameId, Long userId) {
+    public GameParticipantResponse join(Long gameId, Long userId) {
 
         log.info("[경기 참가 신청 시작] gameId={}, userId={}", gameId, userId);
 
-        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime joinedAt = LocalDateTime.now(clock);
 
-        UserEntity applicant = getActiveUser(userId);
+        UserEntity participant = getActiveUser(userId);
 
         validateNotBlackList(userId);
 
@@ -50,32 +49,32 @@ public class GameParticipantService {
 
         validateExistingParticipation(existingParticipation);
 
-        game.validateApply(applicant, now);
+        game.validateJoin(participant, joinedAt);
 
-        ParticipantGameEntity participation = applyOrReapply(game, applicant, existingParticipation, now);
+        ParticipantGameEntity participation = joinOrRejoin(game, participant, existingParticipation, joinedAt);
 
         log.info("[경기 신청 완료] gameId={}, userId={}", gameId, userId);
 
-        return GameApplyResponse.fromEntity(participation);
+        return GameParticipantResponse.fromEntity(participation);
     }
 
     @Transactional
-    public void cancelApply(Long gameId, Long userId) {
+    public void cancelParticipation(Long gameId, Long userId) {
 
         log.info("[경기 참가 취소 시작] gameId={}, userId={}", gameId, userId);
 
-        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime canceledAt = LocalDateTime.now(clock);
 
-        getActiveUser(userId);
+        UserEntity participant = getActiveUser(userId);
 
         GameEntity game = getActiveGame(gameId);
 
         ParticipantGameEntity participation = getParticipation(gameId, userId);
 
 
-        game.validateParticipantCancel(now);
+        game.validateParticipantCancel(participant, canceledAt);
 
-        participation.cancelApply(now);
+        participation.cancelParticipation(canceledAt);
 
         log.info("[경기 참가 신청 취소 완료] gameId={}, userId={}", gameId, userId);
 
@@ -88,17 +87,17 @@ public class GameParticipantService {
         ).orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
     }
 
-    private ParticipantGameEntity applyOrReapply(GameEntity game, UserEntity applicant, ParticipantGameEntity existingParticipation, LocalDateTime now) {
+    private ParticipantGameEntity joinOrRejoin(GameEntity game, UserEntity participant, ParticipantGameEntity existingParticipation, LocalDateTime joinedAt) {
 
         if (existingParticipation == null) {
-            ParticipantGameEntity participation = ParticipantGameEntity.createApply(
-                    game, applicant, now
+            ParticipantGameEntity participation = ParticipantGameEntity.createParticipation(
+                    game, participant, joinedAt
             );
 
             return participantGameRepository.save(participation);
         }
 
-        existingParticipation.reapply(now);
+        existingParticipation.join(joinedAt);
 
         return existingParticipation;
 
@@ -106,15 +105,14 @@ public class GameParticipantService {
 
     private void validateExistingParticipation(ParticipantGameEntity participation) {
 
-        if (participation == null || participation.getParticipantGameStatus() == CANCEL) {
+        if (participation == null) {
             return;
         }
 
         ParticipantGameStatus status = participation.getParticipantGameStatus();
 
         switch (status) {
-            case APPLY -> {
-                throw new CustomException(ALREADY_APPLY_GAME_USER);
+            case APPLY, CANCEL -> {
             }
             case ACCEPT -> {
                 throw new CustomException(ALREADY_ACCEPT_USER);
