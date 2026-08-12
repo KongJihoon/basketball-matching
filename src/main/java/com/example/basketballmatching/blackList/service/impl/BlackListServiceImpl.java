@@ -27,7 +27,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -133,7 +132,7 @@ public class BlackListServiceImpl implements BlackListService {
         LocalDateTime now = LocalDateTime.now();
 
 
-        List<ParticipantGameEntity> list = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(targetUser.getUserId(), List.of(ParticipantGameStatus.ACCEPT, APPLY))
+        List<ParticipantGameEntity> list = participantGameRepository.findByUserEntity_UserIdAndParticipantGameStatusIn(targetUser.getUserId(), List.of(ParticipantGameStatus.ACCEPT))
                 .stream()
                 .filter(participantGameEntity -> participantGameEntity.getGameEntity().getStartDateTime().isAfter(now))
                 .toList();
@@ -142,11 +141,6 @@ public class BlackListServiceImpl implements BlackListService {
         list.forEach(participantGameEntity -> {
             if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
                 participantGameEntity.kickout(now);
-                return;
-            }
-
-            if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
-                participantGameEntity.cancel(now);
             }
 
         });

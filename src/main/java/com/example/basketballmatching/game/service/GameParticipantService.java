@@ -112,7 +112,7 @@ public class GameParticipantService {
         ParticipantGameStatus status = participation.getParticipantGameStatus();
 
         switch (status) {
-            case APPLY, CANCEL -> {
+            case CANCEL -> {
             }
             case ACCEPT -> {
                 throw new CustomException(ALREADY_ACCEPT_USER);
@@ -120,7 +120,7 @@ public class GameParticipantService {
             case KICKOUT -> {
                 throw new CustomException(NOT_APPLY_KICKOUT_USER);
             }
-            case REJECT, DELETE -> {
+            case DELETE -> {
                 throw new CustomException(ALREADY_FINAL_STATUS);
             }
         }

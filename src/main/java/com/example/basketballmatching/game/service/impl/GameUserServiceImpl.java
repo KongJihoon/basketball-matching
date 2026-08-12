@@ -1,6 +1,5 @@
 package com.example.basketballmatching.game.service.impl;
 
-import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.CurrentGameListDto;
 import com.example.basketballmatching.game.dto.GameUserLevelDto;
@@ -9,25 +8,21 @@ import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.service.GameUserService;
-import com.example.basketballmatching.game.type.MatchGenderType;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
-import com.example.basketballmatching.user.type.GenderType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
-import static com.example.basketballmatching.global.exception.ErrorCode.*;
+import static com.example.basketballmatching.global.exception.ErrorCode.PARTICIPANT_NOT_FOUND;
+import static com.example.basketballmatching.global.exception.ErrorCode.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -102,56 +97,8 @@ public class GameUserServiceImpl implements GameUserService {
     }
 
 
-    private GameEntity getGameWithLock(Long gameId) {
-        return gameRepository.findByGameIdWithLock(gameId)
-                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
-    }
 
 
-    private void validateParticipantInfo(UserEntity userEntity, GameEntity gameEntity, ParticipantGameEntity participantGameEntity) {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        if (Objects.equals(userEntity.getUserId(), gameEntity.getUserEntity().getUserId())) {
-            throw new CustomException(NOT_APPLY_GAME_CREATOR);
-        }
-
-        if (participantGameEntity != null) {
-
-            if (participantGameEntity.getParticipantGameStatus().equals(KICKOUT)) {
-                throw new CustomException(NOT_APPLY_KICKOUT_USER);
-            }
-
-            if (participantGameEntity.getParticipantGameStatus().equals(ACCEPT)) {
-                throw new CustomException(ALREADY_ACCEPT_USER);
-            }
-
-            if (participantGameEntity.getParticipantGameStatus().equals(APPLY)) {
-                throw new CustomException(ALREADY_APPLY_GAME_USER);
-            }
-
-        }
 
 
-        if (gameEntity.getParticipantCount() >= gameEntity.getHeadCount()) {
-            throw new CustomException(FULL_HEADCOUNT_GAME);
-        }
-
-        if (now.isAfter(gameEntity.getStartDateTime().minusMinutes(30))) {
-            throw new CustomException(NOT_ALLOWED_TO_JOIN);
-        }
-
-        if (gameEntity.getMatchGenderType().equals(MatchGenderType.FEMALE_ONLY) &&
-                userEntity.getGenderType().equals(GenderType.MALE)) {
-            throw new CustomException(ONLY_FEMALE_GAME);
-        }
-
-
-        if (gameEntity.getMatchGenderType().equals(MatchGenderType.MALE_ONLY) &&
-                userEntity.getGenderType().equals(GenderType.FEMALE)) {
-            throw new CustomException(ONLY_MALE_GAME);
-        }
-
-
-    }
 }

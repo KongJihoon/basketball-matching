@@ -1,9 +1,7 @@
 package com.example.basketballmatching.game.repository;
 
 import com.example.basketballmatching.game.domain.GameEntity;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -59,9 +57,6 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
 
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select g from GameEntity g where g.gameId = :gameId and g.deletedDateTime is NULL ")
-    Optional<GameEntity> findByGameIdWithLock(@Param("gameId") Long gameId);
 
 
     Optional<GameEntity> findByGameIdAndDeletedDateTimeIsNull(Long gameId);
