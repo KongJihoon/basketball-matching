@@ -16,7 +16,6 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
     boolean existsByUserEntity_UserIdAndGameEntity_GameId(Long userId, Long gameId);
 
 
-    Page<ParticipantGameEntity> findByParticipantGameStatusAndGameEntity_GameId(ParticipantGameStatus status, Long gameId, Pageable pageable);
 
     List<ParticipantGameEntity> findByParticipantGameStatusInAndGameEntity_GameId(List<ParticipantGameStatus> statuses, Long gameId);
 
@@ -27,7 +26,7 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
     List<ParticipantGameEntity> findByUserEntity_UserIdAndParticipantGameStatusIn(Long userId, List<ParticipantGameStatus> statuses);
 
-
+    Page<ParticipantGameEntity> findByGameEntity_GameIdAndParticipantGameStatus(Long gameId, ParticipantGameStatus status, Pageable pageable);
 
     @Query(
             """

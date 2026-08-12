@@ -2,14 +2,12 @@ package com.example.basketballmatching.game.service.impl;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.AcceptGameUserListDto;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.service.ParticipantGameService;
 import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.dto.CheckResponse;
-import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.notifications.service.NotificationService;
 import com.example.basketballmatching.notifications.type.NotificationType;
@@ -17,9 +15,6 @@ import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,43 +38,10 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
     private final NotificationService notificationService;
 
-    private final ApplicationEventPublisher eventPublisher;
 
 
 
 
-
-
-
-    /**
-     * 경기 참가 수락자 조회
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public CommonResponse<List<AcceptGameUserListDto>> getAcceptParticipantList(Long gameId, Long userId, Pageable pageable) {
-
-        log.info("[경기 참가 수락자 조회 시작] gameId : {}, userId : {}", gameId, userId);
-
-
-        GameEntity gameEntity = getGame(gameId);
-
-        UserEntity userEntity = getUser(userId);
-
-        // 경기 개설자인지 조회
-        validateGameCreator(gameEntity, userEntity);
-
-        // 지원자 목록 조회 (엔티티 기준)
-        Page<ParticipantGameEntity> pages = getParticipantGameList(pageable, gameEntity, ACCEPT);
-
-
-        // DTO 변환
-        List<AcceptGameUserListDto> participantGameList = pages.stream().map(AcceptGameUserListDto::fromEntity).toList();
-
-        log.info("[경기 참가 수락자 조회 완료] gameId : {}, userId : {}", gameId, userId);
-
-
-        return CommonResponse.of("경기 참가자 조회가 완료되었습니다.", participantGameList);
-    }
 
 
 
@@ -225,10 +187,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
     }
 
-    private Page<ParticipantGameEntity> getParticipantGameList(Pageable pageable, GameEntity gameEntity, ParticipantGameStatus participantGameStatus) {
-        return participantGameRepository.
-                findByParticipantGameStatusAndGameEntity_GameId(participantGameStatus, gameEntity.getGameId(), pageable);
-    }
+
 
     private ParticipantGameEntity getParticipantGame(GameEntity gameEntity, Long participantUserId) {
         return participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameEntity.getGameId(), participantUserId)

@@ -3,6 +3,7 @@ package com.example.basketballmatching.game.service;
 import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
+import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
@@ -12,12 +13,16 @@ import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -78,6 +83,37 @@ public class GameParticipantService {
 
         log.info("[경기 참가 신청 취소 완료] gameId={}, userId={}", gameId, userId);
 
+
+    }
+
+    @Transactional(readOnly = true)
+    public Page<GameParticipantListResponse> getParticipants(Long gameId, Long userId, Pageable pageable) {
+
+        log.info("[경기 참가자 목록 조회 시작] gameId={}, userId={}", gameId, userId);
+
+        UserEntity requester = getActiveUser(userId);
+
+        GameEntity game = getActiveGame(gameId);
+
+        validateGameCreator(game, requester);
+
+        Long creatorId = game.getUserEntity().getUserId();
+
+        Page<GameParticipantListResponse> participants = participantGameRepository.findByGameEntity_GameIdAndParticipantGameStatus(
+                gameId, ACCEPT, pageable
+        ).map(participation -> GameParticipantListResponse.fromEntity(participation, creatorId));
+
+
+        log.info("[경기 참가자 목록 조회 완료] gameId={}, totalElements={}", gameId, participants.getTotalElements());
+
+
+        return participants;
+    }
+
+    private void validateGameCreator(GameEntity game, UserEntity requester) {
+        if (!Objects.equals(requester.getUserId(), game.getUserEntity().getUserId())) {
+            throw new CustomException(NOT_GAME_CREATOR);
+        }
 
     }
 

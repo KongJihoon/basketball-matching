@@ -37,11 +37,11 @@ public class ParticipantGameEntity extends BaseEntity {
 
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(nullable = false)
     private GameEntity gameEntity;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(nullable = false)
     private UserEntity userEntity;
 
