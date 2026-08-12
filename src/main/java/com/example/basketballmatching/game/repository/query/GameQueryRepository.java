@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import static com.example.basketballmatching.game.type.GameSortType.*;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 
 @Repository
 @RequiredArgsConstructor
@@ -193,7 +192,7 @@ public class GameQueryRepository {
                         game.gameId.in(gameIds),
                         participantGame
                                 .participantGameStatus
-                                .in(APPLY, ACCEPT)
+                                .eq(ACCEPT)
                 )
                 .fetch();
 
@@ -217,7 +216,7 @@ public class GameQueryRepository {
                 .where(
                         participantGame.userEntity.userId.eq(userId),
                         participantGame
-                                .participantGameStatus.in(APPLY, ACCEPT),
+                                .participantGameStatus.eq(ACCEPT),
                         game.startDateTime.gt(now),
                         game.deletedDateTime.isNull(),
                         game.userEntity.userId.ne(userId)

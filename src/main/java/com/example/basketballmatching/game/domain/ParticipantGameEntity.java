@@ -26,11 +26,8 @@ public class ParticipantGameEntity extends BaseEntity {
     @Column(nullable = false)
     private ParticipantGameStatus participantGameStatus;
 
-    private LocalDateTime applyDateTime;
 
     private LocalDateTime acceptDateTime;
-
-    private LocalDateTime rejectDateTime;
 
     private LocalDateTime canceledDateTime;
 
@@ -85,7 +82,7 @@ public class ParticipantGameEntity extends BaseEntity {
 
     public void join(LocalDateTime joinedAt) {
         switch (participantGameStatus) {
-            case APPLY, CANCEL-> {
+            case CANCEL-> {
                 transitionTo(ACCEPT, joinedAt);
 
                 this.canceledDateTime = null;
@@ -95,7 +92,7 @@ public class ParticipantGameEntity extends BaseEntity {
 
             case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
 
-            case REJECT, DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
+            case DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
 
         }
     }
@@ -103,34 +100,15 @@ public class ParticipantGameEntity extends BaseEntity {
     public void cancelParticipation(LocalDateTime canceledAt) {
 
         switch (participantGameStatus) {
-            case APPLY, ACCEPT -> transitionTo(CANCEL, canceledAt);
+            case ACCEPT -> transitionTo(CANCEL, canceledAt);
             case CANCEL -> throw new CustomException(ALREADY_CANCELED_USER);
             case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
-            case REJECT, DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
+            case DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
         }
 
     }
 
-    public void reapply(LocalDateTime appliedAt) {
-        transitionTo(APPLY, appliedAt);
 
-        this.canceledDateTime = null;
-
-    }
-
-    public void accept(LocalDateTime now) {
-
-        transitionTo(ACCEPT, now);
-    }
-
-    public void cancel(LocalDateTime now) {
-        transitionTo(CANCEL, now);
-    }
-
-    public void reject(LocalDateTime now) {
-
-        transitionTo(REJECT, now);
-    }
 
     public void kickout(LocalDateTime now) {
 
@@ -181,11 +159,6 @@ public class ParticipantGameEntity extends BaseEntity {
         }
 
         switch (oldStatue) {
-            case APPLY -> {
-                if (newStatus != ACCEPT && newStatus != REJECT && newStatus != CANCEL && newStatus != DELETE) {
-                    throw new CustomException(INVALID_STATUS_TRANSITION);
-                }
-            }
             case ACCEPT -> {
                 if (newStatus != CANCEL && newStatus != KICKOUT && newStatus != DELETE) {
                     throw new CustomException(INVALID_STATUS_TRANSITION);
@@ -196,18 +169,18 @@ public class ParticipantGameEntity extends BaseEntity {
                     throw new CustomException(INVALID_STATUS_TRANSITION);
                 }
             }
-            case REJECT, KICKOUT, DELETE -> {
-                throw new CustomException(ALREADY_FINAL_STATUS);
-            }
+            case KICKOUT, DELETE ->
+                    throw new CustomException(ALREADY_FINAL_STATUS);
+
+
+
         }
 
     }
 
     private void applyTimestamp(ParticipantGameStatus status, LocalDateTime now) {
         switch (status) {
-            case APPLY -> applyDateTime = now;
             case ACCEPT -> acceptDateTime = now;
-            case REJECT -> rejectDateTime = now;
             case CANCEL -> canceledDateTime = now;
             case KICKOUT -> kickoutDateTime = now;
             case DELETE -> deletedDateTime = now;

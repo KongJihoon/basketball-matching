@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.APPLY;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -167,7 +166,7 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
 
 
         // ACCEPT/ APPLY 유저 리스트
-        List<ParticipantGameEntity> participantGameEntityList = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(List.of(ACCEPT, APPLY), gameId);
+        List<ParticipantGameEntity> participantGameEntityList = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(List.of(ACCEPT), gameId);
 
 
         // 조회 유저 상태 DELETE로 변경
@@ -198,21 +197,11 @@ public class ParticipantGameServiceImpl implements ParticipantGameService {
         return CheckResponse.of(true, "경기 삭제가 완료되었습니다.");
     }
 
-    public void validateGameStatusInAcceptAndReject(ParticipantGameStatus status) {
 
-        switch (status) {
-
-            case ACCEPT -> throw new CustomException(ALREADY_ACCEPT_USER);
-            case REJECT -> throw new CustomException(ALREADY_REJECT_USER);
-
-        }
-
-    }
 
     private void validateGameStatusInKickOut(ParticipantGameStatus status) {
 
         switch (status) {
-            case APPLY -> throw new CustomException(NOT_ACCEPT_USER);
             case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
         }
     }

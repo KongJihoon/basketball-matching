@@ -82,7 +82,6 @@ public class UserWithdrawalGameService {
             ParticipantGameStatus status = participation.getParticipantGameStatus();
 
             switch (status) {
-                case APPLY -> participation.cancel(withdrawnAt);
                 case ACCEPT -> participation.kickout(withdrawnAt);
                 default -> throw new CustomException(INVALID_STATUS_TRANSITION);
             }
