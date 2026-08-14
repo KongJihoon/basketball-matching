@@ -110,9 +110,16 @@ public class ParticipantGameEntity extends BaseEntity {
 
 
 
-    public void kickout(LocalDateTime now) {
+    public void kickout(LocalDateTime kickoutAt) {
 
-        transitionTo(KICKOUT, now);
+        switch (participantGameStatus) {
+            case ACCEPT -> transitionTo(KICKOUT, kickoutAt);
+            case CANCEL -> throw new CustomException(NOT_ACTIVE_PARTICIPANT);
+            case KICKOUT -> throw new CustomException(ALREADY_KICKOUT_USER);
+            case DELETE -> throw new CustomException(ALREADY_FINAL_STATUS);
+        }
+
+
     }
 
     public void delete(LocalDateTime now) {

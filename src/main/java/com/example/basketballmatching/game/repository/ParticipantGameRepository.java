@@ -37,4 +37,7 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 """
     )
     List<ParticipantGameEntity> findByGameEntity_GameIdAndParticipantGameStatus(@Param("gameId") Long gameId, @Param("participantGameStatus") ParticipantGameStatus participantGameStatus);
+
+
+    Optional<ParticipantGameEntity> findByParticipantGameIdAndGameEntity_GameId(Long participantGameId, Long gameId);
 }

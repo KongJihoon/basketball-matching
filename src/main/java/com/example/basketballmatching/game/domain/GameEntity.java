@@ -218,6 +218,21 @@ public class GameEntity extends BaseEntity {
         }
     }
 
+    public void validateParticipantKickout(UserEntity participant, LocalDateTime now) {
+
+        LocalDateTime kickoutDeadLine = startDateTime.minusHours(1);
+
+        if (Objects.equals(userEntity.getUserId(), participant.getUserId())) {
+            throw new CustomException(NOT_KICKOUT_CREATOR);
+        }
+
+        if (!now.isBefore(kickoutDeadLine)) {
+            throw new CustomException(NOT_ALLOWED_KICKOUT);
+        }
+
+    }
+
+
     private void validateNotCreatorCancel(UserEntity participant) {
         if (Objects.equals(userEntity.getUserId(), participant.getUserId())) {
             throw new CustomException(NOT_CANCEL_GAME_CREATOR);
