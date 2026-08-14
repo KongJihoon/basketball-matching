@@ -79,7 +79,7 @@ public enum ErrorCode {
     ALREADY_CANCELED_USER(HttpStatus.CONFLICT, "이미 취소한 참가자입니다."),
     NOT_KICKOUT_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자는 강퇴할 수 없습니다."),
     ALREADY_KICKOUT_USER(HttpStatus.CONFLICT, "이미 강퇴한 참가자입니다."),
-    NOT_DELETE_GAME(HttpStatus.FORBIDDEN, "경기를 삭제할 수 없습니다."),
+    GAME_DELETE_NOT_ALLOWED_AT_THIS_TIME(HttpStatus.BAD_REQUEST, "경기 시작 1시간 전부터는 경기를 삭제할 수 없습니다."),
     NOT_APPLY_GAME_CREATOR(HttpStatus.BAD_REQUEST, "경기 생성자는 참가신청을 할 수 없습니다."),
     CLOSED_GAME(HttpStatus.BAD_REQUEST, "모집 마감된 경기입니다."),
     ALREADY_PRECESSED_STATUS(HttpStatus.BAD_REQUEST, "이미 변경된 상태입니다."),
