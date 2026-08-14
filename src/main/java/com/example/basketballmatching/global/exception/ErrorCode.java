@@ -89,7 +89,8 @@ public enum ErrorCode {
     GAME_CREATION_TIME_TOO_SOON(HttpStatus.BAD_REQUEST, "경기 생성은 24시간 전에만 생성 가능합니다."),
     GAME_UPDATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "경기 수정이 불가능합니다."),
     GAME_SCHEDULE_TOO_SOON(HttpStatus.BAD_REQUEST, "경기 시작 시각은 현재보다 최소 24시간 이후여야 합니다."),
-
+    NOT_ALLOWED_KICKOUT(HttpStatus.BAD_REQUEST, "경기 시작 1시간 전부터는 참가자를 강퇴할 수 없습니다."),
+    NOT_ACTIVE_PARTICIPANT(HttpStatus.CONFLICT, "현재 경기에 참가 중인 사용자가 아닙니다."),
     GAME_SCHEDULE_REQUIRED_TOGETHER(HttpStatus.BAD_REQUEST, "경기 시작 시각과 종료 시각을 함께 입력해주세요."),
     NOT_CANCEL_GAME_CREATOR(HttpStatus.FORBIDDEN, "경기 생성자는 참가를 취소할 수 없습니다."),
 

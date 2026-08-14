@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -119,5 +120,44 @@ public class GameParticipantController {
         return ResponseEntity.ok(
                 CommonResponse.of("경기 참가자 목록 조회가 완료되었습니다.", response)
         );
+    }
+
+    @Operation(summary = "경기 참가자 강퇴", description = "경기 생성자가 참가자를 경기에서 강퇴한다.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "참가자 강퇴 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "경기 생성자 본인 강퇴 또는 경기 시작 1시간 이내 요청"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "경기 생성자가 아닌 사용자"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "경기 또는 참가 정보 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 취소 또는 강퇴된 참가자"
+            )
+    })
+    @PatchMapping("/{gameId}/participants/{participantId}/kickout")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CheckResponse> kickoutParticipant(
+            @PathVariable("gameId") Long gameId,
+            @PathVariable("participantId") Long participantId,
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
+    ) {
+
+        gameParticipantService.kickoutParticipant(gameId, participantId, userInfoDetails.getUserEntity().getUserId());
+
+        return ResponseEntity.ok(
+                CheckResponse.of(true, "참가자를 강퇴하였습니다.")
+        );
+
     }
 }

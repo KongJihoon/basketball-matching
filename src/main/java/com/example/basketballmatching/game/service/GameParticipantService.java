@@ -5,6 +5,7 @@ import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
+import com.example.basketballmatching.game.event.GameParticipantKickedOutEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
@@ -13,6 +14,7 @@ import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class GameParticipantService {
     private final GameRepository gameRepository;
     private final ParticipantGameRepository participantGameRepository;
     private final BlackListRepository blackListRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     @Transactional
@@ -110,6 +113,37 @@ public class GameParticipantService {
         return participants;
     }
 
+    @Transactional
+    public void kickoutParticipant(Long gameId, Long participantId, Long requesterId) {
+
+        log.info("[경기 참가자 강퇴 시작] gameId={}, participantId={}, requesterId={}", gameId, participantId, requesterId);
+
+        LocalDateTime kickoutAt = LocalDateTime.now(clock);
+
+
+        UserEntity requester = getActiveUser(requesterId);
+
+        GameEntity game = getActiveGame(gameId);
+
+        validateGameCreator(game, requester);
+
+        ParticipantGameEntity participation = getParticipant(gameId, participantId);
+
+        UserEntity participant = participation.getUserEntity();
+
+        game.validateParticipantKickout(participant, kickoutAt);
+
+        participation.kickout(kickoutAt);
+
+        log.info("[경기 참가자 강퇴 완료] gameId={}, participantId={}, requesterId={}", gameId, participantId, requesterId);
+
+        eventPublisher.publishEvent(new GameParticipantKickedOutEvent(
+                game.getGameId(),game.getTitle(), participant.getUserId()
+        ));
+
+
+    }
+
     private void validateGameCreator(GameEntity game, UserEntity requester) {
         if (!Objects.equals(requester.getUserId(), game.getUserEntity().getUserId())) {
             throw new CustomException(NOT_GAME_CREATOR);
@@ -160,6 +194,13 @@ public class GameParticipantService {
                 throw new CustomException(ALREADY_FINAL_STATUS);
             }
         }
+
+    }
+
+    private ParticipantGameEntity getParticipant(Long gameId, Long participantId) {
+
+        return participantGameRepository.findByParticipantGameIdAndGameEntity_GameId(participantId, gameId)
+                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
 
     }
 
