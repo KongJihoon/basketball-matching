@@ -143,7 +143,7 @@ class GameEntityUnitTest {
         @DisplayName("현재 참가 인원보다 정원을 작게 변경할 수 없다")
         void update_fail_headCountLessThanParticipants() {
             // given
-            game.setParticipantCount(7);
+            increaseParticipantCount(6);
 
             // when
             CustomException exception =
@@ -172,8 +172,7 @@ class GameEntityUnitTest {
         @DisplayName("마감 경기의 정원을 늘리면 모집 중으로 변경된다")
         void update_success_reopenClosedGame() {
             // given
-            game.setParticipantCount(6);
-            game.setStatue(CLOSED);
+            increaseParticipantCount(5);
 
             // when
             game.updateGame(
@@ -204,7 +203,7 @@ class GameEntityUnitTest {
         @DisplayName("변경 정원과 참가 인원이 같으면 마감으로 변경된다")
         void update_success_closeFullGame() {
             // given
-            game.setParticipantCount(6);
+            increaseParticipantCount(5);
 
             game.updateGame(
                     null,
@@ -337,6 +336,14 @@ class GameEntityUnitTest {
                             game.getEndDateTime()
                     )
             );
+        }
+    }
+
+    private void increaseParticipantCount(
+            int additionalCount
+    ) {
+        for (int i = 0; i < additionalCount; i++) {
+            game.increaseParticipantCount();
         }
     }
 

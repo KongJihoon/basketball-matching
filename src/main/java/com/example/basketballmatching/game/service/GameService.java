@@ -10,12 +10,12 @@ import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.event.GameCreateEvent;
+import com.example.basketballmatching.game.event.GameDeletedEvent;
 import com.example.basketballmatching.game.event.UpdateGameEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.CityName;
-import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @RequiredArgsConstructor
@@ -188,6 +189,40 @@ public class GameService {
         return response;
     }
 
+
+    @Transactional
+    public void deleteGame(Long gameId, Long requesterId) {
+        log.info("[경기 삭제 시작] gameId={}, requesterId={}", gameId, requesterId);
+
+        LocalDateTime deletedAt = LocalDateTime.now(clock);
+
+        UserEntity requester = getUser(requesterId);
+
+        GameEntity game = getGame(gameId);
+
+        game.deleteByCreator(requester, deletedAt);
+
+        List<ParticipantGameEntity> participants = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(
+                List.of(ACCEPT), gameId
+        );
+
+        List<Long> receiverIds = participants.stream()
+                .map(ParticipantGameEntity::getUserEntity)
+                .map(UserEntity::getUserId)
+                .filter(
+                        receiverId -> !Objects.equals(requester.getUserId(), receiverId)
+                )
+                .distinct()
+                .toList();
+
+        participants.forEach(participant -> participant.delete(deletedAt));
+
+
+        publishGameDeleteEvent(game, receiverIds);
+
+        log.info("[경기 삭제 완료] gameId={}, requesterId={}", gameId, requesterId);
+    }
+
     private void validateUpdateRequest(UpdateGameRequest request) {
 
         if (!request.hasAnyChange()) {
@@ -297,7 +332,7 @@ public class GameService {
     private void publishUpdateGameEvent(GameEntity game, Long creatorId) {
 
         List<Long> receiverIds = participantGameRepository.findByParticipantGameStatusInAndGameEntity_GameId(
-                        List.of(ParticipantGameStatus.ACCEPT), game.getGameId()
+                        List.of(ACCEPT), game.getGameId()
                 ).stream()
                 .map(participant -> participant.getUserEntity().getUserId())
                 .filter(receiverId -> !receiverId.equals(creatorId))
@@ -334,5 +369,20 @@ public class GameService {
     private GameEntity getGame(Long gameId) {
         return gameRepository.findByGameIdAndDeletedDateTimeIsNull(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
+    }
+
+    private void publishGameDeleteEvent(GameEntity game, List<Long> receiverIds) {
+
+        if (receiverIds.isEmpty()) {
+            return;
+        }
+
+        eventPublisher.publishEvent(
+                new GameDeletedEvent(
+                        game.getGameId(),
+                        game.getTitle(),
+                        receiverIds
+                )
+        );
     }
 }

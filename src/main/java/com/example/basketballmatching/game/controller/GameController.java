@@ -7,6 +7,7 @@ import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameDetailResponse;
 import com.example.basketballmatching.game.dto.response.GameListResponse;
 import com.example.basketballmatching.game.service.GameService;
+import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -153,6 +155,43 @@ public class GameController {
 
         return ResponseEntity.ok(
                 CommonResponse.of("경기 수정에 성공하였습니다.", response)
+        );
+    }
+
+    @Operation(
+            summary = "경기 삭제",
+            description = "경기 생성자가 경기를 삭제합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "경기 삭제 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "경기 시작 1시간 이내 삭제 요청"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "경기 생성자가 아닌 사용자"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "경기를 찾을 수 없음"
+            )
+    })
+    @DeleteMapping("/{gameId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CheckResponse> deleteGame(
+            @Parameter(description = "삭제할 경기 ID", example = "1", required = true)
+            @PathVariable("gameId") Long gameId,
+            @AuthenticationPrincipal
+            UserInfoDetails userInfoDetails
+    ) {
+        gameService.deleteGame(gameId, userInfoDetails.getUserEntity().getUserId());
+
+        return ResponseEntity.ok(
+                CheckResponse.of(true, "경기 삭제가 완료되었습니다.")
         );
     }
 

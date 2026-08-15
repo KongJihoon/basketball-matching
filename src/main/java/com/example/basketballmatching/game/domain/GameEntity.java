@@ -207,6 +207,16 @@ public class GameEntity extends BaseEntity {
 
 
     }
+
+    public void deleteByCreator(UserEntity requester, LocalDateTime deletedAt) {
+
+        validateDeleteRequester(requester);
+        validateDeleteDeadline(deletedAt);
+
+        this.deletedDateTime = deletedAt;
+
+    }
+
     public void validateParticipantCancel(UserEntity participant, LocalDateTime now) {
 
         validateNotCreatorCancel(participant);
@@ -236,6 +246,21 @@ public class GameEntity extends BaseEntity {
     private void validateNotCreatorCancel(UserEntity participant) {
         if (Objects.equals(userEntity.getUserId(), participant.getUserId())) {
             throw new CustomException(NOT_CANCEL_GAME_CREATOR);
+        }
+    }
+
+    private void validateDeleteRequester(UserEntity requester) {
+        if (!Objects.equals(userEntity.getUserId(), requester.getUserId())) {
+            throw new CustomException(NOT_GAME_CREATOR);
+        }
+    }
+
+    private void validateDeleteDeadline(LocalDateTime deletedAt) {
+
+        LocalDateTime deleteDeadline = startDateTime.minusHours(1);
+
+        if (!deletedAt.isBefore(deleteDeadline)) {
+            throw new CustomException(GAME_DELETE_NOT_ALLOWED_AT_THIS_TIME);
         }
     }
 
@@ -375,9 +400,6 @@ public class GameEntity extends BaseEntity {
     }
 
 
-    public void setGameUserLevel(GameUserLevel gameUserLevel) {
-        this.gameUserLevel = gameUserLevel;
-    }
 
 
     public void increaseParticipantCount() {
@@ -394,26 +416,9 @@ public class GameEntity extends BaseEntity {
         updateRecruitmentStatus(headCount);
     }
 
-    public void setStatue(GameStatus status) {
-        this.gameStatus = status;
-    }
-
-    // 테스트용
-    public void setDeletedDateTime(LocalDateTime deletedDateTime) {
-        this.deletedDateTime = deletedDateTime;
-    }
-
-    public void setStartDateTime(LocalDateTime startDateTime) {
-        this.startDateTime = startDateTime;
-    }
 
 
-    public void setEndDateTime(LocalDateTime endDateTime) {
-        this.endDateTime = endDateTime;
-    }
 
 
-    public void setParticipantCount(int participantCount) {
-        this.participantCount = participantCount;
-    }
+
 }
