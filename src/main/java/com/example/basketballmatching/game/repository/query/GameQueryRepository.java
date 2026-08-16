@@ -4,7 +4,6 @@ import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.domain.QGameEntity;
 import com.example.basketballmatching.game.domain.QParticipantGameEntity;
-import com.example.basketballmatching.game.dto.CurrentGameListDto;
 import com.example.basketballmatching.game.dto.LastGameListDto;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
 import com.example.basketballmatching.game.type.GameSortType;
@@ -24,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.basketballmatching.game.type.GameSortType.*;
+import static com.example.basketballmatching.game.type.GameSortType.START_TIME_ASC;
 import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
 
 @Repository
@@ -88,35 +87,43 @@ public class GameQueryRepository {
 
     }
 
-    public List<CurrentGameListDto> getCurrentGameList(Long userId, Pageable pageable) {
 
-        QParticipantGameEntity participantGame = QParticipantGameEntity.participantGameEntity;
+    public Page<ParticipantGameEntity> findUpcomingGamesByUser(Long userId, Pageable pageable, LocalDateTime now) {
 
-        QGameEntity gameEntity = QGameEntity.gameEntity;
+        QParticipantGameEntity participation = QParticipantGameEntity.participantGameEntity;
 
-        LocalDateTime now = LocalDateTime.now();
+        BooleanBuilder condition = new BooleanBuilder();
 
+        condition.and(participation.userEntity.userId.eq(userId));
 
+        condition.and(participation.participantGameStatus.eq(ACCEPT));
 
-        List<ParticipantGameEntity> gameEntities = jpaQueryFactory
-                .select(participantGame)
-                .from(participantGame)
-//                .join(participantGame.gameEntity, gameEntity)
-//                .fetchJoin()
-                .where(
-                        participantGame.userEntity.userId.eq(userId),
-                        participantGame.participantGameStatus.in(ACCEPT),
-                        participantGame.gameEntity.startDateTime.after(now))
-                .orderBy(gameEntity.startDateTime.asc())
+        condition.and(participation.gameEntity.deletedDateTime.isNull());
+
+        condition.and(participation.gameEntity.startDateTime.gt(now));
+
+        List<ParticipantGameEntity> content = jpaQueryFactory
+                .selectFrom(participation)
+                .where(condition)
+                .orderBy(participation.gameEntity.startDateTime.asc(),
+                        participation.participantGameId.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        return gameEntities.stream()
-                .map(CurrentGameListDto::fromEntity)
-                .toList();
+        Long total = Optional.ofNullable(
+                jpaQueryFactory
+                        .select(participation.count())
+                        .from(participation)
+                        .where(condition)
+                        .fetchOne()
+        ).orElse(0L);
+
+
+        return new PageImpl<>(content, pageable, total);
 
     }
+
 
     public List<LastGameListDto> getLastGameList(Long userId, Pageable pageable) {
 

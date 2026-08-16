@@ -1,7 +1,5 @@
 package com.example.basketballmatching.game.service.impl;
 
-import com.example.basketballmatching.game.domain.ParticipantGameEntity;
-import com.example.basketballmatching.game.dto.CurrentGameListDto;
 import com.example.basketballmatching.game.dto.GameUserLevelDto;
 import com.example.basketballmatching.game.dto.LastGameListDto;
 import com.example.basketballmatching.game.repository.GameRepository;
@@ -21,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.example.basketballmatching.global.exception.ErrorCode.PARTICIPANT_NOT_FOUND;
 import static com.example.basketballmatching.global.exception.ErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -29,33 +26,12 @@ import static com.example.basketballmatching.global.exception.ErrorCode.USER_NOT
 @Slf4j
 public class GameUserServiceImpl implements GameUserService {
 
-    private final ParticipantGameRepository participantGameRepository;
 
     private final UserRepository userRepository;
 
-    private final GameRepository gameRepository;
     private final GameQueryRepository gameQueryRepository;
-    private final RedisService redisService;
 
 
-
-
-
-
-    /**
-     * 현재 예정 경기 조회
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public CommonResponse<List<CurrentGameListDto>> getMyCurrentGameList(Long userId, Pageable pageable) {
-
-        UserEntity userEntity = getUser(userId);
-
-
-        List<CurrentGameListDto> currentGameList = gameQueryRepository.getCurrentGameList(userEntity.getUserId(), pageable);
-
-        return CommonResponse.of("현재 예정된 게임 조회가 완료되었습니다.", currentGameList);
-    }
 
     /**
      * 지난 경기 조회
@@ -91,10 +67,6 @@ public class GameUserServiceImpl implements GameUserService {
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
-    private ParticipantGameEntity getParticipantGame(Long userId, Long gameId) {
-        return participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
-                .orElseThrow(() -> new CustomException(PARTICIPANT_NOT_FOUND));
-    }
 
 
 
