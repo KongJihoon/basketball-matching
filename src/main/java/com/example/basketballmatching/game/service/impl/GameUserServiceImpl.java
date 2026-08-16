@@ -1,7 +1,6 @@
 package com.example.basketballmatching.game.service.impl;
 
 import com.example.basketballmatching.game.dto.GameUserLevelDto;
-import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.service.GameUserService;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -22,7 +21,6 @@ public class GameUserServiceImpl implements GameUserService {
 
     private final UserRepository userRepository;
 
-    private final GameQueryRepository gameQueryRepository;
 
 
 

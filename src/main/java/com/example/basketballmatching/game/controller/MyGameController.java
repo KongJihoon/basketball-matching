@@ -3,7 +3,6 @@ package com.example.basketballmatching.game.controller;
 
 import com.example.basketballmatching.game.dto.EvaluatePlayerDto;
 import com.example.basketballmatching.game.dto.GameUserLevelDto;
-import com.example.basketballmatching.game.dto.LastGameListDto;
 import com.example.basketballmatching.game.service.EvaluationService;
 import com.example.basketballmatching.game.service.GameUserService;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -18,14 +17,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,32 +34,6 @@ public class MyGameController {
 
 
 
-
-
-    /**
-     * 지난 경기 조회
-     */
-    @Operation(summary = "지난 경기 조회")
-    @ApiResponse(responseCode = "200", description = "지난 경기 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
-    @GetMapping("/user/last-game")
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<List<LastGameListDto>>> getMyLastGameList (
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "page", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "size", example = "10")
-            @RequestParam(defaultValue = "10") int size
-    ){
-
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.ASC,"gameEntity_startDateTime");
-
-        CommonResponse<List<LastGameListDto>> myCurrentGameList = gameUserService.getMyLastGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
-
-        return ResponseEntity.ok(myCurrentGameList);
-    }
 
     /**
      * 참가자 경기 실력 평가
