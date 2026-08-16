@@ -1,6 +1,7 @@
 package com.example.basketballmatching.game.controller;
 
 
+import com.example.basketballmatching.game.dto.response.MyCompletedGameResponse;
 import com.example.basketballmatching.game.dto.response.MyUpcomingGameResponse;
 import com.example.basketballmatching.game.service.MyGameService;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -66,6 +67,51 @@ public class MyGameQueryController {
 
         return ResponseEntity.ok(
                 CommonResponse.of("내 예정 경기 조회가 완료되었습니다.", response)
+        );
+    }
+
+    @Operation(
+            summary = "내 지난 경기 조회",
+            description = "참가가 확정된 종료 경기를 최근 종료 시각순으로 조회합니다."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "내 지난 경기 조회 성공"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "사용자를 찾을 수 없음"
+    )
+    @GetMapping("/completed")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CommonResponse<Page<MyCompletedGameResponse>>> getCompletedGames(
+            @Parameter(
+                    description = "페이지 번호",
+                    example = "0"
+            )
+            @RequestParam(defaultValue = "0")
+            @Min(0)
+            int page,
+
+            @Parameter(
+                    description = "페이지 크기",
+                    example = "10"
+            )
+            @RequestParam(defaultValue = "10")
+            @Min(1)
+            @Max(100)
+            int size,
+
+            @AuthenticationPrincipal
+            UserInfoDetails userInfoDetails
+    ) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<MyCompletedGameResponse> response = myGameService.getCompletedGames(userInfoDetails.getUserEntity().getUserId(), pageRequest);
+
+
+        return ResponseEntity.ok(
+                CommonResponse.of("내 지난 경기 조회가 완료되었습니다.", response)
         );
     }
 }
