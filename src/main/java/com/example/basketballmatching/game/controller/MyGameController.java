@@ -1,7 +1,9 @@
 package com.example.basketballmatching.game.controller;
 
 
-import com.example.basketballmatching.game.dto.*;
+import com.example.basketballmatching.game.dto.EvaluatePlayerDto;
+import com.example.basketballmatching.game.dto.GameUserLevelDto;
+import com.example.basketballmatching.game.dto.LastGameListDto;
 import com.example.basketballmatching.game.service.EvaluationService;
 import com.example.basketballmatching.game.service.GameUserService;
 import com.example.basketballmatching.global.dto.CheckResponse;
@@ -36,30 +38,7 @@ public class MyGameController {
 
 
 
-    /**
-     * 현재 예정 경기 조회
-     */
-    @Operation(summary = "현재 예정 경기 조회")
-    @ApiResponse(responseCode = "200", description = "현재 예정 경기 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-            content = {@Content(mediaType = "application/json",
-                    schema = @Schema(implementation = ErrorResponse.class))})
-    @GetMapping("/user/current-game")
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CommonResponse<List<CurrentGameListDto>>> getMyCurrentGameList (
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "page", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "size", example = "10")
-            @RequestParam(defaultValue = "10") int size
-    ){
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.ASC,"gameEntity_startDateTime");
-
-        CommonResponse<List<CurrentGameListDto>> myCurrentGameList = gameUserService.getMyCurrentGameList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
-
-        return ResponseEntity.ok(myCurrentGameList);
-    }
 
 
     /**
