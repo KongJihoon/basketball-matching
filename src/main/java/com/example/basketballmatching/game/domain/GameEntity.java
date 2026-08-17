@@ -95,9 +95,6 @@ public class GameEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private GameStatus gameStatus;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private GameUserLevel gameUserLevel;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
@@ -107,7 +104,7 @@ public class GameEntity extends BaseEntity {
     private static final int CREATOR_COUNT = 1;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private GameEntity(String title, String content, Integer headCount, Integer participantCount, FieldStatus fieldStatus, MatchFormat matchFormat,GameStatus gameStatus, GameUserLevel gameUserLevel
+    private GameEntity(String title, String content, Integer headCount, Integer participantCount, FieldStatus fieldStatus, MatchFormat matchFormat,GameStatus gameStatus
             , MatchGenderType matchGenderType, LocalDateTime startDateTime, LocalDateTime endDateTime, String placeName, String address, CityName cityName, Double latitude, Double longitude, UserEntity userEntity) {
 
         this.title = title;
@@ -117,7 +114,6 @@ public class GameEntity extends BaseEntity {
         this.fieldStatus = fieldStatus;
         this.matchFormat = matchFormat;
         this.gameStatus = gameStatus;
-        this.gameUserLevel = gameUserLevel;
         this.matchGenderType = matchGenderType;
         this.startDateTime = startDateTime;
         this.endDateTime = endDateTime;
@@ -154,7 +150,6 @@ public class GameEntity extends BaseEntity {
                 .cityName(cityName)
                 .matchFormat(matchFormat)
                 .gameStatus(GameStatus.RECRUITING)
-                .gameUserLevel(creator.getGameUserLevel())
                 .userEntity(creator)
                 .build();
     }

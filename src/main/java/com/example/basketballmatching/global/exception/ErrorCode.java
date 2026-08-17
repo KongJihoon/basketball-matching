@@ -98,10 +98,7 @@ public enum ErrorCode {
 
     // level
     NOT_GAME_ENDED(HttpStatus.CONFLICT, "아직 경기가 종료되지 않았습니다."),
-    CANNOT_EVALUATE_SELF(HttpStatus.BAD_REQUEST, "자기 자신은 평가할 수 없습니다."),
-    ALREADY_EVALUATED(HttpStatus.CONFLICT, "이미 평가한 참가자입니다."),
-    INVALID_LEVEL_SCORE(HttpStatus.BAD_REQUEST, "평가점수는 1 ~ 5점만 입력가능합니다."),
-    ONLY_EVALUATE_ACCEPT_USER(HttpStatus.FORBIDDEN, "경기 수락자만 평가가 가능합니다."),
+
 
     // report
     ALREADY_REPORTED_USER(HttpStatus.CONFLICT, "이미 신고받은 유저입니다."),
