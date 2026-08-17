@@ -1,7 +1,6 @@
 package com.example.basketballmatching.game.domain;
 
 import com.example.basketballmatching.game.type.FieldStatus;
-import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.type.GenderType;
@@ -369,7 +368,6 @@ class GameEntityUnitTest {
                 .userType(UserType.USER)
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
-                .gameUserLevel(GameUserLevel.NONE)
                 .build();
     }
 

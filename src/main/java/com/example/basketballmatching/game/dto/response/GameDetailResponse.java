@@ -65,10 +65,7 @@ public record GameDetailResponse(
         Long creatorId,
 
         @Schema(description = "경기 생성자 닉네임")
-        String creatorNickname,
-
-        @Schema(description = "참가자 수준")
-        GameUserLevel gameUserLevel
+        String creatorNickname
 
 ) {
 
@@ -91,8 +88,7 @@ public record GameDetailResponse(
                 game.getCityName(),
                 game.getMatchGenderType(),
                 game.getUserEntity().getUserId(),
-                game.getUserEntity().getNickname(),
-                game.getGameUserLevel()
+                game.getUserEntity().getNickname()
         );
     }
 

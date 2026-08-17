@@ -2,7 +2,6 @@ package com.example.basketballmatching.game.dto.response;
 
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.type.GameStatus;
-import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.game.type.MatchFormat;
 import com.example.basketballmatching.game.type.MatchGenderType;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,10 +37,8 @@ public record GameListResponse(
         MatchFormat matchFormat,
 
         @Schema(description = "경기 상태")
-        GameStatus gameStatus,
+        GameStatus gameStatus
 
-        @Schema(description = "참가자 수준")
-        GameUserLevel gameUserLevel
 ) {
 
     public static GameListResponse fromEntity(GameEntity game) {
@@ -56,8 +53,7 @@ public record GameListResponse(
                 game.getParticipantCount(),
                 game.getMatchGenderType(),
                 game.getMatchFormat(),
-                game.getGameStatus(),
-                game.getGameUserLevel()
+                game.getGameStatus()
         );
     }
 }

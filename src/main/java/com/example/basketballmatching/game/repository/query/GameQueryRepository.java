@@ -7,7 +7,6 @@ import com.example.basketballmatching.game.domain.QParticipantGameEntity;
 import com.example.basketballmatching.game.dto.request.GameListCondition;
 import com.example.basketballmatching.game.type.GameSortType;
 import com.example.basketballmatching.user.domain.QUserEntity;
-import com.example.basketballmatching.user.domain.UserEntity;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -62,29 +61,6 @@ public class GameQueryRepository {
 
     }
 
-    public List<Long> findRecent10GamesByUser(UserEntity userEntity) {
-
-        QParticipantGameEntity participantGameEntity = QParticipantGameEntity.participantGameEntity;
-
-        QGameEntity gameEntity = QGameEntity.gameEntity;
-
-        BooleanBuilder builder = new BooleanBuilder();
-
-        builder.and(participantGameEntity.userEntity.eq(userEntity));
-        builder.and(gameEntity.endDateTime.before(LocalDateTime.now()));
-        builder.and(gameEntity.deletedDateTime.isNull());
-        builder.and(participantGameEntity.participantGameStatus.eq(ACCEPT));
-
-        return jpaQueryFactory
-                .select(gameEntity.gameId)
-                .from(participantGameEntity)
-                .join(participantGameEntity.gameEntity, gameEntity)
-                .where(builder)
-                .orderBy(gameEntity.endDateTime.desc())
-                .limit(10)
-                .fetch();
-
-    }
 
 
     public Page<ParticipantGameEntity> findUpcomingGamesByUser(Long userId, Pageable pageable, LocalDateTime now) {

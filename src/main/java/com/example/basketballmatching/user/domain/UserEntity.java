@@ -1,6 +1,5 @@
 package com.example.basketballmatching.user.domain;
 
-import com.example.basketballmatching.game.type.GameUserLevel;
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
@@ -64,10 +63,6 @@ public class UserEntity extends BaseEntity {
     private LoginProvider loginProvider;
 
     @Builder.Default
-    @Enumerated(EnumType.STRING)
-    private GameUserLevel gameUserLevel = GameUserLevel.NONE;
-
-    @Builder.Default
     private boolean emailAuth = false;
 
     private LocalDateTime deletedDateTime;
@@ -78,9 +73,6 @@ public class UserEntity extends BaseEntity {
         this.emailAuth = true;
     }
 
-    public void setDeletedDateTime(LocalDateTime deletedDateTime) {
-        this.deletedDateTime = deletedDateTime;
-    }
 
     public void editUserInfo(String nickname, String phone, String address, GenderType genderType, Position position) {
 
@@ -157,7 +149,4 @@ public class UserEntity extends BaseEntity {
     }
 
 
-    public void updateLevel(GameUserLevel gameUserLevel) {
-        this.gameUserLevel = gameUserLevel;
-    }
 }
