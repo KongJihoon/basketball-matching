@@ -1,6 +1,7 @@
 package com.example.basketballmatching.game.service;
 
 
+import com.example.basketballmatching.game.dto.response.MyCompletedGameResponse;
 import com.example.basketballmatching.game.dto.response.MyUpcomingGameResponse;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.global.exception.CustomException;
@@ -51,5 +52,24 @@ public class MyGameService {
         if (!userRepository.existsByUserIdAndDeletedDateTimeIsNull(userId)) {
             throw new CustomException(USER_NOT_FOUND);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<MyCompletedGameResponse> getCompletedGames(Long userId, Pageable pageable) {
+
+        log.info("[내 지난 경기 조회 시작] userId={}, page={}, size={}", userId, pageable.getPageNumber(), pageable.getPageSize());
+
+        validateActiveUser(userId);
+
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        Page<MyCompletedGameResponse> response = gameQueryRepository.findCompletedGamesByUser(userId, pageable, now)
+                .map(participation -> MyCompletedGameResponse.fromEntity(participation, userId));
+
+
+
+        log.info("[내 지난 경기 조회 완료] userId={}, totalElements={}", userId, response.getTotalElements());
+
+        return response;
     }
 }
