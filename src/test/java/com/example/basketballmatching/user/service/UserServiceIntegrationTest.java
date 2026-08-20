@@ -2,7 +2,7 @@ package com.example.basketballmatching.user.service;
 
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.support.IntegrationTestSupport;
+import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.dto.SignUpRequest;
 import com.example.basketballmatching.user.dto.SignUpResponse;
@@ -28,9 +28,10 @@ import java.util.Set;
 import static com.example.basketballmatching.global.exception.ErrorCode.USER_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 
+@IntegrationTest
 @Transactional
 @DisplayName("UserService 통합 테스트")
-class UserServiceIntegrationTest extends IntegrationTestSupport {
+class UserServiceIntegrationTest {
 
     private static final String EMAIL_VERIFIED_PREFIX =
             "email:auth:verified:";

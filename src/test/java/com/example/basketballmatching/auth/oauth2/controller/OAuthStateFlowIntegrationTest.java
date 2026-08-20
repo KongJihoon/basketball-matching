@@ -3,7 +3,7 @@ package com.example.basketballmatching.auth.oauth2.controller;
 import com.example.basketballmatching.auth.oauth2.client.KakaoOAuthClient;
 import com.example.basketballmatching.auth.oauth2.client.dto.KakaoUserInfoResponse;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.support.IntegrationTestSupport;
+import com.example.basketballmatching.support.IntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -29,9 +29,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@IntegrationTest
 @AutoConfigureMockMvc
 @DisplayName("OAuth State 보안 흐름 통합 테스트")
-class OAuthStateFlowIntegrationTest extends IntegrationTestSupport {
+class OAuthStateFlowIntegrationTest {
 
     private static final String AUTHORIZATION_PATH =
             "/api/v1/auth/oauth2/kakao/authorization";

@@ -13,7 +13,7 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.support.IntegrationTestSupport;
+import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -31,9 +31,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@IntegrationTest
 @Transactional
 @DisplayName("OAuthService 통합 테스트")
-public class OAuthServiceIntegrationTest extends IntegrationTestSupport {
+public class OAuthServiceIntegrationTest {
 
     private static final Long KAKAO_USER_ID = 123456789L;
 

@@ -9,7 +9,7 @@ import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.notifications.entity.NotificationEntity;
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
 import com.example.basketballmatching.notifications.type.NotificationType;
-import com.example.basketballmatching.support.IntegrationTestSupport;
+import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -32,8 +32,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@IntegrationTest
 @DisplayName("UserWithdrawalService xhdgkq xptmxm")
-class UserWithdrawalServiceIntegrationTest extends IntegrationTestSupport {
+class UserWithdrawalServiceIntegrationTest {
 
     private static final String WITHDRAWAL_EMAIL =
             "withdrawal@test.com";

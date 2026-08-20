@@ -5,7 +5,7 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.support.IntegrationTestSupport;
+import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -23,9 +23,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@IntegrationTest
 @Transactional
 @DisplayName("AuthService 통합 테스트")
-class AuthServiceIntegrationTest extends IntegrationTestSupport {
+class AuthServiceIntegrationTest {
 
     private static final String EMAIL =
             "auth-integration@test.com";
