@@ -1,0 +1,2 @@
+idx_game_list_active_start,1,1,deleted_date_time,A,1,BTREE,YES
+idx_game_list_active_start,1,2,start_date_time,A,1339,BTREE,YES
