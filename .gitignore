@@ -46,7 +46,7 @@ out/
 .env.performance
 
 ### Performance test result ###
-/performance/results/
+# 성능 개선 근거를 재현할 수 있도록 summary, k6 JSON, 실행계획 원본을 저장소에 포함한다.
 
 # macOS
 .DS_Store

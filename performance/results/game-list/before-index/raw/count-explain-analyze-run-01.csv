@@ -1,0 +1,4 @@
+"-> Aggregate: count(ge1_0.game_id)  (cost=53792 rows=1) (actual time=139..139 rows=1 loops=1)
+    -> Filter: ((ge1_0.deleted_date_time is null) and (ge1_0.start_date_time >= TIMESTAMP'2026-08-19 19:58:26.033731'))  (cost=52150 rows=16418) (actual time=0.321..132 rows=330941 loops=1)
+        -> Table scan on ge1_0  (cost=52150 rows=492590) (actual time=0.285..109 rows=500000 loops=1)
+"

@@ -18,9 +18,15 @@ import java.util.Objects;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
-// 중복 생성 방지 DB Unique 인덱스
+
 @Table(
         name = "game_entity",
+        indexes = {
+                @Index(
+                        name = "idx_game_list_active_start",
+                        columnList = "deleted_date_time, start_date_time"
+                )
+        },
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uq_game_place_time",
