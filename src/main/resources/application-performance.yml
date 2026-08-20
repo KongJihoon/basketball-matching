@@ -25,3 +25,18 @@ management:
           - 500ms
           - 1s
           - 3s
+
+spring:
+  jpa:
+    show-sql: false
+    open-in-view: false
+
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    com.example.basketballmatching.game.service.GameService: WARN
