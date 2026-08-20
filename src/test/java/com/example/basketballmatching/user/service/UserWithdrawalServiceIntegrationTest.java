@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @IntegrationTest
-@DisplayName("UserWithdrawalService xhdgkq xptmxm")
+@DisplayName("UserWithdrawalService 통합 테스트")
 class UserWithdrawalServiceIntegrationTest {
 
     private static final String WITHDRAWAL_EMAIL =
