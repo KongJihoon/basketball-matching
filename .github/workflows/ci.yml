@@ -50,7 +50,9 @@ jobs:
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthAccountServiceUnitTest" \
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthServiceUnitTest" \
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthStateStoreUnitTest" \
-            --tests "com.example.basketballmatching.auth.oauth2.support.OAuthStateCookieManagerUnitTest"  
+            --tests "com.example.basketballmatching.auth.oauth2.service.OAuthStateCookieManagerUnitTest" \
+            --tests "com.example.basketballmatching.game.service.GameServiceUnitTest" \
+            --tests "com.example.basketballmatching.game.service.GameParticipantServiceUnitTest"
 
       - name: Upload unit test report
         if: always()
@@ -86,7 +88,10 @@ jobs:
             --tests "com.example.basketballmatching.user.service.UserWithdrawalServiceIntegrationTest" \
             --tests "com.example.basketballmatching.auth.service.AuthServiceIntegrationTest" \
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthServiceIntegrationTest" \
-            --tests "com.example.basketballmatching.auth.oauth2.controller.OAuthStateFlowIntegrationTest"
+            --tests "com.example.basketballmatching.auth.oauth2.controller.OAuthStateFlowIntegrationTest" \
+            --tests "com.example.basketballmatching.game.service.GameServiceIntegrationTest" \
+            --tests "com.example.basketballmatching.game.service.GameParticipantServiceIntegrationTest" \
+            --tests "com.example.basketballmatching.game.repository.query.GameQueryRepositoryIntegrationTest"
 
       - name: Upload integration test report
         if: always()
