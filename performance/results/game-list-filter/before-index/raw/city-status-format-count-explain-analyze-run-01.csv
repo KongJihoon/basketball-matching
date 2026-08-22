@@ -1,0 +1,4 @@
+"-> Aggregate: count(ge1_0.game_id)  (cost=53609 rows=1) (actual time=222..222 rows=1 loops=1)
+    -> Filter: ((ge1_0.deleted_date_time is null) and (ge1_0.start_date_time >= TIMESTAMP'2026-08-22 17:33:45.007681') and (ge1_0.city_name = 'SEOUL') and (ge1_0.match_format = 'THREE_ON_THREE') and (ge1_0.game_status = 'RECRUITING'))  (cost=52995 rows=6141) (actual time=0.278..221 rows=48495 loops=1)
+        -> Table scan on ge1_0  (cost=52995 rows=491290) (actual time=0.258..185 rows=500000 loops=1)
+"

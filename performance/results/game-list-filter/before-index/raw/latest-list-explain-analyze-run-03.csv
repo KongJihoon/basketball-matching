@@ -1,0 +1,5 @@
+"-> Limit: 10 row(s)  (cost=51892 rows=10) (actual time=224..224 rows=10 loops=1)
+    -> Sort: ge1_0.created_at DESC, ge1_0.game_id DESC, limit input to 10 row(s) per chunk  (cost=51892 rows=491290) (actual time=224..224 rows=10 loops=1)
+        -> Filter: ((ge1_0.deleted_date_time is null) and (ge1_0.start_date_time >= TIMESTAMP'2026-08-22 17:42:12.98704'))  (cost=51892 rows=491290) (actual time=0.0462..189 rows=331348 loops=1)
+            -> Table scan on ge1_0  (cost=51892 rows=491290) (actual time=0.0431..167 rows=500000 loops=1)
+"

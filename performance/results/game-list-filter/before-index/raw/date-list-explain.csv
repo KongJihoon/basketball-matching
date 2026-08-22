@@ -1,0 +1,2 @@
+id,select_type,table,partitions,type,possible_keys,key,key_len,ref,rows,filtered,extra
+1,SIMPLE,ge1_0,,range,idx_game_list_active_start,idx_game_list_active_start,17,,2778,100,Using index condition

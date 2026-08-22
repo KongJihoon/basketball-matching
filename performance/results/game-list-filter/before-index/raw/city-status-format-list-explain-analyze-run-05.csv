@@ -1,0 +1,4 @@
+"-> Limit: 10 row(s)  (cost=52995 rows=10) (actual time=0.0765..0.137 rows=10 loops=1)
+    -> Filter: ((ge1_0.city_name = 'SEOUL') and (ge1_0.match_format = 'THREE_ON_THREE') and (ge1_0.game_status = 'RECRUITING'))  (cost=52995 rows=6141) (actual time=0.076..0.136 rows=10 loops=1)
+        -> Index range scan on ge1_0 using idx_game_list_active_start over (deleted_date_time = NULL AND '2026-08-22 17:33:45.007681' <= start_date_time), with index condition: ((ge1_0.deleted_date_time is null) and (ge1_0.start_date_time >= TIMESTAMP'2026-08-22 17:33:45.007681'))  (cost=52995 rows=245645) (actual time=0.0723..0.128 rows=50 loops=1)
+"
