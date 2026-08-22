@@ -80,6 +80,7 @@ public class ParticipantGameEntity extends BaseEntity {
         return participantGameEntity;
     }
 
+
     public void join(LocalDateTime joinedAt) {
         switch (participantGameStatus) {
             case CANCEL-> {
