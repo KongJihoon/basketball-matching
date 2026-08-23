@@ -108,6 +108,32 @@ CREATE INDEX idx_game_list_filter
 - [최종 인덱스 검증 결과](./results/game-list-filter/after-index/summary.md)
 - [설계 결정 기록](../docs/adr/game/game-list-filter-index.md)
 
+## 경기 목록 최신순 인덱스
+
+최신순 목록의 전체 스캔과 filesort를 제거하고 COUNT까지 커버링하도록 다음 인덱스를 적용했다.
+
+```sql
+CREATE INDEX idx_game_list_latest
+    ON game_entity (
+        deleted_date_time,
+        created_at DESC,
+        game_id DESC,
+        start_date_time
+    );
+```
+
+| 지표 | 적용 전 | 적용 후 |
+|---|---:|---:|
+| Content SQL 중앙값 | 228ms | 0.103ms |
+| API 평균 중앙값 | 1,231.68ms | 48.28ms |
+| API p95 중앙값 | 5,461.72ms | 51.32ms |
+| dropped iteration | 484건 | 0건 |
+
+- [적용 전 기준선](./results/game-list-filter/before-latest-index/summary.md)
+- [1차 후보 기각 근거](./results/game-list-filter/candidate-01-latest-order/summary.md)
+- [최종 검증 결과](./results/game-list-filter/after-latest-index/summary.md)
+- [설계 결정 기록](../docs/adr/game/game-list-latest-index.md)
+
 ## 측정 원칙
 
 1. 인덱스 적용 전후에 같은 데이터와 같은 Hibernate 바인딩 값을 사용한다.
