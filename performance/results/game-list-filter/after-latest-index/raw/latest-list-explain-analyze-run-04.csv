@@ -1,0 +1,3 @@
+"-> Limit: 10 row(s)  (cost=21032 rows=10) (actual time=0.107..0.11 rows=10 loops=1)
+    -> Index lookup on ge using idx_game_list_latest (deleted_date_time=NULL), with index condition: ((ge.deleted_date_time is null) and (ge.start_date_time >= TIMESTAMP'2026-08-22 17:42:12.98704'))  (cost=21032 rows=245645) (actual time=0.106..0.109 rows=10 loops=1)
+"

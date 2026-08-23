@@ -48,6 +48,14 @@ game-list-filter/
     ├── raw/
     ├── plan-after-*.png
     └── summary.md
+
+최신순 후속 실험:
+
+```text
+├── before-latest-index/
+├── candidate-01-latest-order/
+└── after-latest-index/
+```
 ```
 
 관련 실행 파일:
@@ -59,6 +67,10 @@ game-list-filter/
 - 1차 후보 적용: [`../../sql/game-list-filter/30-add-candidate-01-deleted-first-index.sql`](../../sql/game-list-filter/30-add-candidate-01-deleted-first-index.sql)
 - 후보 인덱스 제거: [`../../sql/game-list-filter/31-drop-game-list-filter-index.sql`](../../sql/game-list-filter/31-drop-game-list-filter-index.sql)
 - 최종 후보 적용: [`../../sql/game-list-filter/32-add-candidate-02-city-first-index.sql`](../../sql/game-list-filter/32-add-candidate-02-city-first-index.sql)
+- 최신순 기준선: [`../../sql/game-list-filter/40-before-latest-index-baseline.sql`](../../sql/game-list-filter/40-before-latest-index-baseline.sql)
+- 최신순 1차 후보: [`../../sql/game-list-filter/41-add-candidate-01-latest-order-index.sql`](../../sql/game-list-filter/41-add-candidate-01-latest-order-index.sql)
+- 최신순 후보 제거: [`../../sql/game-list-filter/42-drop-latest-index.sql`](../../sql/game-list-filter/42-drop-latest-index.sql)
+- 최신순 최종 후보: [`../../sql/game-list-filter/43-add-candidate-02-latest-covering-index.sql`](../../sql/game-list-filter/43-add-candidate-02-latest-covering-index.sql)
 
 ## 4. 공통 측정 조건
 
@@ -114,4 +126,24 @@ game-list-filter/
 
 지역 조회의 COUNT 중앙값은 `133ms → 44.3ms`, 지역·모집 상태·경기 형식 복합 조회는 `138ms → 22.0ms`로 감소했다. 같은 조건의 API p95도 각각 약 68.9%, 80.2% 감소했다.
 
-기본 및 날짜 조회는 기존 `idx_game_list_active_start`가 계속 담당한다. 최신순 조회는 `created_at DESC, game_id DESC` 정렬을 지원하지 않아 기존부터 발생하던 전체 스캔과 filesort가 남아 있으며, 이번 지역 필터 인덱스와 분리해 후속 실험으로 다룬다.
+기본 및 날짜 조회는 기존 `idx_game_list_active_start`가 계속 담당한다. 최신순 조회는 지역 필터 인덱스와 분리해 별도의 후속 실험으로 진행했다.
+
+## 8. 최신순 후속 실험
+
+최신순 정렬을 지원하면서 COUNT를 커버링하도록 다음 인덱스를 선택했다.
+
+```text
+(deleted_date_time, created_at DESC,
+ game_id DESC, start_date_time)
+```
+
+| 지표 | 적용 전 | 적용 후 | 개선 |
+|---|---:|---:|---:|
+| Content SQL 중앙값 | 228ms | 0.103ms | 99.95% 감소 |
+| API 평균 중앙값 | 1,231.68ms | 48.28ms | 96.1% 감소 |
+| API p95 중앙값 | 5,461.72ms | 51.32ms | 99.1% 감소 |
+| dropped iteration | 484건 | 0건 | 누락 제거 |
+
+- [최신순 적용 전 기준선](./before-latest-index/summary.md)
+- [최신순 1차 후보 기각 근거](./candidate-01-latest-order/summary.md)
+- [최신순 최종 검증 결과](./after-latest-index/summary.md)

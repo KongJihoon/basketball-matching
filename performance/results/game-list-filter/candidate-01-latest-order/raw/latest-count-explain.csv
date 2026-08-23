@@ -1,0 +1,1 @@
+1,SIMPLE,ge,,ref,"idx_game_list_active_start,idx_game_list_filter,idx_game_list_latest",idx_game_list_latest,9,const,245860,33.33,Using index condition; Using where

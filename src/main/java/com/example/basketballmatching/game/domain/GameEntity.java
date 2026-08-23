@@ -32,6 +32,12 @@ import static com.example.basketballmatching.global.exception.ErrorCode.*;
                         columnList =
                                 "city_name, game_status, match_format, "
                                         + "deleted_date_time, start_date_time, game_id"
+                ),
+                @Index(
+                        name = "idx_game_list_latest",
+                        columnList =
+                                "deleted_date_time, created_at DESC, "
+                                        + "game_id DESC, start_date_time"
                 )
         },
         uniqueConstraints = {
