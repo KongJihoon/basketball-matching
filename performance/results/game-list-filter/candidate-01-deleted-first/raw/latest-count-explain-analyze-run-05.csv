@@ -1,0 +1,4 @@
+"-> Aggregate: count(game_entity.game_id)  (cost=29070 rows=1) (actual time=86.5..86.5 rows=1 loops=1)
+    -> Filter: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-22 17:42:12.98704'))  (cost=20875 rows=81945) (actual time=0.015..77.9 rows=331348 loops=1)
+        -> Covering index skip scan on game_entity using idx_game_list_filter over deleted_date_time = NULL, '2026-08-22 17:42:12.987040' <= start_date_time  (cost=20875 rows=81945) (actual time=0.0135..58.8 rows=331348 loops=1)
+"

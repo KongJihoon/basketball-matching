@@ -38,6 +38,10 @@ game-list-filter/
 │   │   └── *-explain-analyze-run-01~05.csv
 │   ├── plan-before-*.png
 │   └── summary.md
+├── candidate-01-deleted-first/
+│   ├── raw/
+│   ├── plan-*.png
+│   └── summary.md
 └── after-index/
     ├── grafana/
     ├── k6/
@@ -52,6 +56,9 @@ game-list-filter/
 - 실행 스크립트: [`../../scripts/run-game-list-filter-test.sh`](../../scripts/run-game-list-filter-test.sh)
 - 데이터 생성: [`../../sql/game-list-filter/10-seed-filter-dataset.sql`](../../sql/game-list-filter/10-seed-filter-dataset.sql)
 - 적용 전 SQL: [`../../sql/game-list-filter/20-before-index-baseline.sql`](../../sql/game-list-filter/20-before-index-baseline.sql)
+- 1차 후보 적용: [`../../sql/game-list-filter/30-add-candidate-01-deleted-first-index.sql`](../../sql/game-list-filter/30-add-candidate-01-deleted-first-index.sql)
+- 후보 인덱스 제거: [`../../sql/game-list-filter/31-drop-game-list-filter-index.sql`](../../sql/game-list-filter/31-drop-game-list-filter-index.sql)
+- 최종 후보 적용: [`../../sql/game-list-filter/32-add-candidate-02-city-first-index.sql`](../../sql/game-list-filter/32-add-candidate-02-city-first-index.sql)
 
 ## 4. 공통 측정 조건
 
@@ -86,8 +93,25 @@ game-list-filter/
 - [x] 적용 전 DB 실행계획 및 5회 측정
 - [x] 적용 전 k6 20 RPS, 3분, 3회 측정
 - [x] 적용 전 Grafana 증거 수집
-- [ ] 후보 인덱스 적용
-- [ ] 적용 후 동일 조건 재측정
-- [ ] 전후 결과 및 트레이드오프 정리
+- [x] 삭제 여부 선두의 1차 후보 적용 및 회귀 확인
+- [x] 지역 선두의 2차 후보 적용
+- [x] 적용 후 동일 조건 재측정
+- [x] 전후 결과 및 트레이드오프 정리
 
 적용 전 분석 결과는 [`before-index/summary.md`](./before-index/summary.md)에서 확인한다.
+
+- [1차 후보 검증 및 기각 근거](./candidate-01-deleted-first/summary.md)
+- [최종 인덱스 검증 결과](./after-index/summary.md)
+
+## 7. 최종 결론
+
+최종적으로 다음 인덱스를 선택했다.
+
+```text
+(city_name, game_status, match_format,
+ deleted_date_time, start_date_time, game_id)
+```
+
+지역 조회의 COUNT 중앙값은 `133ms → 44.3ms`, 지역·모집 상태·경기 형식 복합 조회는 `138ms → 22.0ms`로 감소했다. 같은 조건의 API p95도 각각 약 68.9%, 80.2% 감소했다.
+
+기본 및 날짜 조회는 기존 `idx_game_list_active_start`가 계속 담당한다. 최신순 조회는 `created_at DESC, game_id DESC` 정렬을 지원하지 않아 기존부터 발생하던 전체 스캔과 filesort가 남아 있으며, 이번 지역 필터 인덱스와 분리해 후속 실험으로 다룬다.

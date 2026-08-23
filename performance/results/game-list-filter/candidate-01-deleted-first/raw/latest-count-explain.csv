@@ -1,0 +1,1 @@
+1,SIMPLE,game_entity,,range,"idx_game_list_active_start,idx_game_list_filter",idx_game_list_filter,20,,81945,100,Using where; Using index for skip scan

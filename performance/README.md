@@ -82,6 +82,32 @@ CREATE INDEX idx_game_list_active_start
 - [인덱스 적용 SQL](./sql/30-add-game-list-active-start-index.sql)
 - [인덱스 롤백 SQL](./sql/31-drop-game-list-active-start-index.sql)
 
+## 경기 목록 필터 인덱스
+
+기본 목록 인덱스 적용 후 지역, 경기 상태, 경기 형식 조합을 대상으로 별도 실험을 진행했다. 삭제 여부를 선두에 둔 1차 후보의 최신순 회귀를 확인하고, 지역을 선두로 이동한 필터 전용 인덱스를 최종 선택했다.
+
+```sql
+CREATE INDEX idx_game_list_filter
+    ON game_entity (
+        city_name,
+        game_status,
+        match_format,
+        deleted_date_time,
+        start_date_time,
+        game_id
+    );
+```
+
+| 시나리오 | COUNT 적용 전 | 적용 후 | API p95 적용 전 | 적용 후 |
+|---|---:|---:|---:|---:|
+| 서울 | 133ms | 44.3ms | 101.68ms | 31.62ms |
+| 서울 + 모집 중 + 3대3 | 138ms | 22.0ms | 133.88ms | 26.48ms |
+
+- [필터 인덱스 실험 개요](./results/game-list-filter/README.md)
+- [1차 후보 기각 근거](./results/game-list-filter/candidate-01-deleted-first/summary.md)
+- [최종 인덱스 검증 결과](./results/game-list-filter/after-index/summary.md)
+- [설계 결정 기록](../docs/adr/game/game-list-filter-index.md)
+
 ## 측정 원칙
 
 1. 인덱스 적용 전후에 같은 데이터와 같은 Hibernate 바인딩 값을 사용한다.

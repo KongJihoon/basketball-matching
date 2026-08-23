@@ -1,0 +1,4 @@
+"-> Aggregate: count(ge1_0.game_id)  (cost=29070 rows=1) (actual time=39.8..39.8 rows=1 loops=1)
+    -> Filter: ((ge1_0.deleted_date_time is null) and (ge1_0.start_date_time >= TIMESTAMP'2026-08-22 17:23:46.884726') and (ge1_0.city_name = 'SEOUL'))  (cost=20875 rows=81945) (actual time=0.0158..36.3 rows=132539 loops=1)
+        -> Covering index skip scan on ge1_0 using idx_game_list_filter over deleted_date_time = NULL, city_name = 'SEOUL', '2026-08-22 17:23:46.884726' <= start_date_time  (cost=20875 rows=81945) (actual time=0.013..23.6 rows=132539 loops=1)
+"

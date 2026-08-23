@@ -1,0 +1,4 @@
+"-> Limit: 10 row(s)  (cost=16865 rows=10) (actual time=828..828 rows=10 loops=1)
+    -> Sort: game_entity.created_at DESC, game_entity.game_id DESC, limit input to 10 row(s) per chunk  (cost=16865 rows=245860) (actual time=828..828 rows=10 loops=1)
+        -> Index lookup on game_entity using idx_game_list_filter (deleted_date_time=NULL), with index condition: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-22 17:42:12.98704'))  (cost=16865 rows=245860) (actual time=2.81..795 rows=331348 loops=1)
+"
