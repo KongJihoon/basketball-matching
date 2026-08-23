@@ -1,0 +1,4 @@
+"-> Limit: 10 row(s)  (cost=22957 rows=10) (actual time=0.098..0.103 rows=10 loops=1)
+    -> Filter: (game_entity.city_name = 'SEOUL')  (cost=22957 rows=122930) (actual time=0.0975..0.102 rows=10 loops=1)
+        -> Index range scan on game_entity using idx_game_list_active_start over (deleted_date_time = NULL AND '2026-08-22 17:23:46.884726' <= start_date_time), with index condition: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-22 17:23:46.884726'))  (cost=22957 rows=245860) (actual time=0.0936..0.0979 rows=25 loops=1)
+"

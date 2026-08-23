@@ -1,0 +1,4 @@
+"-> Aggregate: count(game_entity.game_id)  (cost=25665 rows=1) (actual time=43.3..43.3 rows=1 loops=1)
+    -> Filter: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-22 17:23:46.884726'))  (cost=13372 rows=122930) (actual time=5.27..40.1 rows=132539 loops=1)
+        -> Covering index lookup on game_entity using idx_game_list_filter (city_name='SEOUL')  (cost=13372 rows=245860) (actual time=0.0491..30.1 rows=200000 loops=1)
+"

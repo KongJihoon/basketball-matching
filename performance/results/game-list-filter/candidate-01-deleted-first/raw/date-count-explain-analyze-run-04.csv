@@ -1,0 +1,4 @@
+"-> Aggregate: count(game_entity.game_id)  (cost=842 rows=1) (actual time=0.836..0.836 rows=1 loops=1)
+    -> Filter: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-29 00:00:00') and (game_entity.start_date_time < TIMESTAMP'2026-08-30 00:00:00'))  (cost=564 rows=2778) (actual time=0.0208..0.728 rows=2778 loops=1)
+        -> Covering index range scan on game_entity using idx_game_list_active_start over (deleted_date_time = NULL AND '2026-08-29 00:00:00.000000' <= start_date_time < '2026-08-30 00:00:00.000000')  (cost=564 rows=2778) (actual time=0.0192..0.458 rows=2778 loops=1)
+"

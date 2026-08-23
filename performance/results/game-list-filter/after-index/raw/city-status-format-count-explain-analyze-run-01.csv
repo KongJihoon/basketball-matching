@@ -1,0 +1,4 @@
+"-> Aggregate: count(game_entity.game_id)  (cost=26905 rows=1) (actual time=28.9..28.9 rows=1 loops=1)
+    -> Filter: ((game_entity.deleted_date_time is null) and (game_entity.start_date_time >= TIMESTAMP'2026-08-22 17:33:45.007681') and (game_entity.city_name = 'SEOUL') and (game_entity.match_format = 'THREE_ON_THREE') and (game_entity.game_status = 'RECRUITING'))  (cost=18066 rows=88388) (actual time=0.165..27.3 rows=48495 loops=1)
+        -> Covering index range scan on game_entity using idx_game_list_filter over (city_name = 'SEOUL' AND game_status = 'RECRUITING' AND match_format = 'THREE_ON_THREE' AND deleted_date_time = NULL AND '2026-08-22 17:33:45.007681' <= start_date_time)  (cost=18066 rows=88388) (actual time=0.149..12.3 rows=48495 loops=1)
+"
