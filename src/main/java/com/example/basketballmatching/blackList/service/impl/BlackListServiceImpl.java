@@ -8,11 +8,11 @@ import com.example.basketballmatching.blackList.service.BlackListService;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
-import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
+import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.report.entity.ReportEntity;
+import com.example.basketballmatching.report.domain.ReportEntity;
 import com.example.basketballmatching.report.repository.ReportRepository;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -55,8 +55,10 @@ public class BlackListServiceImpl implements BlackListService {
         ReportEntity reportEntity = reportRepository.findById(reportId)
                 .orElseThrow(() -> new CustomException(NOT_FOUND_REPORT));
 
-        if (reportEntity.isBanned()) {
-            throw new CustomException(ALREADY_CHECK_REPORT);
+        if (!reportEntity.isApproved()) {
+            throw new CustomException(
+                    REPORT_NOT_APPROVED
+            );
         }
 
         // 신고자 존재 여부 -> 회원탈퇴 가능성
@@ -75,8 +77,6 @@ public class BlackListServiceImpl implements BlackListService {
 
         participantGameRepository.saveAll(list);
 
-        reportEntity.setBanned();
-        reportRepository.save(reportEntity);
 
         redisService.setDataExpireDays("blackList:" + targetUser.getEmail(), "BLACKLIST", 7L);
 
