@@ -86,9 +86,9 @@ public class GameParticipantController {
 
     }
 
-    @Operation(summary = "경기 참가자 목록 조회", description = "경기 생성자가 참가 확정된 사용자 목록을 조회한다.")
+    @Operation(summary = "경기 참가자 목록 조회", description = "해당 경기에 참가 확정된 사용자가 같은 경기 확정 참가자 목록 조회")
     @ApiResponse(responseCode = "200", description = "경기 참가자 목록 조회 성공")
-    @ApiResponse(responseCode = "403", description = "경기 생성자가 아님",
+    @ApiResponse(responseCode = "403", description = "해당 경기의 참가 확정 사용자가 아님",
     content = @Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "사용자 또는 경기를 찾을 수 없다.",
@@ -107,7 +107,7 @@ public class GameParticipantController {
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10")
             @Min(1)
-            @Max(100)
+            @Max(20)
             int size,
             @AuthenticationPrincipal UserInfoDetails userInfoDetails
     ) {

@@ -93,7 +93,7 @@ public enum ErrorCode {
     NOT_ACTIVE_PARTICIPANT(HttpStatus.CONFLICT, "현재 경기에 참가 중인 사용자가 아닙니다."),
     GAME_SCHEDULE_REQUIRED_TOGETHER(HttpStatus.BAD_REQUEST, "경기 시작 시각과 종료 시각을 함께 입력해주세요."),
     NOT_CANCEL_GAME_CREATOR(HttpStatus.FORBIDDEN, "경기 생성자는 참가를 취소할 수 없습니다."),
-
+    PARTICIPANT_LIST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "참가가 확정된 사용자만 참가자 목록을 조회할 수 있습니다."),
     NO_GAME_UPDATE_FIELDS(HttpStatus.BAD_REQUEST, "수정할 경기 정보를 입력해주세요."),
 
     // level

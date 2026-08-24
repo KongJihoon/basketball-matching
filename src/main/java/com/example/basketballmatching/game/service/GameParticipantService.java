@@ -94,11 +94,12 @@ public class GameParticipantService {
 
         log.info("[경기 참가자 목록 조회 시작] gameId={}, userId={}", gameId, userId);
 
-        UserEntity requester = getActiveUser(userId);
+       getActiveUser(userId);
 
         GameEntity game = getActiveGame(gameId);
 
-        validateGameCreator(game, requester);
+        validateParticipantListAccess(gameId, userId);
+
 
         Long creatorId = game.getUserEntity().getUserId();
 
@@ -141,6 +142,18 @@ public class GameParticipantService {
                 game.getGameId(),game.getTitle(), participant.getUserId()
         ));
 
+
+    }
+
+    private void validateParticipantListAccess(Long gameId, Long userId) {
+
+        boolean acceptedParticipant = participantGameRepository.existsByGameEntity_GameIdAndUserEntity_UserIdAndParticipantGameStatus(
+                gameId, userId, ACCEPT
+        );
+
+        if (!acceptedParticipant) {
+            throw new CustomException(PARTICIPANT_LIST_ACCESS_DENIED);
+        }
 
     }
 
