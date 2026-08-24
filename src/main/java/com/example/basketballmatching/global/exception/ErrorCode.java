@@ -101,9 +101,16 @@ public enum ErrorCode {
 
 
     // report
-    ALREADY_REPORTED_USER(HttpStatus.CONFLICT, "이미 신고받은 유저입니다."),
+    SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "자기 자신을 신고할 수 없습니다."),
+    REPORT_PERIOD_EXPIRED(HttpStatus.CONFLICT, "경기 종료 후 7일이 지나 신고할 수 없습니다."),
+
+    REPORTER_NOT_ACCEPTED_PARTICIPANT(HttpStatus.FORBIDDEN, "해당 경기의 참가 확정 사용자만 신고할 수 있습니다."),
+
+    REPORT_TARGET_NOT_ACCEPTED_PARTICIPANT(HttpStatus.BAD_REQUEST, "신고 대상이 해당 경기의 참가 확정 사용자가 아닙니다."),
+    ALREADY_REPORTED_USER(HttpStatus.CONFLICT, "해당 경기에서 이미 신고한 사용자입니다."),
     NOT_FOUND_REPORT(HttpStatus.NOT_FOUND, "신고내역을 찾을 수 없습니다."),
-    ALREADY_CHECK_REPORT(HttpStatus.CONFLICT, "이미 처리된 신고내역입니다."),
+    REPORT_ALREADY_PROCESSED(HttpStatus.CONFLICT, "이미 처리된 신고 내역입니다."),
+    REPORT_NOT_APPROVED(HttpStatus.CONFLICT, "승인된 신고만 제재 처리할 수 있습니다."),
 
 
     // blackList

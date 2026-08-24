@@ -1,80 +1,90 @@
 package com.example.basketballmatching.report.controller;
 
 import com.example.basketballmatching.global.dto.CommonResponse;
-import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.security.UserInfoDetails;
-import com.example.basketballmatching.report.dto.CreateReportDto;
-import com.example.basketballmatching.report.dto.ReportListDto;
+import com.example.basketballmatching.report.dto.request.CreateReportRequest;
+import com.example.basketballmatching.report.dto.response.CreateReportResponse;
 import com.example.basketballmatching.report.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("api/v1/report")
+@RequestMapping("/api/v1/games/{gameId}/reports")
 @Tag(name = "REPORT")
 public class ReportController {
 
     private final ReportService reportService;
 
-
-    @Operation(summary = "유저 신고 등록")
-    @ApiResponse(responseCode = "200", description = "유저 신고 등록 성공",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = CheckResponse.class))})
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
+    @Operation(summary = "경기 참가자 신고", description = """
+            종료된 경기의 참가 확정 사용자가 같은 경기의 다른 확정 참가자를 신고한다.""")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "신고 접수 성공"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "자기 신고 또는 잘못된 신고 요청",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(
+                                    implementation = ErrorResponse.class
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "신고 자격이 없는 사용자"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "경기 또는 사용자를 찾을 수 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "신고 기간 만료 또는 중복 신고"
+            )
+    })
     @PostMapping
-    @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<CheckResponse> createReport(
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "targetUserId", example = "1")
-            @RequestParam Long targetUserId,
-            @Parameter(name = "gameId", example = "1")
-            @RequestParam Long gameId,
-            @RequestBody @Valid CreateReportDto request) {
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CommonResponse<CreateReportResponse>> createReport(
+            @PathVariable("gameId") Long gameId,
+            @RequestBody @Valid CreateReportRequest request,
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
+            ) {
 
-        CheckResponse checkResponse = reportService.createReport(userInfoDetails.getUserEntity().getUserId(), targetUserId, gameId, request);
+        CreateReportResponse response = reportService.createReport(userInfoDetails.getUserEntity().getUserId(), gameId, request);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{reportId}")
+                .buildAndExpand(response.reportId())
+                .toUri();
 
 
-        return ResponseEntity.ok(checkResponse);
+        return ResponseEntity.created(location)
+                .body(CommonResponse.of("신고가 접수되었습니다.", response));
     }
 
-    @Operation(summary = "신고 받은 유저 조회")
-    @ApiResponse(responseCode = "200", description = "신고 받은 유저 조회 성공")
-    @ApiResponse(responseCode = "400", description = "잘못된 요청",
-    content = {@Content(mediaType = "application/json",
-    schema = @Schema(implementation = ErrorResponse.class))})
-    @GetMapping("/list")
-    @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<CommonResponse<Page<ReportListDto>>> getReportUserList(
-            @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "page", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(name = "size", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-
-        PageRequest pageRequest = PageRequest.of(page, size);
-
-        CommonResponse<Page<ReportListDto>> reportedUserList = reportService.getReportedUserList(userInfoDetails.getUserEntity().getUserId(), pageRequest);
 
 
-        return ResponseEntity.ok(reportedUserList);
-    }
+
+
 
 
 }

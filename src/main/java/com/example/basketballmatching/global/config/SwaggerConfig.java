@@ -32,13 +32,14 @@ import java.util.Arrays;
                 @Tag(name = "EMAIL_VERIFICATION", description = "회원가입 이메일 인증"),
                 @Tag(name = "AUTH", description = "인증/인가"),
                 @Tag(name = "REPORT", description = "유저 신고"),
+                @Tag(name = "ADMIN_REPORT", description = "관리자 신고 관리"),
                 @Tag(name = "GAME", description = "경기 생성자 기능"),
-                @Tag(name = "PARTICIPANT", description = "경기 참가 기능"),
+                @Tag(name = "GAME_PARTICIPANT", description = "경기 참가 관리 API"),
                 @Tag(name = "GAME_USER", description = "경기 참가자 기능"),
                 @Tag(name = "NOTIFICATION", description = "알림 기능"),
                 @Tag(name = "BLACK_LIST", description = "블랙리스트 기능"),
                 @Tag(name = "OAUTH2", description = "소셜 로그인 (Kakao)"),
-                @Tag(name = "GAME_PARTICIPANT", description = "경기 참가 관리 API")
+
         }
 )
 @Configuration
