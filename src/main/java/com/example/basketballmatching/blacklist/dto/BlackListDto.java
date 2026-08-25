@@ -1,6 +1,6 @@
-package com.example.basketballmatching.blackList.dto;
+package com.example.basketballmatching.blacklist.dto;
 
-import com.example.basketballmatching.blackList.entity.BlackListEntity;
+import com.example.basketballmatching.blacklist.domain.BlackListEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

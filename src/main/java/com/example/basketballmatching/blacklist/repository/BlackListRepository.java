@@ -1,7 +1,6 @@
-package com.example.basketballmatching.blackList.repository;
+package com.example.basketballmatching.blacklist.repository;
 
-import com.example.basketballmatching.blackList.entity.BlackListEntity;
-import org.springframework.data.domain.Page;
+import com.example.basketballmatching.blacklist.domain.BlackListEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

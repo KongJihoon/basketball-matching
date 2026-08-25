@@ -1,6 +1,6 @@
 package com.example.basketballmatching.game.service;
 
-import com.example.basketballmatching.blackList.repository.BlackListRepository;
+import com.example.basketballmatching.blacklist.repository.BlackListRepository;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;

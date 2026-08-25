@@ -1,10 +1,9 @@
-package com.example.basketballmatching.blackList.service.impl;
+package com.example.basketballmatching.blacklist.service;
 
 
-import com.example.basketballmatching.blackList.dto.BlackListDto;
-import com.example.basketballmatching.blackList.entity.BlackListEntity;
-import com.example.basketballmatching.blackList.repository.BlackListRepository;
-import com.example.basketballmatching.blackList.service.BlackListService;
+import com.example.basketballmatching.blacklist.dto.BlackListDto;
+import com.example.basketballmatching.blacklist.domain.BlackListEntity;
+import com.example.basketballmatching.blacklist.repository.BlackListRepository;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
@@ -31,7 +30,7 @@ import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
-public class BlackListServiceImpl implements BlackListService {
+public class BlackListService {
 
     private final UserRepository userRepository;
 
@@ -43,12 +42,11 @@ public class BlackListServiceImpl implements BlackListService {
 
     private final RedisService redisService;
 
-    @Override
     @Transactional
     public CheckResponse createBlackListUser(Long userId, Long reportId) {
 
         // 관리자 존재 여부
-        userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
+        UserEntity admin = userRepository.findByUserIdAndDeletedDateTimeIsNull(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         // 신고 내역 존재 여부
@@ -61,16 +59,25 @@ public class BlackListServiceImpl implements BlackListService {
             );
         }
 
-        // 신고자 존재 여부 -> 회원탈퇴 가능성
-        UserEntity targetUser = getUser(reportEntity.getTargetUser().getUserId());
 
-        // 블랙 유저 존재 여부
-        validateBlackUser(targetUser);
+        UserEntity targetUser =
+                reportEntity.getTargetUser();
 
-        BlackListEntity blackListEntity = BlackListEntity.create(targetUser, LocalDateTime.now());
+        LocalDateTime bannedAt =
+                LocalDateTime.now();
+
+        LocalDateTime expiresAt =
+                bannedAt.plusDays(7);
+
+        BlackListEntity blackListEntity =
+                BlackListEntity.create(
+                        reportEntity,
+                        admin,
+                        bannedAt,
+                        expiresAt
+                );
 
         blackListRepository.save(blackListEntity);
-
 
         // 블랙 유저 예정 경기 상태 변경
         List<ParticipantGameEntity> list = handleBlackUserStatus(targetUser);
@@ -85,7 +92,6 @@ public class BlackListServiceImpl implements BlackListService {
         return CheckResponse.of(true, "신고 유저 블랙리스트 등록에 성공하였습니다.");
     }
 
-    @Override
     @Transactional(readOnly = true)
     public CommonResponse<Page<BlackListDto>> getBlackLists(Long userId, Pageable pageable) {
 

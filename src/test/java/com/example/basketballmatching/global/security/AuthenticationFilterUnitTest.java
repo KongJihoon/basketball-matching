@@ -1,7 +1,7 @@
 package com.example.basketballmatching.global.security;
 
 import com.example.basketballmatching.auth.service.AuthTokenStore;
-import com.example.basketballmatching.blackList.service.BlackListStore;
+import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

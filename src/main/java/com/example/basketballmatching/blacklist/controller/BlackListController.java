@@ -1,7 +1,7 @@
-package com.example.basketballmatching.blackList.controller;
+package com.example.basketballmatching.blacklist.controller;
 
-import com.example.basketballmatching.blackList.dto.BlackListDto;
-import com.example.basketballmatching.blackList.service.BlackListService;
+import com.example.basketballmatching.blacklist.dto.BlackListDto;
+import com.example.basketballmatching.blacklist.service.BlackListService;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;

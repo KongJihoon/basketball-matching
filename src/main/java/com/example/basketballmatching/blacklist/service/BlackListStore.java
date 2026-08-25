@@ -1,4 +1,4 @@
-package com.example.basketballmatching.blackList.service;
+package com.example.basketballmatching.blacklist.service;
 
 import com.example.basketballmatching.global.service.RedisService;
 import lombok.RequiredArgsConstructor;

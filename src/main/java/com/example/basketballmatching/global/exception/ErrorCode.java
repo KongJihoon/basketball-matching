@@ -116,6 +116,7 @@ public enum ErrorCode {
     // blackList
     ALREADY_BLACK_USER(HttpStatus.CONFLICT, "이미 블랙리스트 등록된 유저입니다."),
     BLACKLIST_USER(HttpStatus.FORBIDDEN, "블랙리스트 유저입니다."),
+    INVALID_BLACKLIST_PERIOD(HttpStatus.INTERNAL_SERVER_ERROR, "블랙리스트 제재 기간이 올바르지 않습니다."),
 
 
     // friend
