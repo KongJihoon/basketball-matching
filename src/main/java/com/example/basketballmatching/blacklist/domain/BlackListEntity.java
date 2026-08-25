@@ -11,6 +11,15 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Table(
+        name = "black_list_entity",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_black_list_report",
+                        columnNames = "report_id"
+                )
+        }
+)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,7 +30,7 @@ public class BlackListEntity {
     private Long blackListId;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "report_id", nullable = false)
+    @JoinColumn(name = "report_id", nullable = false, unique = true)
     private ReportEntity reportEntity;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -67,7 +76,7 @@ public class BlackListEntity {
         return expiresAt.isAfter(now);
     }
 
-    private BlackListStatus getStatus(LocalDateTime now) {
+    public BlackListStatus getStatus(LocalDateTime now) {
         return isActive(now) ? BlackListStatus.ACTIVE : BlackListStatus.EXPIRED;
     }
 

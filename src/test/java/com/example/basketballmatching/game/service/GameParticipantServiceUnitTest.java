@@ -1,6 +1,6 @@
 package com.example.basketballmatching.game.service;
 
-import com.example.basketballmatching.blacklist.repository.BlackListRepository;
+import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
@@ -73,8 +73,7 @@ class GameParticipantServiceUnitTest {
     private ParticipantGameRepository participantGameRepository;
 
     @Mock
-    private BlackListRepository blackListRepository;
-
+    private BlackListStore blackListStore;
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
@@ -93,7 +92,7 @@ class GameParticipantServiceUnitTest {
                 NOW.atZone(ZONE_ID).toInstant(), ZONE_ID);
 
         gameParticipantService = new GameParticipantService(
-                userRepository, gameRepository, participantGameRepository, blackListRepository, eventPublisher, clock
+                userRepository, gameRepository, participantGameRepository, blackListStore, eventPublisher, clock
         );
 
         creator = createUser(CREATOR_ID, "creator@test.com", "경기생성자");
@@ -122,7 +121,7 @@ class GameParticipantServiceUnitTest {
         when(userRepository.findByUserIdAndDeletedDateTimeIsNull(PARTICIPANT_ID))
                 .thenReturn(Optional.of(participant));
 
-        when(blackListRepository.existsByUserEntity_UserId(PARTICIPANT_ID))
+        when(blackListStore.isBlacklisted("participant@test.com"))
                 .thenReturn(false);
 
         when(gameRepository.findByGameIdAndDeletedDateTimeIsNull(GAME_ID))
@@ -187,7 +186,7 @@ class GameParticipantServiceUnitTest {
         when(userRepository.findByUserIdAndDeletedDateTimeIsNull(PARTICIPANT_ID))
                 .thenReturn(Optional.of(participant));
 
-        when(blackListRepository.existsByUserEntity_UserId(PARTICIPANT_ID))
+        when(blackListStore.isBlacklisted("participant@test.com"))
                 .thenReturn(false);
         when(
                 gameRepository

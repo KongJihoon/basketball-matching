@@ -1,24 +1,21 @@
 package com.example.basketballmatching.auth.service;
 
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
+import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
-import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.security.TokenProvider;
-import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -62,8 +59,6 @@ class AuthServiceUnitTest {
     private static final long REFRESH_TOKEN_EXPIRATION =
             1_209_600_000L;
 
-    private static final String BLACKLIST_KEY =
-            "blackList:" + EMAIL;
     @Mock
     private UserRepository userRepository;
 
@@ -74,17 +69,18 @@ class AuthServiceUnitTest {
     private TokenProvider tokenProvider;
 
     @Mock
-    private RedisService redisService;
-
-    @Mock
     private AuthTokenStore authTokenStore;
 
     @Mock
     private UserSessionRevocationService
             userSessionRevocationService;
 
+    @Mock
+    private BlackListStore blackListStore;
+
     @InjectMocks
     private AuthService authService;
+
 
 
     @Nested
@@ -119,8 +115,7 @@ class AuthServiceUnitTest {
                     () -> assertEquals(EMAIL, response.user().email())
             );
 
-            verify(redisService).getData(BLACKLIST_KEY);
-
+            verify(blackListStore).isBlacklisted(EMAIL);
             verify(authTokenStore).saveRefreshToken(EMAIL, REFRESH_TOKEN, REFRESH_TOKEN_EXPIRATION);
 
         }
@@ -146,7 +141,7 @@ class AuthServiceUnitTest {
 
             assertEquals(PASSWORD_NOT_MATCH, exception.getErrorCode());
 
-            verifyNoInteractions(redisService, tokenProvider, authTokenStore);
+            verifyNoInteractions(blackListStore, tokenProvider, authTokenStore);
 
         }
 
@@ -167,7 +162,7 @@ class AuthServiceUnitTest {
 
             assertEquals(PROVIDER_NOT_MATCH, exception.getErrorCode());
 
-            verifyNoInteractions(passwordEncoder, redisService, authTokenStore, tokenProvider);
+            verifyNoInteractions(passwordEncoder, blackListStore, authTokenStore, tokenProvider);
 
         }
 
@@ -184,8 +179,8 @@ class AuthServiceUnitTest {
             when(passwordEncoder.matches(PASSWORD, ENCODED_PASSWORD))
                     .thenReturn(true);
 
-            when(redisService.getData(BLACKLIST_KEY))
-                    .thenReturn("BLACKLIST");
+            when(blackListStore.isBlacklisted(EMAIL))
+                    .thenReturn(true);
 
             // when
 
@@ -194,6 +189,7 @@ class AuthServiceUnitTest {
             // then
 
             assertEquals(BLACKLIST_USER, exception.getErrorCode());
+            verify(blackListStore).isBlacklisted(EMAIL);
 
             verifyNoInteractions(tokenProvider, authTokenStore);
 

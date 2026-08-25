@@ -1,9 +1,9 @@
 package com.example.basketballmatching.auth.service;
 
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
+import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
-import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +21,7 @@ import static com.example.basketballmatching.user.type.LoginProvider.LOCAL;
 @Slf4j
 public class AuthService {
 
-    private static final String BLACKLIST_PREFIX =
-            "blackList:";
+
 
     private final UserRepository userRepository;
 
@@ -30,11 +29,12 @@ public class AuthService {
 
     private final TokenProvider tokenProvider;
 
-    private final RedisService redisService;
 
     private final AuthTokenStore authTokenStore;
 
     private final UserSessionRevocationService userSessionRevocationService;
+
+    private final BlackListStore blackListStore;
 
 
     @Transactional(readOnly = true)
@@ -100,6 +100,8 @@ public class AuthService {
         validateReissue(refreshToken, savedRefreshToken);
 
         UserEntity user = getActiveUser(email);
+
+        validateNotBlacklisted(email);
 
         String accessToken = issueAccessToken(user);
 
@@ -175,9 +177,8 @@ public class AuthService {
     }
 
     private void validateNotBlacklisted(String email) {
-        String blacklist = redisService.getData(BLACKLIST_PREFIX + email);
 
-        if (blacklist != null) {
+        if (blackListStore.isBlacklisted(email)) {
             throw new CustomException(BLACKLIST_USER);
         }
     }

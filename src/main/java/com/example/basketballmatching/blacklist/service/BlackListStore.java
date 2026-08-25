@@ -1,24 +1,29 @@
 package com.example.basketballmatching.blacklist.service;
 
-import com.example.basketballmatching.global.service.RedisService;
+import com.example.basketballmatching.blacklist.repository.BlackListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
 public class BlackListStore {
 
-    private static final String BLACKLIST_PREFIX =
-            "blackList:";
+    private final BlackListRepository blackListRepository;
 
-    private final RedisService redisService;
+    private final Clock clock;
 
+    @Transactional(readOnly = true)
     public boolean isBlacklisted(String email) {
 
-        return redisService.getData(blacklistKey(email)) != null;
+        return blackListRepository.existsByUserEntity_EmailAndExpiresAtAfter(
+                email, LocalDateTime.now(clock)
+        );
+
     }
 
-    private String blacklistKey(String email) {
-        return BLACKLIST_PREFIX + email;
-    }
+
 }
