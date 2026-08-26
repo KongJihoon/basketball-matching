@@ -1,6 +1,6 @@
 package com.example.basketballmatching.game.service;
 
-import com.example.basketballmatching.blackList.repository.BlackListRepository;
+import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;
@@ -24,7 +24,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import static com.example.basketballmatching.game.type.ParticipantGameStatus.*;
+import static com.example.basketballmatching.game.type.ParticipantGameStatus.ACCEPT;
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
 @Service
@@ -35,7 +35,7 @@ public class GameParticipantService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final ParticipantGameRepository participantGameRepository;
-    private final BlackListRepository blackListRepository;
+    private final BlackListStore blackListStore;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
@@ -48,7 +48,7 @@ public class GameParticipantService {
 
         UserEntity participant = getActiveUser(userId);
 
-        validateNotBlackList(userId);
+        validateNotBlackList(participant.getEmail());
 
         GameEntity game = getActiveGame(gameId);
 
@@ -227,9 +227,11 @@ public class GameParticipantService {
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
     }
 
-    private void validateNotBlackList(Long userId) {
-        if (blackListRepository.existsByUserEntity_UserId(userId)) {
+    private void validateNotBlackList(String email) {
+
+        if (blackListStore.isBlacklisted(email)) {
             throw new CustomException(BLACKLIST_USER);
         }
+
     }
 }

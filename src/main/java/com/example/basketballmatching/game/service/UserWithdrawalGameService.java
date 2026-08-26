@@ -67,7 +67,7 @@ public class UserWithdrawalGameService {
         }
 
         games.forEach(
-                game -> game.cancelByCreatorWithdrawal(
+                game -> game.cancelByCreatorUnavailable(
                         withdrawnAt
                 )
         );

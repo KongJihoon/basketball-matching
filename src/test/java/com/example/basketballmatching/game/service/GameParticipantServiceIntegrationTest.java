@@ -1,6 +1,5 @@
 package com.example.basketballmatching.game.service;
 
-import com.example.basketballmatching.blackList.repository.BlackListRepository;
 import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.request.CreateGameRequest;
@@ -8,7 +7,6 @@ import com.example.basketballmatching.game.dto.response.CreateGameResponse;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
-import com.example.basketballmatching.game.type.ParticipantGameStatus;
 import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static com.example.basketballmatching.game.type.FieldStatus.INDOOR;
 import static com.example.basketballmatching.game.type.MatchFormat.THREE_ON_THREE;

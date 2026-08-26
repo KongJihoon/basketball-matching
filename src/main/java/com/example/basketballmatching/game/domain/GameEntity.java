@@ -365,7 +365,7 @@ public class GameEntity extends BaseEntity {
     }
 
 
-    public void cancelByCreatorWithdrawal(LocalDateTime now) {
+    public void cancelByCreatorUnavailable(LocalDateTime now) {
         if (deletedDateTime != null) {
             return;
         }

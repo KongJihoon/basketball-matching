@@ -11,7 +11,6 @@ import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -130,7 +129,7 @@ class GameQueryRepositoryIntegrationTest {
                 now.plusDays(3)
         );
 
-        deletedGame.cancelByCreatorWithdrawal(now);
+        deletedGame.cancelByCreatorUnavailable(now);
 
         flushAndClear();
 

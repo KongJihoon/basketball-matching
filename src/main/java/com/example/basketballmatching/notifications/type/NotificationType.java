@@ -12,7 +12,7 @@ public enum NotificationType {
     REJECT_GAME("경기 참가 거절"),
     DELETE_GAME("경기 삭제"),
     UPDATE_GAME("경기 정보 수정"),
-
+    BLACKLISTED("서비스 이용 제한"),
     REQUEST_FRIEND("친구 요청");
 
     private final String description;

@@ -1,10 +1,21 @@
 package com.example.basketballmatching.auth.service;
 
 import com.example.basketballmatching.auth.dto.AuthTokenResponse;
+import com.example.basketballmatching.blacklist.domain.BlackListEntity;
+import com.example.basketballmatching.blacklist.repository.BlackListRepository;
+import com.example.basketballmatching.game.domain.GameEntity;
+import com.example.basketballmatching.game.repository.GameRepository;
+import com.example.basketballmatching.game.type.CityName;
+import com.example.basketballmatching.game.type.FieldStatus;
+import com.example.basketballmatching.game.type.MatchFormat;
+import com.example.basketballmatching.game.type.MatchGenderType;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
+import com.example.basketballmatching.report.domain.ReportEntity;
+import com.example.basketballmatching.report.repository.ReportRepository;
+import com.example.basketballmatching.report.type.ReportType;
 import com.example.basketballmatching.support.IntegrationTest;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -18,6 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,9 +56,6 @@ class AuthServiceIntegrationTest {
     private static final String REVOKED_ACCESS_TOKEN_PREFIX =
             "logout:access:";
 
-    private static final String BLACKLIST_PREFIX =
-            "blackList:";
-
     @Autowired
     private AuthService authService;
 
@@ -60,6 +70,18 @@ class AuthServiceIntegrationTest {
 
     @Autowired
     private RedisService redisService;
+
+    @Autowired
+    private GameRepository gameRepository;
+
+    @Autowired
+    private ReportRepository reportRepository;
+
+    @Autowired
+    private BlackListRepository blackListRepository;
+
+    @Autowired
+    private Clock clock;
 
     private final Set<String> createdRedisKeys = new HashSet<>();
 
@@ -178,17 +200,13 @@ class AuthServiceIntegrationTest {
     void login_fail_blacklistedUser() {
         // given
 
-        saveLocalUser();
-
-        String blacklistKey = BLACKLIST_PREFIX + EMAIL;
+        UserEntity targetUser = saveLocalUser();
 
         String refreshTokenKey = refreshTokenKey();
 
-        createdRedisKeys.add(blacklistKey);
-
         createdRedisKeys.add(refreshTokenKey);
 
-        redisService.setDataExpireDays(blacklistKey, "BLACKLIST", 7L);
+        saveActiveBlackList(targetUser);
 
         // when
 
@@ -232,6 +250,70 @@ class AuthServiceIntegrationTest {
 
     private String refreshTokenKey() {
         return REFRESH_TOKEN_PREFIX + EMAIL;
+    }
+
+    private void saveActiveBlackList(UserEntity targetUser) {
+        LocalDateTime now = LocalDateTime.now(clock);
+
+        UserEntity admin = userRepository.saveAndFlush(
+                UserEntity.create(
+                        "blacklist-admin@test.com",
+                        passwordEncoder.encode(RAW_PASSWORD),
+                        "블랙리스트관리자",
+                        "관리자",
+                        LocalDate.of(1990, 1, 1),
+                        "010-9999-9999",
+                        "서울특별시",
+                        Position.GUARD,
+                        GenderType.MALE
+                )
+        );
+
+        GameEntity game = gameRepository.saveAndFlush(
+                GameEntity.create(
+                        "블랙리스트 통합 테스트 경기",
+                        "블랙리스트 로그인 차단 검증용 경기",
+                        6,
+                        FieldStatus.INDOOR,
+                        MatchFormat.THREE_ON_THREE,
+                        MatchGenderType.MIXED,
+                        now.plusDays(2),
+                        now.plusDays(2).plusHours(2),
+                        "테스트 농구장",
+                        "서울특별시 송파구",
+                        CityName.SEOUL,
+                        37.5,
+                        127.0,
+                        admin,
+                        now
+                )
+        );
+
+        ReportEntity report = ReportEntity.create(
+                admin,
+                targetUser,
+                game,
+                ReportType.POOR_SPORTSMANSHIP,
+                "블랙리스트 로그인 차단 검증용 신고",
+                now
+        );
+
+        report.approve(
+                admin,
+                "신고 승인",
+                now
+        );
+
+        reportRepository.saveAndFlush(report);
+
+        blackListRepository.saveAndFlush(
+                BlackListEntity.create(
+                        report,
+                        admin,
+                        now,
+                        now.plusDays(7)
+                )
+        );
     }
 
 

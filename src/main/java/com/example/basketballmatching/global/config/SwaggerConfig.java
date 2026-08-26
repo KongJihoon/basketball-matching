@@ -37,7 +37,7 @@ import java.util.Arrays;
                 @Tag(name = "GAME_PARTICIPANT", description = "경기 참가 관리 API"),
                 @Tag(name = "GAME_USER", description = "경기 참가자 기능"),
                 @Tag(name = "NOTIFICATION", description = "알림 기능"),
-                @Tag(name = "BLACK_LIST", description = "블랙리스트 기능"),
+                @Tag(name = "ADMIN_BLACKLIST", description = "관리자 블랙리스트 제재 관리"),
                 @Tag(name = "OAUTH2", description = "소셜 로그인 (Kakao)"),
 
         }
