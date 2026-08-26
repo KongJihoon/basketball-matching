@@ -52,7 +52,10 @@ jobs:
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthStateStoreUnitTest" \
             --tests "com.example.basketballmatching.auth.oauth2.service.OAuthStateCookieManagerUnitTest" \
             --tests "com.example.basketballmatching.game.service.GameServiceUnitTest" \
-            --tests "com.example.basketballmatching.game.service.GameParticipantServiceUnitTest"
+            --tests "com.example.basketballmatching.game.service.GameParticipantServiceUnitTest" \
+            --tests "com.example.basketballmatching.report.service.ReportServiceUnitTest" \
+            --tests "com.example.basketballmatching.blacklist.service.BlackListServiceUnitTest" \
+            --tests "com.example.basketballmatching.game.service.BlackListGameServiceUnitTest"
 
       - name: Upload unit test report
         if: always()
