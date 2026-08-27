@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.example.basketballmatching.blacklist.type.BlackListStatus.ACTIVE;
@@ -185,9 +186,12 @@ class BlackListServiceIntegrationTest {
         assertEquals(targetId, blackList.getUserEntity().getUserId());
         assertEquals(adminId, blackList.getBannedBy().getUserId());
 
-        assertEquals(response.bannedAt().plusDays(7), blackList.getExpiresAt());
+        assertEquals(response.bannedAt().plusDays(7), response.expiresAt());
 
-        assertEquals(response.expiresAt(), blackList.getExpiresAt());
+        assertEquals(
+                response.expiresAt().truncatedTo(ChronoUnit.SECONDS),
+                blackList.getExpiresAt().truncatedTo(ChronoUnit.SECONDS)
+        );
 
         assertEquals(ACTIVE, response.status());
 

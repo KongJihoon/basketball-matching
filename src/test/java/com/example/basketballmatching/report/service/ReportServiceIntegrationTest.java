@@ -33,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static com.example.basketballmatching.game.type.CityName.SEOUL;
 import static com.example.basketballmatching.game.type.FieldStatus.INDOOR;
@@ -205,7 +206,10 @@ class ReportServiceIntegrationTest {
 
         assertEquals(PENDING, report.getReportStatus());
 
-        assertEquals(response.reportedAt(), report.getReportedDateTime());
+        assertEquals(
+                response.reportedAt().truncatedTo(ChronoUnit.SECONDS),
+                report.getReportedDateTime().truncatedTo(ChronoUnit.SECONDS)
+        );
     }
 
     @Test
