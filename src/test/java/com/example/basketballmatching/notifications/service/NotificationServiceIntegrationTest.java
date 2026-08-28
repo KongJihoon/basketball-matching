@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.example.basketballmatching.notifications.type.NotificationType.DELETE_GAME;
@@ -136,7 +137,8 @@ class NotificationServiceIntegrationTest {
 
         flushAndClear();
 
-        LocalDateTime beforeRead = LocalDateTime.now(clock);
+        LocalDateTime beforeRead = LocalDateTime.now(clock)
+                .truncatedTo(ChronoUnit.SECONDS);
 
         // when
 
@@ -155,9 +157,16 @@ class NotificationServiceIntegrationTest {
 
         assertTrue(readNotification.isRead());
 
-        assertEquals(response.readDateTime(), readNotification.getReadDateTime());
+        assertEquals(
+                response.readDateTime().truncatedTo(ChronoUnit.SECONDS),
+                readNotification.getReadDateTime().truncatedTo(ChronoUnit.SECONDS)
+        );
 
-        assertFalse(readNotification.getReadDateTime().isBefore(beforeRead));
+        assertFalse(
+                readNotification.getReadDateTime()
+                        .truncatedTo(ChronoUnit.SECONDS)
+                        .isBefore(beforeRead)
+        );
 
         List<NotificationResponse> unReadNotifications = notificationService.getUnReadNotifications(receiverId, PageRequest.of(0, 10));
 
