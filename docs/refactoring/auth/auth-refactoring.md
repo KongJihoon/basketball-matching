@@ -43,7 +43,7 @@ JWT 생성 책임과 Redis 저장 책임이 결합되어 TokenProvider 단위 �
 - Authorization 헤더 추출
 - JWT 검증
 - 로그아웃 토큰 Redis 조회
-- 블랙리스트 사용자 Redis 조회
+- 활성 블랙리스트 사용자 조회
 - Authentication 생성
 - SecurityContext 저장
 - JSON 예외 응답 생성
@@ -119,8 +119,8 @@ RefreshToken 내부에는 사용자 이메일이 Subject로 포함되어 있었�
 
 담당 책임:
 
-- Redis에서 블랙리스트 사용자 여부 조회
-- 블랙리스트 Redis Key 생성
+- 이메일과 만료 시각을 기준으로 DB에서 활성 블랙리스트 여부 조회
+- 인증 계층이 블랙리스트 Repository 구현을 직접 알지 않도록 조회 책임 캡슐화
 
 ### AuthenticationFilter
 
@@ -248,7 +248,7 @@ Testcontainers를 이용하여 실제 MySQL과 Redis를 사용했다.
 - 저장된 Refresh Token을 이용한 Access Token 재발급
 - 로그아웃 후 Refresh Token 삭제
 - 로그아웃 Access Token Redis 저장 및 TTL
-- Redis에 등록된 블랙리스트 사용자의 로그인 차단
+- DB에 활성 제재가 존재하는 블랙리스트 사용자의 로그인 차단
 
 ---
 
@@ -257,20 +257,18 @@ Testcontainers를 이용하여 실제 MySQL과 Redis를 사용했다.
 Github Actions에서 단위 테스트와 통합테스트 Job을 분리했다.
 
 ### Unit Test
-- UserService 단위 테스트
-- UserWithdrawalService 단위 테스트
-- AuthService 단위 테스트
-- UserSessionRevocationService 단위 테스트
-- AuthenticationFilter 단위 테스트
+
+`./gradlew clean unitTest`를 실행한다. `integration` 태그가 없는 테스트를 자동으로 검색하므로 새로운 단위 테스트 클래스를 CI 파일에 수동으로 추가하지 않는다.
 
 ### Integration Tests
-- UserService 통합 테스트
-- UserWithdrawalService 통합 테스트
-- AuthService 통합 테스트
+
+`./gradlew clean integrationTest`를 실행한다. 공통 `@IntegrationTest`에 포함된 `@Tag("integration")`을 기준으로 통합 테스트를 자동으로 검색한다.
 
 통합 테스트는 GitHub Actions의 Docker 환경에서
 
 Testcontainers를 이용하여 MySQL과 Redis를 실행한다.
+
+두 Job이 모두 성공한 경우에만 실행 가능한 JAR을 빌드한다. 클래스명을 CI에 직접 나열하지 않아 테스트 추가 시 실행이 누락되는 문제를 방지했다.
 
 
 ---

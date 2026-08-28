@@ -90,6 +90,7 @@ src/test/java/com/example/basketballmatching/support/IntegrationTest.java
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@Tag("integration")
 @SpringBootTest
 @ActiveProfiles("test")
 @ContextConfiguration(
@@ -98,6 +99,30 @@ src/test/java/com/example/basketballmatching/support/IntegrationTest.java
 public @interface IntegrationTest {
 }
 ```
+
+`@Tag("integration")`은 Gradle과 CI가 테스트 클래스명을 직접 알지 않아도 통합 테스트를 분류할 수 있게 한다.
+
+```groovy
+tasks.register('unitTest', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+}
+```
+
+새 통합 테스트에 `@IntegrationTest`만 붙이면 로컬의 `integrationTest` Task와 GitHub Actions Integration Tests Job에 자동 포함된다. 반대로 일반 단위 테스트는 `unitTest` Task에서 실행된다. CI 파일에 클래스명을 나열하는 방식보다 테스트 누락 가능성이 낮다.
 
 테스트 클래스에서는 다음처럼 사용한다.
 
