@@ -1,7 +1,8 @@
 package com.example.basketballmatching.notifications.redis;
 
-import com.example.basketballmatching.notifications.dto.GameCreateSuccessSseDto;
+import com.example.basketballmatching.notifications.dto.response.GameCreatedNotificationMessage;
 import com.example.basketballmatching.notifications.repository.EmitterRepository;
+import com.example.basketballmatching.notifications.support.SseIdGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,40 +22,56 @@ public class NotificationRedisSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
     private final EmitterRepository emitterRepository;
+    private final SseIdGenerator sseIdGenerator;
 
 
 
     @Override
-    public void onMessage(Message message, byte[] pattern) {
+    public void onMessage(Message redisMessage, byte[] pattern) {
 
         try {
 
-            String json = new String(message.getBody(), StandardCharsets.UTF_8);
-            GameCreateSuccessSseDto gameCreateSuccessSseDto = objectMapper.readValue(json, GameCreateSuccessSseDto.class);
+            String json = new String(redisMessage.getBody(), StandardCharsets.UTF_8);
+            GameCreatedNotificationMessage message = objectMapper.readValue(json, GameCreatedNotificationMessage.class);
 
-            Map<String, SseEmitter> emitters = emitterRepository.findAllStartWithByUserId(
-                    String.valueOf(gameCreateSuccessSseDto.getReceiverUserId())
+
+            Long receiverId = message.receiverUserId();
+
+            String eventId = sseIdGenerator.createEventId(receiverId);
+
+            emitterRepository.saveEvent(eventId, message);
+
+            Map<String, SseEmitter> emitters = emitterRepository.findAllEmittersByUserId(receiverId);
+
+
+            emitters.forEach(
+                    (emitterId, emitter) ->
+                            sendToClient(emitter, emitterId, eventId, message)
             );
 
-            if (emitters.isEmpty()) {
-                return;
-            }
-
-            emitters.forEach((emitterId, emitter) -> {
-                emitterRepository.saveEventCache(emitterId, gameCreateSuccessSseDto);
-
-                try {
-                    emitter.send(SseEmitter.event()
-                            .id(emitterId)
-                            .name("sse")
-                            .data(gameCreateSuccessSseDto));
-                } catch (IOException e) {
-                    emitterRepository.deleteByEmitterId(emitterId);
-                }
-            });
 
         } catch (Exception e) {
-            log.error("[NotificationRedisSubscriber] message process fail", e);
+            log.error("[Redis 알림 메시지 처리 실패]", e);
+        }
+
+    }
+
+    private void sendToClient(SseEmitter emitter, String emitterId, String eventId, Object data) {
+
+        try {
+
+            emitter.send(
+                    SseEmitter.event()
+                            .id(eventId)
+                            .name("notification")
+                            .data(data)
+            );
+
+        } catch (IOException e) {
+            emitterRepository.deleteEmitter(emitterId);
+
+            log.warn("[Redis SSE 알림 전송 실패] emitterId={}, eventId={}", emitterId, eventId, e);
+
         }
 
     }

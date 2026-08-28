@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum RedisTopic {
 
-    Game_CREATED("game.created");
+    GAME_CREATED("game.created");
 
     private final String value;
 

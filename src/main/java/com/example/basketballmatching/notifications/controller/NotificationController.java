@@ -48,8 +48,8 @@ public class NotificationController {
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<SseEmitter> subscribe(
             @AuthenticationPrincipal UserInfoDetails userInfoDetails,
-            @Parameter(name = "lastEventId", description = "유실된 이벤트 복구를 위한 마지막 이벤트 ID")
-            @RequestHeader(value = "lastEventId", required = false, defaultValue = "")
+            @Parameter(name = "Last-Event-ID", description = "마지막으로 수신한 SSE 이벤트 ID")
+            @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "")
             String lastEventId) {
 
 

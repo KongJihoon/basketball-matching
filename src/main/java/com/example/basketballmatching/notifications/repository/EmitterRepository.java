@@ -1,68 +1,85 @@
 package com.example.basketballmatching.notifications.repository;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Repository
+@RequiredArgsConstructor
 public class EmitterRepository {
 
-    public final Map<String, SseEmitter> emitter = new ConcurrentHashMap<>();
-    private final Map<String, Object> eventCache = new ConcurrentHashMap<>();
+    private static final Duration EVENT_CACHE_TTL = Duration.ofMinutes(5);
+
+    private final Clock clock;
 
 
-    public SseEmitter save(String emitterId, SseEmitter sseEmitter) {
-        emitter.put(emitterId, sseEmitter);
-        return sseEmitter;
+    private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final Map<String, CacheEvent> eventCache = new ConcurrentHashMap<>();
+
+
+    public SseEmitter saveEmitter(String emitterId, SseEmitter emitter) {
+        emitters.put(emitterId, emitter);
+        return emitter;
     }
 
 
-    public void saveEventCache(String emitterId, Object event) {
-        eventCache.put(emitterId, event);
+    public void saveEvent(String eventId, Object event) {
+
+        removeExpireEvents();
+
+        eventCache.put(eventId, new CacheEvent(event, Instant.now(clock)));
     }
 
-    public Map<String, SseEmitter> findAllStartWithByUserId(String userId) {
+    public Map<String, SseEmitter> findAllEmittersByUserId(Long userId) {
 
-        return emitter.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(userId))
+        String emitterPrefix = userId + "_emitter_";
+
+
+        return emitters.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(emitterPrefix))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     }
 
-    public Map<String, Object> findAllEventCacheStartWithUserId(String userId) {
+    public Map<String, Object> findAllEventsByUserId(Long userId) {
+
+        removeExpireEvents();
+
+        String eventPrefix = userId + "_event_";
 
 
         return eventCache.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(userId))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .filter(entry -> entry.getKey().startsWith(eventPrefix))
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
+                        entry.getValue().data(), (first, second) -> first, LinkedHashMap::new));
 
     }
 
-    public void deleteAllStratWithUserId(String userId) {
-        emitter.forEach(
-                (key, value) -> {
-                    if (key.startsWith(userId)) {
-                        emitter.remove(key);
-                    }
-                }
+
+    public void deleteEmitter(String emitterId) {
+        emitters.remove(emitterId);
+    }
+
+
+
+    private void removeExpireEvents() {
+        Instant expirationTime = Instant.now(clock).minus(EVENT_CACHE_TTL);
+
+        eventCache.entrySet().removeIf(
+                entry -> entry.getValue().cacheAt.isBefore(expirationTime)
         );
     }
 
-    public void deleteByEmitterId(String emitterId) {
-        emitter.remove(emitterId);
-    }
-
-    public void deleteAllEventCacheStartWithUserId(String userId) {
-
-        eventCache.forEach(
-                (key, value) -> {
-                    if (key.startsWith(userId)) {
-                        eventCache.remove(key);
-                    }
-                }
-        );
-    }
+    private record CacheEvent(
+            Object data, Instant cacheAt
+    ) {}
 }

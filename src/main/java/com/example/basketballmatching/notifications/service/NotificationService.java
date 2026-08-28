@@ -7,6 +7,7 @@ import com.example.basketballmatching.notifications.dto.response.ReadNotificatio
 import com.example.basketballmatching.notifications.repository.EmitterRepository;
 import com.example.basketballmatching.notifications.repository.NotificationQueryRepository;
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
+import com.example.basketballmatching.notifications.support.SseIdGenerator;
 import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -40,37 +41,25 @@ public class NotificationService {
 
     private final UserRepository userRepository;
 
+    private final SseIdGenerator sseIdGenerator;
+
     private final Clock clock;
 
     public SseEmitter subscribe(Long userId, String lastEventId) {
 
         getActiveUser(userId);
 
-        String emitterId = userId + "_" + System.currentTimeMillis();
+        String emitterId = sseIdGenerator.createEmitterId(userId);
 
-        SseEmitter emitter = emitterRepository.save(emitterId, new SseEmitter(DEFAULT_TIMEOUT));
+        SseEmitter emitter = emitterRepository.saveEmitter(emitterId, new SseEmitter(DEFAULT_TIMEOUT));
 
-        emitter.onCompletion(
-                () -> emitterRepository.deleteByEmitterId(emitterId)
-        );
+        registerEmitterCallbacks(emitter, emitterId);
 
-        emitter.onTimeout(() -> emitterRepository.deleteByEmitterId(emitterId));
-        emitter.onError((e) -> emitterRepository.deleteByEmitterId(emitterId));
+        sendConnectionEvent(emitter, emitterId);
 
 
-        sendToClient(emitter, emitterId,
-                "EventStream Created. [emitterId = " + emitterId + "]");
-
-        if (!lastEventId.isEmpty()) {
-            Map<String, Object> events = emitterRepository.findAllEventCacheStartWithUserId(
-                    String.valueOf(userId)
-            );
-
-            events.entrySet().stream()
-                    .filter(entry -> lastEventId.compareTo(entry.getKey()) < 0)
-                    .forEach(
-                            entry -> sendToClient(emitter, entry.getKey(), entry.getValue())
-                    );
+        if (!lastEventId.isBlank()) {
+            resendMissedEvents(userId, lastEventId, emitterId, emitter);
         }
 
 
@@ -86,15 +75,20 @@ public class NotificationService {
 
         NotificationEntity savedNotification = notificationRepository.save(notification);
 
-        Map<String, SseEmitter> sseEmitters = emitterRepository.findAllStartWithByUserId(
-                String.valueOf(userEntity.getUserId())
-        );
+        NotificationResponse response = NotificationResponse.fromEntity(savedNotification);
+
+
+        Long receiverId = userEntity.getUserId();
+
+        String eventId = sseIdGenerator.createEventId(receiverId);
+
+        emitterRepository.saveEvent(eventId, response);
+
+
+        Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmittersByUserId(receiverId);
 
         sseEmitters.forEach(
-                (key, emitter) -> {
-                    emitterRepository.saveEventCache(key, savedNotification);
-                    sendToClient(emitter, key, NotificationResponse.fromEntity(savedNotification));
-                }
+                (emitterId, emiter) -> sendToClient(emiter, emitterId, eventId, response)
         );
 
 
@@ -124,17 +118,51 @@ public class NotificationService {
         return ReadNotificationResponse.fromEntity(notification);
     }
 
+    private void registerEmitterCallbacks(SseEmitter emitter, String emitterId) {
 
-    private void sendToClient(SseEmitter sseEmitter, String emitterId, Object data) {
+        emitter.onCompletion(() -> emitterRepository.deleteEmitter(emitterId));
+        emitter.onTimeout(() -> emitterRepository.deleteEmitter(emitterId));
+        emitter.onError(exception -> emitterRepository.deleteEmitter(emitterId));
+
+    }
+
+    private void resendMissedEvents(Long userId, String lastEventId, String emitterId, SseEmitter emitter) {
+
+        Map<String, Object> events = emitterRepository.findAllEventsByUserId(userId);
+
+        events.entrySet().stream()
+                .filter(entry -> lastEventId.compareTo(entry.getKey()) < 0)
+                .forEach(entry ->
+                        sendToClient(emitter, emitterId, entry.getKey(), entry.getValue()));
+
+    }
+
+    private void sendConnectionEvent(SseEmitter emitter, String emitterId) {
+
         try {
-            sseEmitter.send(SseEmitter.event()
-                    .id(emitterId)
-                    .name("sse")
+            emitter.send(
+                    SseEmitter.event()
+                            .name("connect")
+                            .data("SSE 연결이 완료되었습니다.")
+            );
+        } catch (IOException e) {
+            emitterRepository.deleteEmitter(emitterId);
+
+            log.warn("[SSE 연결 이벤트 전송 실패] emitterId={}", emitterId, e);
+        }
+    }
+
+
+    private void sendToClient(SseEmitter emitter, String emitterId, String eventId,Object data) {
+        try {
+            emitter.send(SseEmitter.event()
+                    .id(eventId)
+                    .name("notification")
                     .data(data));
         } catch (IOException e) {
-            emitterRepository.deleteByEmitterId(emitterId);
+            emitterRepository.deleteEmitter(emitterId);
 
-            log.warn("[SSE 알림 전송 실패] emitterId={}", emitterId, e);
+            log.warn("[SSE 알림 전송 실패] emitterId={} eventId={}", emitterId,eventId, e);
 
         }
     }

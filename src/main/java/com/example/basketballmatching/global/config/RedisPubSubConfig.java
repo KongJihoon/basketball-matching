@@ -16,7 +16,7 @@ public class RedisPubSubConfig {
 
     @Bean
     public ChannelTopic gameCreatedTopic() {
-        return new ChannelTopic(RedisTopic.Game_CREATED.getValue());
+        return new ChannelTopic(RedisTopic.GAME_CREATED.getValue());
     }
 
     @Bean
