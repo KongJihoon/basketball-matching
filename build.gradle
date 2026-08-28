@@ -71,6 +71,32 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.register('unitTest', Test) {
+    group = 'verification'
+    description = 'Runs tests excluding integration tests.'
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    group = 'verification'
+    description = 'Runs integration tests.'
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+
+    shouldRunAfter tasks.named('unitTest')
+}
+
 def querydslDir = "$buildDir/generated/querydsl"
 
 sourceSets {
@@ -80,4 +106,3 @@ sourceSets {
 tasks.withType(JavaCompile).configureEach {
     options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
 }
-

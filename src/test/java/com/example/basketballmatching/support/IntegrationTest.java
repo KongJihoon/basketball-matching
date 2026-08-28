@@ -1,6 +1,7 @@
 package com.example.basketballmatching.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -15,6 +16,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
+@Tag("integration")
 @SpringBootTest
 @ActiveProfiles("test")
 @ContextConfiguration(
