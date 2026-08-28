@@ -1,16 +1,15 @@
 package com.example.basketballmatching.notifications.repository;
 
-import com.example.basketballmatching.notifications.dto.NotificationDto;
-import com.example.basketballmatching.notifications.entity.NotificationEntity;
+import com.example.basketballmatching.notifications.domain.NotificationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Long> {
 
 
-
+    Optional<NotificationEntity> findByNotificationIdAndReceiver_UserId(Long notificationId, Long userId);
 
 }

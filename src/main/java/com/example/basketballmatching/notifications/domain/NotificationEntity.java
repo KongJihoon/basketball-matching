@@ -1,21 +1,16 @@
-package com.example.basketballmatching.notifications.entity;
+package com.example.basketballmatching.notifications.domain;
 
 import com.example.basketballmatching.global.entity.BaseEntity;
 import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.user.domain.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationEntity extends BaseEntity {
 
     @Id
@@ -35,14 +30,31 @@ public class NotificationEntity extends BaseEntity {
     private String content;
 
     @Column(nullable = false)
-    @Builder.Default
-    private boolean isRead = false;
-
+    private boolean isRead;
 
     private LocalDateTime readDateTime;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private NotificationEntity(UserEntity receiver, NotificationType notificationType, String content) {
+        this.receiver = receiver;
+        this.notificationType = notificationType;
+        this.content = content;
+        this.isRead = false;
+    }
 
-    public void setReadAndReadDateTime(LocalDateTime readDateTime) {
+    public static NotificationEntity create(UserEntity receiver, NotificationType notificationType, String content) {
+        return NotificationEntity.builder()
+                .receiver(receiver)
+                .notificationType(notificationType)
+                .content(content)
+                .build();
+    }
+
+    public void markAsRead(LocalDateTime readDateTime) {
+        if (isRead) {
+            return;
+        }
+
         this.isRead = true;
         this.readDateTime = readDateTime;
     }
