@@ -6,7 +6,7 @@ import com.example.basketballmatching.game.dto.UserWithdrawalGameResultDto;
 import com.example.basketballmatching.game.service.UserWithdrawalGameService;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.global.service.RedisService;
-import com.example.basketballmatching.notifications.entity.NotificationEntity;
+import com.example.basketballmatching.notifications.domain.NotificationEntity;
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
 import com.example.basketballmatching.notifications.type.NotificationType;
 import com.example.basketballmatching.support.IntegrationTest;

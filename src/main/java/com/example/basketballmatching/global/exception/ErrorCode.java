@@ -119,10 +119,8 @@ public enum ErrorCode {
     BLACKLIST_REPORT_ALREADY_USED(HttpStatus.CONFLICT, "이미 블랙리스트 제재에 사용된 신고입니다."),
     INVALID_BLACKLIST_PERIOD(HttpStatus.INTERNAL_SERVER_ERROR, "블랙리스트 제재 기간이 올바르지 않습니다."),
 
-
-    // friend
-    ALREADY_EXIST_FRIEND(HttpStatus.BAD_REQUEST, "이미 친구목록에 존재하는 유저입니다."),
-    INVALID_FRIEND_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 친구요청입니다.");
+    // notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다.");
 
 
 
