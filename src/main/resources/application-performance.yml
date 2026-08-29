@@ -40,3 +40,4 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     com.example.basketballmatching.game.service.GameService: WARN
+    com.example.basketballmatching.game.service.GameParticipantService: WARN

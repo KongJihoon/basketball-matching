@@ -1,0 +1,36 @@
+{
+  "testPhase": "before-lock",
+  "testRun": "run-01",
+  "userCount": 100,
+  "expectedSuccessCount": 5,
+  "actualResults": {
+    "successCount": 12,
+    "fullHeadcountCount": 52,
+    "systemErrorCount": 36,
+    "unexpectedResponseCount": 0,
+    "expectedResponseRate": 0.64,
+    "httpFailureRate": 0.36
+  },
+  "participationDurationMs": {
+    "average": 216.79,
+    "median": 220.72,
+    "p90": 253.76,
+    "p95": 258.99,
+    "p99": 262.55,
+    "maximum": 263.94
+  },
+  "databaseVerification": {
+    "headCount": 6,
+    "participantCount": 6,
+    "acceptedParticipantCount": 13,
+    "acceptedApplicantCount": 12,
+    "overbookedCount": 7,
+    "duplicateParticipationCount": 0,
+    "gameStatus": "CLOSED",
+    "verdict": "FAIL"
+  },
+  "security": {
+    "setupDataRemoved": true,
+    "note": "JWT access tokens issued during setup are intentionally excluded."
+  }
+}
