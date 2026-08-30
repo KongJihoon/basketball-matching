@@ -38,6 +38,8 @@ TEST_PASSWORD="${TEST_PASSWORD:-Perf@1234}"
 
 P95_LIMIT_MS="${P95_LIMIT_MS:-5000}"
 
+SETUP_TIMEOUT="${SETUP_TIMEOUT:-5m}"
+
 OVERWRITE="${OVERWRITE:-false}"
 
 ENABLE_PROMETHEUS="${ENABLE_PROMETHEUS:-true}"
@@ -103,7 +105,7 @@ fi
 
 
 case "${TEST_PHASE}" in
-    before-lock|pessimistic-lock|optimistic-lock)
+    before-lock|pessimistic-lock|optimistic-lock|pessimistic-lock-load-limit)
         ;;
     *)
         echo "지원하지 않는 TEST_PHASE입니다."
@@ -113,6 +115,7 @@ case "${TEST_PHASE}" in
         echo "- before-lock"
         echo "- pessimistic-lock"
         echo "- optimistic-lock"
+        echo "- pessimistic-lock-load-limit"
         exit 1
         ;;
 esac
@@ -193,6 +196,7 @@ echo "USER_COUNT             : ${USER_COUNT}"
 echo "EXPECTED_SUCCESS_COUNT : ${EXPECTED_SUCCESS_COUNT}"
 echo "EXPECTED_FULL_COUNT    : ${EXPECTED_FULL_COUNT}"
 echo "P95_LIMIT_MS           : ${P95_LIMIT_MS}"
+echo "SETUP_TIMEOUT          : ${SETUP_TIMEOUT}"
 echo "PROMETHEUS             : ${ENABLE_PROMETHEUS}"
 echo "RESULT_FILE            : ${SUMMARY_FILE}"
 echo "============================================================"
@@ -219,7 +223,7 @@ fi
 # 개선 전에는 다음 임계값이 실패할 수 있다.
 #
 # - 성공 요청이 5건을 초과
-# - 정상 정원 초과가 95건보다 적음
+# - 정상 정원 초과가 USER_COUNT - 5건보다 적음
 # - 500 응답 또는 데드락 발생
 #
 # 따라서 set +e로 k6 종료 코드를 먼저 저장하고,
@@ -237,6 +241,7 @@ USER_COUNT="${USER_COUNT}" \
 EXPECTED_SUCCESS_COUNT="${EXPECTED_SUCCESS_COUNT}" \
 TEST_PASSWORD="${TEST_PASSWORD}" \
 P95_LIMIT_MS="${P95_LIMIT_MS}" \
+SETUP_TIMEOUT="${SETUP_TIMEOUT}" \
 K6_PROMETHEUS_RW_SERVER_URL="${PROMETHEUS_REMOTE_WRITE_URL}" \
 K6_PROMETHEUS_RW_TREND_STATS="${PROMETHEUS_TREND_STATS}" \
 k6 run \

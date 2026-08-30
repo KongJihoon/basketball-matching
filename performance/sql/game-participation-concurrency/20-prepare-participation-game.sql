@@ -8,11 +8,11 @@
  * - 생성자: 이미 ACCEPT 상태
  * - 현재 참가 인원: 1명
  * - 남은 자리: 5명
- * - 동시 참가 요청: 100명
+ * - 동시 참가 요청: USER_COUNT명
  *
  * 기대 결과:
  * - 성공: 5건
- * - 정원 초과 거절: 95건
+ * - 정원 초과 거절: USER_COUNT - 5건
  * - 최종 participant_count: 6
  * - 최종 ACCEPT 참가자: 6
  *
@@ -70,7 +70,7 @@ SELECT
  * 정상 결과:
  *
  * creator_user_id       = NULL이 아닌 값
- * participant_user_count = 100
+ * participant_user_count = 1000
  */
 
 

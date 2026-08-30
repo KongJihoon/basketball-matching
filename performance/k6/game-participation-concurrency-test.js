@@ -42,6 +42,9 @@ const P95_LIMIT_MS = Number(
     __ENV.P95_LIMIT_MS || 5000,
 );
 
+const SETUP_TIMEOUT =
+    __ENV.SETUP_TIMEOUT || '5m';
+
 
 /*
  * ============================================================
@@ -112,15 +115,17 @@ const participationExpectedResponseRate =
  * k6 실행 설정
  * ============================================================
  *
- * 사용자 100명이 각각 한 번씩 참가 요청을 보낸다.
+ * USER_COUNT명의 사용자가 각각 한 번씩 참가 요청을 보낸다.
  *
  * per-vu-iterations:
  * - VU마다 정해진 횟수만큼 실행
- * - VU 100명 × 1회 = 총 100건
+ * - VU USER_COUNT명 × 1회 = 총 USER_COUNT건
  * ============================================================
  */
 
 export const options = {
+    setupTimeout: SETUP_TIMEOUT,
+
     scenarios: {
         game_participation_concurrency: {
             executor: 'per-vu-iterations',
@@ -146,6 +151,9 @@ export const options = {
 
                 test_run:
                 TEST_RUN,
+
+                load_level:
+                    `users-${USER_COUNT}`,
             },
         },
     },
@@ -246,7 +254,7 @@ function parseResponseBody(response) {
  * 테스트 사전 준비
  * ============================================================
  *
- * 참가 요청 전에 사용자 100명을 순서대로 로그인한다.
+ * 참가 요청 전에 USER_COUNT명의 사용자를 순서대로 로그인한다.
  *
  * 로그인 요청은 테스트 준비 과정이며,
  * 경기 참가 API 지표와는 endpoint 태그로 분리한다.

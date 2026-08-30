@@ -161,8 +161,21 @@ CREATE INDEX idx_game_list_latest
 - [락 적용 전 기준선](./results/game-participation-concurrency/before-lock/summary.md)
 - [낙관적 락 무재시도 비교 실험](./results/game-participation-concurrency/optimistic-lock-no-retry/summary.md)
 - [비관적 락 적용 후 검증](./results/game-participation-concurrency/pessimistic-lock/summary.md)
+- [비관적 락 200·500·1,000명 부하 한계 탐색](./results/game-participation-concurrency/pessimistic-lock-load-limit/summary.md)
 - [동시성 제어 방식 결정 기록](../docs/adr/game/game-participation-concurrency-lock.md)
 - [k6 동시 참가 스크립트](./k6/game-participation-concurrency-test.js)
 - [테스트 실행 스크립트](./scripts/run-game-participation-concurrency-test.sh)
 - [테스트 경기 준비 SQL](./sql/game-participation-concurrency/20-prepare-participation-game.sql)
 - [정합성 검증 SQL](./sql/game-participation-concurrency/90-verify-participation-result.sql)
+
+### 비관적 락 단계별 부하 결과
+
+비관적 락을 최종 선택한 뒤 같은 경기의 남은 5자리에 요청을 집중시키는 규모를 200명, 500명, 1,000명으로 높였다.
+
+| VU | 참가 성공 | 정상 거절 | 시스템 오류 | p95 | DB 판정 |
+|---:|---:|---:|---:|---:|---|
+| 200 | 5 | 195 | 0 | 502.17ms | `PASS` |
+| 500 | 5 | 495 | 0 | 817.57ms | `PASS` |
+| 1,000 | 5 | 995 | 0 | 2,024.20ms | `PASS` |
+
+HikariCP 최대 크기 10에서 1,000 VU 테스트의 Active Connection은 최대 10, Pending Connection은 최대 198이었고 Connection Timeout은 0건이었다. 요청 규모에 따라 꼬리 지연은 증가했지만 검증한 1,000 VU 범위에서 정합성과 정상 응답을 유지했다. 이는 확인한 상한이며 실제 시스템 파괴 지점이나 운영 수용량을 의미하지 않는다.
