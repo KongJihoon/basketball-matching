@@ -151,7 +151,6 @@ public class GameParticipantConcurrencyIntegrationTest {
 
     }
 
-    @Disabled("락 적용 전 동시성 문제 재현 테스트 - 락 적용 단계에서 활성화")
     @Test
     @DisplayName("100명이 동시에 참가해도 경기 정원이 보장된다")
     void join_concurrently_preservesConsistency() throws InterruptedException {
@@ -185,7 +184,7 @@ public class GameParticipantConcurrencyIntegrationTest {
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
 
-        log.info("=== 락 적용 전 동시 참가 결과 ===");
+        log.info("=== 동시 참가 정합성 테스트 결과 ===");
 
         log.info("전체 요청 수: {}", result.totalCount());
         log.info("성공 요청 수: {}", result.successCount());
