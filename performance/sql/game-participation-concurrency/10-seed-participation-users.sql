@@ -5,7 +5,7 @@
  *
  * 생성 데이터:
  * - 경기 생성자 1명
- * - 동시 참가 요청 사용자 100명
+ * - 동시 참가 요청 사용자 1000명
  *
  * 공통 비밀번호:
  * - Perf@1234
@@ -40,7 +40,7 @@ SELECT
  * 1. 테스트용 숫자 임시 테이블 생성
  * ============================================================
  *
- * 1부터 100까지의 숫자를 생성한다.
+ * 1부터 1000까지의 숫자를 생성한다.
  * 임시 테이블이므로 현재 DB 연결이 종료되면 자동 삭제된다.
  * ============================================================
  */
@@ -70,13 +70,16 @@ WITH digits AS (
 SELECT
     ones.number
         + tens.number * 10
+        + hundreds.number * 100
         + 1 AS sequence_no
 FROM digits AS ones
          CROSS JOIN digits AS tens
+         CROSS JOIN digits AS hundreds
 WHERE (
           ones.number
               + tens.number * 10
-          ) < 100;
+              + hundreds.number * 100
+          ) < 1000;
 
 
 /* 숫자 생성 확인 */
@@ -91,9 +94,9 @@ FROM perf_participation_sequence;
 /*
  * 정상 결과:
  *
- * sequence_count = 100
+ * sequence_count = 1000
  * min_sequence   = 1
- * max_sequence   = 100
+ * max_sequence   = 1000
  */
 
 
@@ -159,13 +162,13 @@ VALUES (
 
 
 /* ============================================================
- * 3. 동시 참가 사용자 100명 생성
+ * 3. 동시 참가 사용자 1000명 생성
  * ============================================================
  *
  * 이메일:
  * - perf-concurrency-user-001@example.test
  * - ...
- * - perf-concurrency-user-100@example.test
+ * - perf-concurrency-user-1000@example.test
  *
  * 모든 사용자의 비밀번호:
  * - Perf@1234
@@ -208,7 +211,14 @@ SELECT
 
     CONCAT(
             'perf-concurrency-user-',
-            LPAD(sequence_no, 3, '0'),
+            LPAD(
+                    sequence_no,
+                    GREATEST(
+                            3,
+                            CHAR_LENGTH(CAST(sequence_no AS CHAR))
+                    ),
+                    '0'
+            ),
             '@example.test'
     ),
 
@@ -224,12 +234,26 @@ SELECT
 
     CONCAT(
             '동시성테스트사용자',
-            LPAD(sequence_no, 3, '0')
+            LPAD(
+                    sequence_no,
+                    GREATEST(
+                            3,
+                            CHAR_LENGTH(CAST(sequence_no AS CHAR))
+                    ),
+                    '0'
+            )
     ),
 
     CONCAT(
             'concurrency_user_',
-            LPAD(sequence_no, 3, '0')
+            LPAD(
+                    sequence_no,
+                    GREATEST(
+                            3,
+                            CHAR_LENGTH(CAST(sequence_no AS CHAR))
+                    ),
+                    '0'
+            )
     ),
 
     '$2y$10$X41wLjiMCumq51wxDclm7Ok.B/ItPtLEYkAqNIpT12qftI2x1PLaW',
@@ -276,8 +300,15 @@ WHERE email = 'perf-concurrency-creator@example.test'
 
 SELECT
     COUNT(*) AS participant_user_count,
-    MIN(email) AS first_participant_email,
-    MAX(email) AS last_participant_email
+
+    SUM(
+            email = 'perf-concurrency-user-001@example.test'
+    ) AS first_user_exists,
+
+    SUM(
+            email = 'perf-concurrency-user-1000@example.test'
+    ) AS thousandth_user_exists
+
 FROM user_entity
 WHERE email LIKE 'perf-concurrency-user-%@example.test'
   AND deleted_date_time IS NULL;
@@ -287,13 +318,10 @@ WHERE email LIKE 'perf-concurrency-user-%@example.test'
  * 정상 결과:
  *
  * creator_count          = 1
- * participant_user_count = 100
+ * participant_user_count = 1000
  *
- * first_participant_email
- * = perf-concurrency-user-001@example.test
- *
- * last_participant_email
- * = perf-concurrency-user-100@example.test
+ * first_user_exists      = 1
+ * thousandth_user_exists = 1
  */
 
 

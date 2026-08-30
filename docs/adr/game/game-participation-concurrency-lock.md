@@ -67,6 +67,10 @@ Optional<GameEntity> findActiveGameWithPessimisticLock(
 
 비관적 락은 CountDownLatch 통합 테스트와 k6 3회 반복 측정에서 매번 성공 5건, 정상 거절 95건, 시스템 오류 0건을 기록했다.
 
+선택 후 요청 규모를 200, 500, 1,000 VU로 높인 추가 검증에서도 모든 단계가 DB 정합성 `PASS`, 시스템 오류 0건을 기록했다. 1,000 VU의 참가 API p95는 2,024.20ms였고 HikariCP Pending Connection은 최대 198까지 증가했지만 Connection Timeout은 발생하지 않았다.
+
+이 결과는 로컬 단일 서버에서 검증한 상한이다. 실제 운영 수용량이나 시스템의 절대 파괴 지점을 의미하지 않으며, 요청 규모가 커질수록 비관적 락의 대기시간이 증가하는 트레이드오프도 확인했다.
+
 ## 트레이드오프와 재검토 조건
 
 같은 경기의 참가 요청은 락을 얻을 때까지 대기하므로 인기 경기에 요청이 집중되면 지연시간과 DB 커넥션 점유 시간이 증가할 수 있다. 트랜잭션 안에서 외부 API 호출이나 오래 걸리는 작업을 수행하지 않고 락 보유 시간을 짧게 유지해야 한다.
@@ -78,4 +82,4 @@ Optional<GameEntity> findActiveGameWithPessimisticLock(
 - DB 다중화 구조에서 동일한 잠금 보장을 유지하기 어렵다.
 - 대기열, Redis 분산 락 또는 비동기 참가 처리의 필요성이 생긴다.
 
-세부 실험 자료는 [비관적 락 검증](../../../performance/results/game-participation-concurrency/pessimistic-lock/summary.md)과 [낙관적 락 무재시도 비교](../../../performance/results/game-participation-concurrency/optimistic-lock-no-retry/summary.md)에 보관한다.
+세부 실험 자료는 [비관적 락 검증](../../../performance/results/game-participation-concurrency/pessimistic-lock/summary.md), [낙관적 락 무재시도 비교](../../../performance/results/game-participation-concurrency/optimistic-lock-no-retry/summary.md), [비관적 락 단계별 부하 탐색](../../../performance/results/game-participation-concurrency/pessimistic-lock-load-limit/summary.md)에 보관한다.
