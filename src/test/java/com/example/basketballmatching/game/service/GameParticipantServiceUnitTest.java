@@ -124,7 +124,7 @@ class GameParticipantServiceUnitTest {
         when(blackListStore.isBlacklisted("participant@test.com"))
                 .thenReturn(false);
 
-        when(gameRepository.findByGameIdAndDeletedDateTimeIsNull(GAME_ID))
+        when(gameRepository.findActiveGameWithPessimisticLock(GAME_ID))
                 .thenReturn(Optional.of(game));
 
         when(participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(GAME_ID, PARTICIPANT_ID))
@@ -190,7 +190,7 @@ class GameParticipantServiceUnitTest {
                 .thenReturn(false);
         when(
                 gameRepository
-                        .findByGameIdAndDeletedDateTimeIsNull(
+                        .findActiveGameWithPessimisticLock(
                                 GAME_ID
                         )
         ).thenReturn(Optional.of(game));
