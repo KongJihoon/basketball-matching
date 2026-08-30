@@ -1,0 +1,222 @@
+{
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {
+      "setup": {
+        "name": "setup",
+        "path": "::setup",
+        "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+        "groups": {},
+        "checks": {
+          "테스트 사용자 로그인이 성공했다": {
+            "name": "테스트 사용자 로그인이 성공했다",
+            "path": "::setup::테스트 사용자 로그인이 성공했다",
+            "id": "e3bb4df8edeac668852186bffc310f92",
+            "passes": 100,
+            "fails": 0
+          }
+        }
+      }
+    },
+    "checks": {
+      "참가 응답이 성공 또는 정상적인 정원 초과다": {
+        "name": "참가 응답이 성공 또는 정상적인 정원 초과다",
+        "path": "::참가 응답이 성공 또는 정상적인 정원 초과다",
+        "id": "19f02525f460d427c2d8ca2ce725390e",
+        "passes": 100,
+        "fails": 0
+      },
+      "서버 오류가 발생하지 않았다": {
+        "fails": 0,
+        "name": "서버 오류가 발생하지 않았다",
+        "path": "::서버 오류가 발생하지 않았다",
+        "id": "86ce4fead4bc68a4fea4fd8a08698d4f",
+        "passes": 100
+      },
+      "예상하지 못한 응답이 발생하지 않았다": {
+        "name": "예상하지 못한 응답이 발생하지 않았다",
+        "path": "::예상하지 못한 응답이 발생하지 않았다",
+        "id": "f955110304b2971ec01c82aa1b05362d",
+        "passes": 100,
+        "fails": 0
+      }
+    }
+  },
+  "metrics": {
+    "http_req_duration": {
+      "avg": 83.93381000000007,
+      "min": 43.521,
+      "med": 73.0075,
+      "max": 135.894,
+      "p(90)": 117.2457,
+      "p(95)": 128.337,
+      "p(99)": 133.25348
+    },
+    "http_req_connecting": {
+      "avg": 0.16939000000000004,
+      "min": 0,
+      "med": 0.0475,
+      "max": 2.663,
+      "p(90)": 0.4158000000000001,
+      "p(95)": 0.8218999999999997,
+      "p(99)": 2.3588999999999998
+    },
+    "http_req_tls_handshaking": {
+      "max": 0,
+      "p(90)": 0,
+      "p(95)": 0,
+      "p(99)": 0,
+      "avg": 0,
+      "min": 0,
+      "med": 0
+    },
+    "http_req_failed": {
+      "passes": 0,
+      "fails": 200,
+      "value": 0
+    },
+    "http_req_receiving": {
+      "p(99)": 0.5211099999999995,
+      "avg": 0.099035,
+      "min": 0.016,
+      "med": 0.0785,
+      "max": 2.536,
+      "p(90)": 0.12,
+      "p(95)": 0.14639999999999992
+    },
+    "game_participation_expected_response": {
+      "passes": 100,
+      "fails": 0,
+      "thresholds": {
+        "rate==1": false
+      },
+      "value": 1
+    },
+    "game_participation_unexpected": {
+      "rate": 0,
+      "count": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "http_req_waiting": {
+      "p(95)": 128.23905,
+      "p(99)": 133.19392,
+      "avg": 83.795075,
+      "min": 43.385,
+      "med": 72.9015,
+      "max": 135.8,
+      "p(90)": 117.10510000000001
+    },
+    "vus_max": {
+      "max": 100,
+      "value": 100,
+      "min": 100
+    },
+    "http_reqs": {
+      "count": 200,
+      "rate": 26.947234081999355
+    },
+    "iterations": {
+      "count": 100,
+      "rate": 13.473617040999677
+    },
+    "game_participation_full": {
+      "count": 95,
+      "rate": 12.799936188949694,
+      "thresholds": {
+        "count==95": false
+      }
+    },
+    "game_participation_system_error": {
+      "count": 0,
+      "rate": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "http_req_blocked": {
+      "max": 4.457,
+      "p(90)": 0.48250000000000004,
+      "p(95)": 0.8537499999999995,
+      "p(99)": 2.5660999999999996,
+      "avg": 0.2029699999999999,
+      "min": 0.001,
+      "med": 0.057
+    },
+    "vus": {
+      "value": 0,
+      "min": 0,
+      "max": 0
+    },
+    "http_req_duration{endpoint:game-participation}": {
+      "avg": 95.22636999999999,
+      "min": 43.521,
+      "med": 96.149,
+      "max": 135.894,
+      "p(90)": 128.399,
+      "p(95)": 130.95235,
+      "p(99)": 133.62096000000003,
+      "thresholds": {
+        "p(95)<5000": false
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "med": 73.0075,
+      "max": 135.894,
+      "p(90)": 117.2457,
+      "p(95)": 128.337,
+      "p(99)": 133.25348,
+      "avg": 83.93381000000007,
+      "min": 43.521
+    },
+    "checks": {
+      "passes": 400,
+      "fails": 0,
+      "value": 1
+    },
+    "data_received": {
+      "count": 153793,
+      "rate": 20721.479855864636
+    },
+    "iteration_duration": {
+      "avg": 95.71470202999998,
+      "min": 43.752958,
+      "med": 96.33785449999999,
+      "max": 136.118041,
+      "p(90)": 129.39230410000002,
+      "p(95)": 131.21344019999998,
+      "p(99)": 134.06783416
+    },
+    "game_participation_success": {
+      "count": 5,
+      "rate": 0.6736808520499838,
+      "thresholds": {
+        "count==5": false
+      }
+    },
+    "http_req_failed{endpoint:game-participation}": {
+      "passes": 0,
+      "fails": 100,
+      "thresholds": {
+        "rate<0.01": false
+      },
+      "value": 0
+    },
+    "http_req_sending": {
+      "p(95)": 0.12734999999999977,
+      "p(99)": 0.19891999999999913,
+      "avg": 0.039699999999999985,
+      "min": 0.003,
+      "med": 0.012,
+      "max": 0.736,
+      "p(90)": 0.10790000000000004
+    },
+    "data_sent": {
+      "count": 63400,
+      "rate": 8542.273203993796
+    }
+  }
+}

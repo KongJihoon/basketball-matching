@@ -50,7 +50,8 @@ public class GameParticipantService {
 
         validateNotBlackList(participant.getEmail());
 
-        GameEntity game = getActiveGame(gameId);
+        GameEntity game = gameRepository.findActiveGameWithPessimisticLock(gameId)
+                .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
         ParticipantGameEntity existingParticipation = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElse(null);

@@ -141,5 +141,25 @@ CREATE INDEX idx_game_list_latest
 3. `EXPLAIN`과 `EXPLAIN ANALYZE` 원본을 모두 보관한다.
 4. `EXPLAIN ANALYZE`는 워밍업 후 5회 측정하고 중앙값을 비교한다.
 5. DB 측정과 k6 API 측정 결과를 혼동하지 않는다.
-6. API 부하 테스트는 적용 전후 모두 20 RPS, 3분, 3회 조건으로 수행한다.
+6. 경기 목록 API 부하 테스트는 적용 전후 모두 20 RPS, 3분, 3회 조건으로 수행한다.
 7. k6 JSON을 정량 비교 원본으로 사용하고 Grafana 캡처는 자원 추세를 설명하는 시각 자료로 사용한다.
+
+## 경기 참가 동시성 개선
+
+정원 6명인 경기에 생성자 1명이 참가한 상태에서 일반 사용자 100명이 동시에 참가하는 시나리오를 검증했다. 락이 없을 때는 초과 승인과 집계 불일치, HTTP 500이 발생했고 경기 행에 비관적 쓰기 락을 적용해 해결했다.
+
+| 항목 | 락 적용 전 | 비관적 락 적용 후 |
+|---|---:|---:|
+| 성공한 일반 참가 | 12건 | 5건 |
+| 시스템 오류 | 36건 | 0건 |
+| 실제 `ACCEPT` | 13명 | 6명 |
+| 초과 승인 | 7명 | 0명 |
+| DB 정합성 판정 | `FAIL` | `PASS` |
+| 적용 후 반복 검증 | - | 3회 모두 통과 |
+
+- [락 적용 전 기준선](./results/game-participation-concurrency/before-lock/summary.md)
+- [비관적 락 적용 후 검증](./results/game-participation-concurrency/pessimistic-lock/summary.md)
+- [k6 동시 참가 스크립트](./k6/game-participation-concurrency-test.js)
+- [테스트 실행 스크립트](./scripts/run-game-participation-concurrency-test.sh)
+- [테스트 경기 준비 SQL](./sql/game-participation-concurrency/20-prepare-participation-game.sql)
+- [정합성 검증 SQL](./sql/game-participation-concurrency/90-verify-participation-result.sql)
