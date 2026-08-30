@@ -146,19 +146,22 @@ CREATE INDEX idx_game_list_latest
 
 ## 경기 참가 동시성 개선
 
-정원 6명인 경기에 생성자 1명이 참가한 상태에서 일반 사용자 100명이 동시에 참가하는 시나리오를 검증했다. 락이 없을 때는 초과 승인과 집계 불일치, HTTP 500이 발생했고 경기 행에 비관적 쓰기 락을 적용해 해결했다.
+정원 6명인 경기에 생성자 1명이 참가한 상태에서 일반 사용자 100명이 동시에 참가하는 시나리오를 검증했다. 락이 없을 때는 초과 승인과 집계 불일치, HTTP 500이 발생했다. 낙관적 락 무재시도는 DB 정합성을 회복했지만 충돌 요청 39건이 시스템 오류로 끝났고, 비관적 쓰기 락은 모든 초과 요청을 정상적인 도메인 응답으로 처리했다.
 
-| 항목 | 락 적용 전 | 비관적 락 적용 후 |
-|---|---:|---:|
-| 성공한 일반 참가 | 12건 | 5건 |
-| 시스템 오류 | 36건 | 0건 |
-| 실제 `ACCEPT` | 13명 | 6명 |
-| 초과 승인 | 7명 | 0명 |
-| DB 정합성 판정 | `FAIL` | `PASS` |
-| 적용 후 반복 검증 | - | 3회 모두 통과 |
+| 항목 | 락 적용 전 | 낙관적 락 무재시도 | 비관적 락 적용 후 |
+|---|---:|---:|---:|
+| 성공한 일반 참가 | 12건 | 5건 | 5건 |
+| 정원 초과 정상 거절 | 52건 | 56건 | 95건 |
+| 시스템 오류 | 36건 | 39건 | 0건 |
+| 실제 `ACCEPT` | 13명 | 6명 | 6명 |
+| 초과 승인 | 7명 | 0명 | 0명 |
+| DB 정합성 판정 | `FAIL` | `PASS` | `PASS` |
+| 최종 선택 | 기각 | 기각 | **채택** |
 
 - [락 적용 전 기준선](./results/game-participation-concurrency/before-lock/summary.md)
+- [낙관적 락 무재시도 비교 실험](./results/game-participation-concurrency/optimistic-lock-no-retry/summary.md)
 - [비관적 락 적용 후 검증](./results/game-participation-concurrency/pessimistic-lock/summary.md)
+- [동시성 제어 방식 결정 기록](../docs/adr/game/game-participation-concurrency-lock.md)
 - [k6 동시 참가 스크립트](./k6/game-participation-concurrency-test.js)
 - [테스트 실행 스크립트](./scripts/run-game-participation-concurrency-test.sh)
 - [테스트 경기 준비 SQL](./sql/game-participation-concurrency/20-prepare-participation-game.sql)
