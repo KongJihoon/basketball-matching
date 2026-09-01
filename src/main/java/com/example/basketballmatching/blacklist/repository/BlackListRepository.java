@@ -3,6 +3,7 @@ package com.example.basketballmatching.blacklist.repository;
 import com.example.basketballmatching.blacklist.domain.BlackListEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,10 +18,12 @@ public interface BlackListRepository extends JpaRepository<BlackListEntity, Long
 
     boolean existsByUserEntity_EmailAndExpiresAtAfter(String email, LocalDateTime now);
 
+    @EntityGraph(attributePaths = "userEntity")
     Page<BlackListEntity> findAllByExpiresAtAfterOrderByBannedDateTimeDesc(
             LocalDateTime now, Pageable pageable
     );
 
+    @EntityGraph(attributePaths = "userEntity")
     Page<BlackListEntity> findAllByExpiresAtLessThanEqualOrderByBannedDateTimeDesc(LocalDateTime now, Pageable pageable);
 
 }

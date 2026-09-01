@@ -242,7 +242,11 @@ OAuth 로그인은 콜백 URI에서 장기 인증 토큰을 직접 노출하지 
 
 ## 🚀 성능 개선
 
-50만 건의 경기 데이터를 생성하고 목록 Content Query와 COUNT Query를 분리해 측정했습니다. 인덱스 적용 전후에 같은 데이터와 요청 조건을 사용하고, `EXPLAIN ANALYZE` 5회 중앙값과 k6 20 RPS·3분·3회 결과를 비교했습니다.
+조회 성능, 동시성 정합성, ORM 쿼리 증폭을 서로 다른 문제로 분리해 측정했습니다. MySQL `EXPLAIN ANALYZE`, 요청당 Hibernate 쿼리 수 메트릭, k6, Prometheus, Grafana를 사용했고 개선 전·후에 같은 데이터와 요청 조건을 적용했습니다.
+
+### 50만 건 경기 목록 인덱스
+
+50만 건의 경기 데이터를 생성하고 목록 Content Query와 COUNT Query를 분리해 측정했습니다. `EXPLAIN ANALYZE` 5회 중앙값과 k6 20 RPS·3분·3회 결과를 비교했습니다.
 
 ### 기본 시작 시간순 조회
 
@@ -269,10 +273,42 @@ CREATE INDEX idx_game_list_active_start
 
 처음 추가한 인덱스가 다른 정렬 조건에 회귀를 만드는 것도 확인했습니다. 후보 인덱스를 바로 채택하지 않고 실행계획과 부하 테스트로 기각 근거를 남긴 뒤, 기본·필터·최신순 접근 패턴을 각각 담당하는 인덱스로 분리했습니다.
 
+### 경기 참가 동시성 제어
+
+정원 6명인 경기의 남은 5자리에 100명이 동시에 참가하는 상황을 재현했습니다. 락이 없을 때는 초과 승인과 집계 불일치가 발생했고, 낙관적 락 무재시도는 DB 정합성은 복구했지만 충돌 요청 39건이 시스템 오류로 종료됐습니다. 비관적 쓰기 락을 적용해 남은 자리에 정확히 5명만 참가하고 나머지 요청을 정상적인 정원 초과 응답으로 처리했습니다.
+
+| 항목 | 락 없음 | 낙관적 락 무재시도 | 비관적 락 |
+|---|---:|---:|---:|
+| 참가 성공 | 12건 | 5건 | 5건 |
+| 정상 정원 초과 | 52건 | 56건 | 95건 |
+| 시스템 오류 | 36건 | 39건 | 0건 |
+| 최종 `ACCEPT` | 13명 | 6명 | 6명 |
+| DB 정합성 | FAIL | PASS | PASS |
+
+비관적 락 채택 후 200·500·1,000 VU로 동시 요청 규모를 높였으며, 1,000 VU에서 참가 성공 5건, 정상 거절 995건, 시스템 오류 0건과 p95 2,024.20ms를 기록했습니다. 정합성과 API 계약은 유지했지만 요청 규모에 따라 락·커넥션 대기가 지연으로 나타나는 트레이드오프도 확인했습니다.
+
+### 목록 조회 N+1 제거
+
+Repository 조회와 DTO 변환 경로를 연결해 `LAZY` 연관관계의 일반 필드에 접근하는 목록을 선별했습니다. QueryDSL 커스텀 조회에는 Fetch Join을, Spring Data JPA 파생 쿼리에는 `EntityGraph`를 적용해 전역 `LAZY` 정책과 DB 페이지네이션을 유지했습니다.
+
+| 대상 목록 | 검증 건수 | 개선 전 SELECT | 개선 후 SELECT | 결과 |
+|---|---:|---:|---:|---|
+| 내 예정·지난 경기 | 100건 | 103회 | 3회 | 97.09% 감소 |
+| 경기 참가자 | 20건 | 24회 | 4회 | 83.33% 감소 |
+| 관리자 블랙리스트 | 20건 | 23회 | 3회 | 86.96% 감소 |
+| 관리자 신고 | 20건 | 유효한 기준선 미확보 | 3회 | 쿼리 수 상수 유지 |
+
+내 경기 목록은 요청당 SELECT를 103회에서 3회로 줄였고, 최대 200 RPS 스트레스 구간의 p95를 4,744.71ms에서 14.70ms로 단축했습니다. 같은 구간에서 dropped iteration 4,445건과 HikariCP Pending Connection 최대 189건이 모두 0건으로 감소했습니다.
+
 - [성능 테스트 재현 문서](performance/README.md)
 - [경기 목록 필터 실험](performance/results/game-list-filter/README.md)
+- [내 경기 N+1 개선 전 기준선](performance/results/my-game-list-n-plus-one/before/summary.md)
+- [내 경기 N+1 개선 후 검증](performance/results/my-game-list-n-plus-one/after/summary.md)
 - [필터 인덱스 설계 결정](docs/adr/game/game-list-filter-index.md)
 - [최신순 인덱스 설계 결정](docs/adr/game/game-list-latest-index.md)
+- [경기 참가 동시성 제어 결정](docs/adr/game/game-participation-concurrency-lock.md)
+- [N+1 로딩 전략 결정](docs/adr/performance/n-plus-one-loading-strategy.md)
+- [목록 조회 N+1 리팩터링](docs/refactoring/performance/list-query-n-plus-one-refactoring.md)
 
 ---
 
@@ -302,10 +338,14 @@ Pull Request / main push
 - [OAuth 일회용 티켓](docs/adr/auth/oauth-one-time-ticket.md)
 - [OAuth state와 CSRF 방어](docs/adr/auth/oauth-state-csrf-protection.md)
 - [선착순 즉시 참가 정책](docs/adr/game/direct-participation-policy.md)
+- [경기 참가 동시성 제어](docs/adr/game/game-participation-concurrency-lock.md)
+- [경기 목록 필터 인덱스](docs/adr/game/game-list-filter-index.md)
+- [경기 목록 최신순 인덱스](docs/adr/game/game-list-latest-index.md)
 - [경기 랭크 기능 제거](docs/adr/game/game-rank-removal.md)
 - [신고 승인과 블랙리스트 제재 분리](docs/adr/report/report-review-and-sanction-separation.md)
 - [블랙리스트 커밋 이후 처리](docs/adr/blacklist/blacklist-after-commit-processing.md)
 - [영속 알림과 실시간 알림 분리](docs/adr/notification/persistent-and-realtime-notification.md)
+- [N+1 로딩 전략](docs/adr/performance/n-plus-one-loading-strategy.md)
 
 </details>
 
@@ -320,6 +360,7 @@ Pull Request / main push
 - [신고 기능 리팩터링](docs/refactoring/report/report-refactoring.md)
 - [블랙리스트 기능 리팩터링](docs/refactoring/blacklist/blacklist-refactoring.md)
 - [알림 기능 리팩터링](docs/refactoring/notification/notification-refactoring.md)
+- [목록 조회 N+1 리팩터링](docs/refactoring/performance/list-query-n-plus-one-refactoring.md)
 
 </details>
 
@@ -338,8 +379,8 @@ Pull Request / main push
 
 ## 🔭 향후 개선 계획
 
-- [ ] 동시 참가 요청 재현 후 정원 정합성을 위한 락 전략 비교
-- [ ] 실제 쿼리 수 측정을 통한 N+1 후보 분석과 개선
+- [ ] 인기 경기 집중 요청에서 락 대기시간과 운영 임계치 관측
+- [ ] 페이지 크기 증가에도 쿼리 수가 상수인지 확인하는 N+1 회귀 테스트 추가
 - [ ] 조회 빈도와 변경 빈도를 측정한 뒤 캐싱 대상 선정
 - [ ] 이벤트 유실이 허용되지 않는 후속 작업에 Transactional Outbox 검토
 - [ ] 배포 환경에서 선별한 개선 항목의 부하 테스트 및 비용 관측

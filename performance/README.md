@@ -1,11 +1,17 @@
 # Performance tests
 
-이 디렉터리는 경기 목록 API의 성능 개선 과정을 재현하기 위한 자료를 관리한다.
+이 디렉터리는 경기 목록 인덱스, 경기 참가 동시성, 목록 조회 N+1 개선 과정을 재현하기 위한 실행 스크립트와 측정 결과를 관리한다.
 
-## 대상 API
+## 성능 검증 대상 API
 
 ```http
 GET /api/v1/games?page=0&size=10
+GET /api/v1/mypage/games/upcoming?page=0&size=100
+GET /api/v1/mypage/games/completed?page=0&size=100
+POST /api/v1/games/{gameId}/participations
+GET /api/v1/games/{gameId}/participants?page=0&size=20
+GET /api/v1/admin/reports?status=PENDING&page=0&size=20
+GET /api/v1/admin/blacklists?status=ACTIVE&page=0&size=20
 ```
 
 ## 디렉터리 구조
@@ -134,7 +140,27 @@ CREATE INDEX idx_game_list_latest
 - [최종 검증 결과](./results/game-list-filter/after-latest-index/summary.md)
 - [설계 결정 기록](../docs/adr/game/game-list-latest-index.md)
 
-## 측정 원칙
+## 목록 조회 N+1 개선
+
+응답 DTO 변환 과정에서 `LAZY` 연관관계의 일반 필드에 접근하면 페이지 항목 수에 비례해 추가 SELECT가 발생했다. 커스텀 QueryDSL 조회에는 Fetch Join을, Spring Data JPA 파생 쿼리에는 `EntityGraph`를 적용해 필요한 `ToOne` 연관관계만 본문 쿼리에서 함께 조회했다.
+
+| 대상 목록 | 검증 크기 | 개선 전 SELECT | 개선 후 SELECT | 결과 |
+|---|---:|---:|---:|---|
+| 내 예정·지난 경기 | 100건 | 103회 | 3회 | 97.09% 감소 |
+| 경기 참가자 | 20건 | 24회 | 4회 | 83.33% 감소 |
+| 관리자 블랙리스트 | 20건 | 23회 | 3회 | 86.96% 감소 |
+| 관리자 신고 | 20건 | 유효한 기준선 미확보 | 3회 | 쿼리 수 상수 유지 |
+
+경기 참가자와 블랙리스트 목록은 서로 다른 사용자 20명을 조회해 페이지 크기만큼 추가 SELECT가 발생하는 것을 재현했다. 신고 목록은 DTO가 `gameEntity`, `reportUser`, `targetUser`의 일반 필드를 읽는 세 개의 지연 로딩 경로를 분석했고, 서로 다른 연관 데이터 20건을 조회했을 때 SELECT 3회로 유지되는 것을 확인했다.
+
+모든 Fetch 대상은 `ManyToOne` 또는 식별자 기반의 단건 연관관계이다. 컬렉션 Fetch Join을 사용하지 않아 결과 행 증폭과 메모리 페이지네이션 문제를 피했고, COUNT 쿼리는 본문 조회와 분리해 전체 건수 정확성을 유지했다.
+
+- [내 경기 목록 개선 전 기준선](./results/my-game-list-n-plus-one/before/summary.md)
+- [내 경기 목록 개선 후 검증](./results/my-game-list-n-plus-one/after/summary.md)
+- [N+1 로딩 전략 결정 기록](../docs/adr/performance/n-plus-one-loading-strategy.md)
+- [목록 조회 N+1 리팩터링](../docs/refactoring/performance/list-query-n-plus-one-refactoring.md)
+
+## 경기 목록 인덱스 측정 원칙
 
 1. 인덱스 적용 전후에 같은 데이터와 같은 Hibernate 바인딩 값을 사용한다.
 2. 목록 SQL과 COUNT SQL을 별도로 측정한다.

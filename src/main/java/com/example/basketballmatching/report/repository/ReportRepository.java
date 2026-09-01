@@ -4,6 +4,7 @@ import com.example.basketballmatching.report.domain.ReportEntity;
 import com.example.basketballmatching.report.type.ReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
@@ -13,6 +14,11 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     );
 
 
+    @EntityGraph(attributePaths = {
+            "gameEntity",
+            "reportUser",
+            "targetUser"
+    })
     Page<ReportEntity> findAllByReportStatusOrderByReportedDateTimeDesc(
             ReportStatus reportStatus, Pageable pageable
     );
