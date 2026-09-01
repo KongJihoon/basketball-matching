@@ -67,21 +67,23 @@ public class GameQueryRepository {
 
         QParticipantGameEntity participation = QParticipantGameEntity.participantGameEntity;
 
+        QGameEntity game = QGameEntity.gameEntity;
+
         BooleanBuilder condition = new BooleanBuilder();
 
         condition.and(participation.userEntity.userId.eq(userId));
 
         condition.and(participation.participantGameStatus.eq(ACCEPT));
 
-        condition.and(participation.gameEntity.deletedDateTime.isNull());
+        condition.and(game.deletedDateTime.isNull());
 
-        condition.and(participation.gameEntity.startDateTime.gt(now));
+        condition.and(game.startDateTime.gt(now));
 
         List<ParticipantGameEntity> content = jpaQueryFactory
                 .selectFrom(participation)
+                .join(participation.gameEntity, game).fetchJoin()
                 .where(condition)
-                .orderBy(participation.gameEntity.startDateTime.asc(),
-                        participation.participantGameId.asc())
+                .orderBy(game.startDateTime.asc(), participation.participantGameId.asc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -90,6 +92,7 @@ public class GameQueryRepository {
                 jpaQueryFactory
                         .select(participation.count())
                         .from(participation)
+                        .join(participation.gameEntity, game)
                         .where(condition)
                         .fetchOne()
         ).orElse(0L);
@@ -105,6 +108,8 @@ public class GameQueryRepository {
 
         QParticipantGameEntity participation = QParticipantGameEntity.participantGameEntity;
 
+        QGameEntity game = QGameEntity.gameEntity;
+
         BooleanBuilder condition = new BooleanBuilder();
 
 
@@ -112,14 +117,15 @@ public class GameQueryRepository {
 
         condition.and(participation.participantGameStatus.eq(ACCEPT));
 
-        condition.and(participation.gameEntity.deletedDateTime.isNull());
+        condition.and(game.deletedDateTime.isNull());
 
-        condition.and(participation.gameEntity.endDateTime.loe(now));
+        condition.and(game.endDateTime.loe(now));
 
         List<ParticipantGameEntity> content = jpaQueryFactory
                 .selectFrom(participation)
+                .join(participation.gameEntity, game).fetchJoin()
                 .where(condition)
-                .orderBy(participation.gameEntity.endDateTime.desc(), participation.participantGameId.desc())
+                .orderBy(game.endDateTime.desc(), participation.participantGameId.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -128,6 +134,7 @@ public class GameQueryRepository {
                 jpaQueryFactory
                         .select(participation.count())
                         .from(participation)
+                        .join(participation.gameEntity, game)
                         .where(condition)
                         .fetchOne()
         ).orElse(0L);
