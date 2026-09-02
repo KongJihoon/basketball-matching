@@ -14,9 +14,9 @@
 
 ## 1️⃣ ERD
 
-![Basketball Matching ERD](https://github.com/KongJihoon/basketball-matching/blob/main/docs/erd/ERD02.png?raw=true)
+![Basketball Matching ERD](docs/erd/ERD03.png)
 
-> 현재 ERD 이미지는 기존 버전이며, 신고·블랙리스트·알림 리팩터링 구조를 반영한 이미지로 추후 교체할 예정입니다. 테이블 관계에 대한 설명은 [신고·블랙리스트·알림 ERD 문서](docs/erd/moderation-notification-erd.md)에서 확인할 수 있습니다.
+사용자·OAuth 계정·경기·참가자·신고·블랙리스트·알림의 최신 관계를 반영했습니다. 신고 처리와 제재·알림 테이블의 관계는 [신고·블랙리스트·알림 ERD 문서](docs/erd/moderation-notification-erd.md)에서 자세히 설명합니다.
 
 ---
 
@@ -41,7 +41,28 @@
 http://localhost:8080/swagger-ui/index.html
 ```
 
-> Swagger 주요 화면 이미지는 추후 이 영역에 추가할 예정입니다.
+<details open>
+<summary><b>Swagger UI 주요 화면</b></summary>
+
+### 전체 API 도메인
+
+회원·인증부터 경기 참가, 신고·블랙리스트, 알림까지 도메인별 API를 구분해 문서화했습니다.
+
+![Swagger API Overview](docs/images/swagger/swagger-overview.png)
+
+### 경기·참가 API
+
+경기 생성·조회·수정·삭제와 선착순 참가·취소·강퇴·참가자 목록 조회 API입니다.
+
+![Swagger Game and Participation API](docs/images/swagger/swagger-game-participation.png)
+
+### 인증·이메일 검증 API
+
+회원가입 이메일 인증과 로그인·로그아웃·토큰 재발급 API입니다.
+
+![Swagger Authentication and Email API](docs/images/swagger/swagger-auth-email.png)
+
+</details>
 
 <details>
 <summary><b>👤 사용자·이메일 인증 API</b></summary>
@@ -384,4 +405,3 @@ Pull Request / main push
 - [ ] 조회 빈도와 변경 빈도를 측정한 뒤 캐싱 대상 선정
 - [ ] 이벤트 유실이 허용되지 않는 후속 작업에 Transactional Outbox 검토
 - [ ] 배포 환경에서 선별한 개선 항목의 부하 테스트 및 비용 관측
-- [ ] 최신 도메인 관계를 반영한 ERD와 Swagger 주요 화면 추가
