@@ -4,6 +4,7 @@ import com.example.basketballmatching.game.type.FieldStatus;
 import com.example.basketballmatching.game.type.MatchFormat;
 import com.example.basketballmatching.game.type.MatchGenderType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,9 +21,10 @@ public record CreateGameRequest(
         @NotBlank(message = "내용을 입력해주세요.")
         String content,
 
-        @Schema(name = "headCount", description = "인원 수")
+        @Schema(name = "headCount", description = "경기 모집 정원", example = "10", minimum = "6", maximum = "100")
         @NotNull(message = "인원수를 입력해주세요.")
         @Min(value = 6, message = "경기 정원은 최소 6명 이상이어야 합니다.")
+        @Max(value = 100, message = "경기 정원은 최대 100명 이하여야 합니다.")
         Integer headCount,
 
         @Schema(name = "fieldStatus", description = "경기장 상태", example = "INDOOR")

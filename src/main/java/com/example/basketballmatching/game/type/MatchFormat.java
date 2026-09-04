@@ -11,16 +11,17 @@ import static com.example.basketballmatching.global.exception.ErrorCode.INVALID_
 public enum MatchFormat {
 
 
-    FIVE_ON_FIVE(10, 20),
-    THREE_ON_THREE(6, 9);
+    FIVE_ON_FIVE(10),
+    THREE_ON_THREE(6);
+
+    private static final int MAXIMUM_HEAD_COUNT = 100;
 
     private final int minimumHeadCount;
 
-    private final int maximumHeadCount;
 
     public void validateHeadCount(Integer headCount) {
 
-        if (headCount == null || headCount < minimumHeadCount || headCount > maximumHeadCount) {
+        if (headCount == null || headCount < minimumHeadCount || headCount > MAXIMUM_HEAD_COUNT) {
 
             throw new CustomException(INVALID_HEADCOUNT);
 

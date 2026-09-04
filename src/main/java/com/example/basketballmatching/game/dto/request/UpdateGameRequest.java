@@ -3,6 +3,8 @@ package com.example.basketballmatching.game.dto.request;
 import com.example.basketballmatching.game.type.MatchFormat;
 import com.example.basketballmatching.game.type.MatchGenderType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -19,7 +21,9 @@ public record UpdateGameRequest(
         @Size(max = 255, message = "경기 내용은 255자 이하로 입력해주세요.")
         String content,
 
-        @Schema(description = "경기 인원 수", example = "6")
+        @Schema(description = "경기 모집 정원", example = "10", minimum = "6", maximum = "100")
+        @Min(value = 6, message = "경기 정원은 최소 6명 이상이어야 합니다.")
+        @Max(value = 100, message = "경기 정원은 최대 100명 이하여야 합니다.")
         Integer headCount,
 
         @Schema(description = "경기 형식", example = "THREE_ON_THREE")

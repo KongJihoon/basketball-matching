@@ -121,6 +121,9 @@ public class GameEntity extends BaseEntity {
 
 
     private static final int CREATOR_COUNT = 1;
+    private static final long MINIMUM_GAME_DURATION_MINUTES = 60;
+    private static final long MAXIMUM_GAME_DURATION_MINUTES = 240;
+
 
     @Builder(access = AccessLevel.PRIVATE)
     private GameEntity(String title, String content, Integer headCount, Integer participantCount, FieldStatus fieldStatus, MatchFormat matchFormat,GameStatus gameStatus
@@ -313,7 +316,7 @@ public class GameEntity extends BaseEntity {
                 startDateTime, endDateTime
         ).toMinutes();
 
-        if (durationMinutes < 60 || durationMinutes > 120) {
+        if (durationMinutes < MINIMUM_GAME_DURATION_MINUTES || durationMinutes > MAXIMUM_GAME_DURATION_MINUTES) {
             throw new CustomException(GAME_TIME_OUT_OF_RANGE);
         }
 
