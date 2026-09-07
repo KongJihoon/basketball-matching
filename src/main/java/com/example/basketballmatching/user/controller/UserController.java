@@ -176,6 +176,10 @@ public class UserController {
 
     }
 
+    /**
+     * 로그인한 사용자의 회원 탈퇴를 요청한다.
+     * Access Token은 탈퇴 후 현재 세션을 폐기하기 위해 전달한다.
+     */
     @Operation(summary = "회원 탈퇴")
     @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공",
             content = {@Content(mediaType = "application/json",
@@ -206,6 +210,10 @@ public class UserController {
 
     }
 
+    /**
+     * Authorization 헤더의 Bearer 토큰에서 Access Token을 추출한다.
+     * 올바른 Bearer 형식이 아니면 서비스에서 검증할 수 있도록 null 반환.
+     */
     private String resolveAccessToken(HttpServletRequest request) {
         String authorization = request.getHeader("Authorization");
 

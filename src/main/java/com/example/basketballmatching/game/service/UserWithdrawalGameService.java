@@ -25,6 +25,11 @@ public class UserWithdrawalGameService {
 
     private final GameQueryRepository gameQueryRepository;
 
+    /**
+     * 회원 탈퇴 요청 사용자의 예정 경기와 참가 정보를 정리한다.
+     *
+     * 탈퇴자가 생성한 경기는 취소되고, 다른 사용자의 경기에 참가한 상태는 강퇴 상태로 변경한다.
+     */
     @Transactional
     public UserWithdrawalGameResultDto cleanup(
             Long userId,
@@ -39,6 +44,10 @@ public class UserWithdrawalGameService {
         return new UserWithdrawalGameResultDto(notices);
     }
 
+    /**
+     * 탈퇴자가 생성한 예정 경기를 취소하고 활성 참가자를 정리한다.
+     * 탈퇴자를 제외한 참가자에게 전달할 경기 취소 알림 정보를 반환한다.
+     */
     private List<GameCancelNotificationDto> cancelCreatedFutureGames(Long userId, LocalDateTime withdrawnAt) {
 
         List<GameEntity> games = gameQueryRepository.findFutureGamesCreatedBy(userId, withdrawnAt);
@@ -57,15 +66,21 @@ public class UserWithdrawalGameService {
 
         for (ParticipantGameEntity participant : participants) {
 
+            /*
+             * 취소된 경기의 참가 기록을 DELETE 상태로 변경
+             * 상태 변경 과정에서 경기 참가 인원도 함께 감소한다.
+             */
             participant.delete(withdrawnAt);
 
             Long participantUserId = participant.getUserEntity().getUserId();
 
+            // 탈퇴한 경기 생성자에게는 경기 취소 알림을 보내지 않는다.
             if (!participantUserId.equals(userId)) {
                 notices.add(new GameCancelNotificationDto(participantUserId, participant.getGameEntity().getTitle()));
             }
         }
 
+        // Soft Delete 처리
         games.forEach(
                 game -> game.cancelByCreatorUnavailable(
                         withdrawnAt
@@ -75,12 +90,17 @@ public class UserWithdrawalGameService {
         return notices;
     }
 
+    /**
+     * 탈퇴 요청자가 참가한 예정 경기에 기록을 정리한다.
+     * 경기 자체는 유지되고 탈퇴 사용자의 참가 상태를 KICKOUT으로 변경한다.
+     */
     private void cancelOtherFutureParticipation(Long userId, LocalDateTime withdrawnAt) {
         List<ParticipantGameEntity> participations = gameQueryRepository.findFutureParticipationExcludingCreatedGames(userId, withdrawnAt);
 
         for (ParticipantGameEntity participation : participations) {
             ParticipantGameStatus status = participation.getParticipantGameStatus();
 
+            // ACCEPT 상태의 참가 예정 경기만 강퇴 처리
             switch (status) {
                 case ACCEPT -> participation.kickout(withdrawnAt);
                 default -> throw new CustomException(INVALID_STATUS_TRANSITION);
