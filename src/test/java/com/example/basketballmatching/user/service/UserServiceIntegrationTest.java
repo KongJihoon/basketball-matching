@@ -62,7 +62,6 @@ class UserServiceIntegrationTest {
      * DB데이터는 @Transactional로 롤백되지만
      * Redis 데이터는 롤백 되지않는다.
      */
-
     private final Set<String> redisKey = new HashSet<>();
 
     @AfterEach
