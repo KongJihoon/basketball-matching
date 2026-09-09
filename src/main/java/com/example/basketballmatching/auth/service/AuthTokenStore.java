@@ -35,6 +35,9 @@ public class AuthTokenStore {
         redisService.deleteData(refreshTokenKey(email));
     }
 
+    /**
+     * AccessToken을 남은 유효시간 동안 Redis에 블랙리스트에 등록한다.
+     */
     public void revokeAccessToken(String accessToken, long expirationMillis) {
         if (expirationMillis <= 0) {
             return;
@@ -43,6 +46,9 @@ public class AuthTokenStore {
         redisService.setDataExpireMillis(revokedAccessToken(accessToken), REVOKED_VALUE, expirationMillis);
     }
 
+    /**
+     * AccessToken이 Redis 블랙리스트에 등록되어 있는지 확인
+     */
     public boolean isAccessTokenRevoked(String accessToken) {
         return redisService.getData(revokedAccessToken(accessToken)) != null;
     }

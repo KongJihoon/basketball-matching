@@ -66,9 +66,13 @@ public class NotificationService {
         return emitter;
     }
 
+    /**
+     * 알림을 DB에 저장하고 현재 서버에 연결된 SSE 구독자에게 실시간 전송된다.
+     */
     @Transactional
     public void send(NotificationType notificationType, UserEntity userEntity, String content) {
 
+        // 사용자가 나중에도 조회할 수 있도록 알림을 DB에 저장
         NotificationEntity notification = NotificationEntity.create(
                 userEntity, notificationType, content
         );
@@ -82,11 +86,16 @@ public class NotificationService {
 
         String eventId = sseIdGenerator.createEventId(receiverId);
 
+        /*
+         * SSE 연결이 끊겼다가 재연결 되었을 때
+         * 놓친 이벤트를 다시 보낼 수 있도록 로컬 이벤트 캐시에 저장.
+         */
         emitterRepository.saveEvent(eventId, response);
 
 
         Map<String, SseEmitter> sseEmitters = emitterRepository.findAllEmittersByUserId(receiverId);
 
+        // 해당 사용자가 현재 서버에 연결한 모든 SSE 연결로 전송
         sseEmitters.forEach(
                 (emitterId, emiter) -> sendToClient(emiter, emitterId, eventId, response)
         );
