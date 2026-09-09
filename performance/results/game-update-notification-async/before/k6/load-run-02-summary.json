@@ -1,0 +1,594 @@
+{
+  "metadata": {
+    "test_phase": "before",
+    "test_run": "run-02",
+    "run_key": "20260909T064821-99-56159",
+    "test_mode": "load",
+    "game_ids": [
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277
+    ],
+    "receiver_count": 99,
+    "title_prefix": "PERF_UPDATE_20260909T064821-99-56159_",
+    "profiles": [
+      {
+        "name": "warmup_5rps",
+        "rate": 5,
+        "seconds": 30,
+        "start": 0
+      },
+      {
+        "name": "load_10rps",
+        "rate": 10,
+        "seconds": 60,
+        "start": 45
+      },
+      {
+        "name": "load_20rps",
+        "rate": 20,
+        "seconds": 60,
+        "start": 120
+      },
+      {
+        "name": "load_30rps",
+        "rate": 30,
+        "seconds": 60,
+        "start": 195
+      }
+    ],
+    "planned_requests": 3750,
+    "attempted_requests": 2943,
+    "successful_requests": 574,
+    "all_attempts_succeeded": false,
+    "expected_notifications_for_successful_requests": 56826,
+    "notification_delivery_verified": false,
+    "note": "HTTP 결과만 기록. 실제 알림 저장 건수와 수신자 중복은 별도 SQL로 검증한다."
+  },
+  "stages": [
+    {
+      "name": "warmup_5rps",
+      "rate": 5,
+      "seconds": 30,
+      "start": 0,
+      "title_prefix": "PERF_UPDATE_20260909T064821-99-56159_warmup_5rps_",
+      "attempted_requests": 150,
+      "successful_requests": 150,
+      "expected_notifications": 14850,
+      "latency": {
+        "p(99)": 302.91596,
+        "avg": 173.31366666666656,
+        "min": 73.209,
+        "med": 157.97050000000002,
+        "max": 313.127,
+        "p(90)": 268.9793,
+        "p(95)": 275.74955
+      }
+    },
+    {
+      "name": "load_10rps",
+      "rate": 10,
+      "seconds": 60,
+      "start": 45,
+      "title_prefix": "PERF_UPDATE_20260909T064821-99-56159_load_10rps_",
+      "attempted_requests": 569,
+      "successful_requests": 424,
+      "expected_notifications": 41976,
+      "latency": {
+        "med": 293.271,
+        "max": 10001.125,
+        "p(90)": 10000.1372,
+        "p(95)": 10000.332,
+        "p(99)": 10000.58928,
+        "avg": 2847.3855536028113,
+        "min": 103.458
+      }
+    },
+    {
+      "name": "load_20rps",
+      "rate": 20,
+      "seconds": 60,
+      "start": 120,
+      "title_prefix": "PERF_UPDATE_20260909T064821-99-56159_load_20rps_",
+      "attempted_requests": 1051,
+      "successful_requests": 0,
+      "expected_notifications": 0,
+      "latency": {
+        "med": 9999.921,
+        "max": 10004.152,
+        "p(90)": 10000.194,
+        "p(95)": 10000.448499999999,
+        "p(99)": 10000.991999999998,
+        "avg": 9999.969490960977,
+        "min": 9992.237
+      }
+    },
+    {
+      "name": "load_30rps",
+      "rate": 30,
+      "seconds": 60,
+      "start": 195,
+      "title_prefix": "PERF_UPDATE_20260909T064821-99-56159_load_30rps_",
+      "attempted_requests": 1173,
+      "successful_requests": 0,
+      "expected_notifications": 0,
+      "latency": {
+        "avg": 10000.136919011076,
+        "min": 9999.058,
+        "med": 9999.974,
+        "max": 10023.024,
+        "p(90)": 10000.8568,
+        "p(95)": 10001.0234,
+        "p(99)": 10001.28924
+      }
+    }
+  ],
+  "metrics": {
+    "notification_update_attempted": {
+      "contains": "default",
+      "values": {
+        "count": 2943,
+        "rate": 11.093283621752425
+      },
+      "thresholds": {
+        "count>=3750": {
+          "ok": false
+        }
+      },
+      "type": "counter"
+    },
+    "notification_update_attempted{scenario:load_20rps}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1051,
+        "rate": 3.961617766381855
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "notification_update_unexpected": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2369,
+        "rate": 8.929659836877844
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": false
+        }
+      }
+    },
+    "notification_update_succeeded{scenario:load_30rps}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 603922,
+        "rate": 2276.411155764855
+      }
+    },
+    "http_req_failed{endpoint:game-update-notification}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.8049609242269793,
+        "passes": 2369,
+        "fails": 574
+      },
+      "thresholds": {
+        "rate==0": {
+          "ok": false
+        }
+      }
+    },
+    "notification_update_succeeded{scenario:load_20rps}": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      }
+    },
+    "http_req_duration{endpoint:game-update-notification,scenario:warmup_5rps}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 268.9793,
+        "p(95)": 275.74955,
+        "p(99)": 302.91596,
+        "avg": 173.31366666666656,
+        "min": 73.209,
+        "med": 157.97050000000002,
+        "max": 313.127
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "p(90)": 10001.2918162,
+        "p(95)": 10001.719471100001,
+        "p(99)": 10002.305135280001,
+        "avg": 8117.155113099897,
+        "min": 73.720541,
+        "med": 10000.85475,
+        "max": 10042.280416
+      },
+      "type": "trend"
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.8019634394041977,
+        "passes": 2369,
+        "fails": 585
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 10000.2744,
+        "p(95)": 10000.763350000001,
+        "p(99)": 10001.19394,
+        "avg": 8086.0733090724425,
+        "min": 10.535,
+        "med": 9999.8265,
+        "max": 10022.978
+      }
+    },
+    "checks{endpoint:game-update-notification}": {
+      "thresholds": {
+        "rate==1": {
+          "ok": false
+        }
+      },
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.19503907577302074,
+        "passes": 1722,
+        "fails": 7107
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 10000.3267,
+        "p(95)": 10000.84235,
+        "p(99)": 10001.23247,
+        "avg": 8086.177716316857,
+        "min": 10.673,
+        "med": 9999.9095,
+        "max": 10023.024
+      }
+    },
+    "notification_update_attempted{scenario:load_30rps}": {
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 1173,
+        "rate": 4.421482055153107
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 1366210,
+        "rate": 5149.763852148957
+      }
+    },
+    "iterations": {
+      "contains": "default",
+      "values": {
+        "count": 2943,
+        "rate": 11.093283621752425
+      },
+      "type": "counter"
+    },
+    "dropped_iterations": {
+      "values": {
+        "count": 809,
+        "rate": 3.0494279476716657
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": false
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "notification_update_attempted{scenario:warmup_5rps}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 150,
+        "rate": 0.565406912423671
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "notification_update_succeeded{scenario:warmup_5rps}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0.565406912423671,
+        "count": 150
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "vus": {
+      "values": {
+        "value": 5,
+        "min": 0,
+        "max": 200
+      },
+      "type": "gauge",
+      "contains": "default"
+    },
+    "http_req_duration{endpoint:game-update-notification,scenario:load_10rps}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 103.458,
+        "med": 293.271,
+        "max": 10001.125,
+        "p(90)": 10000.1372,
+        "p(95)": 10000.332,
+        "p(99)": 10000.58928,
+        "avg": 2847.3855536028113
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.29384021665538285,
+        "min": 0,
+        "med": 0.357,
+        "max": 7.92,
+        "p(90)": 0.443,
+        "p(95)": 0.464,
+        "p(99)": 0.582
+      }
+    },
+    "http_reqs": {
+      "contains": "default",
+      "values": {
+        "count": 2954,
+        "rate": 11.13474679533016
+      },
+      "type": "counter"
+    },
+    "http_req_duration{expected_response:true}": {
+      "values": {
+        "max": 3252.691,
+        "p(90)": 592.8712000000002,
+        "p(95)": 1286.6321999999996,
+        "p(99)": 2632.00364,
+        "avg": 335.7668478632478,
+        "min": 10.673,
+        "med": 200.122
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_duration{endpoint:game-update-notification}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 10023.024,
+        "p(90)": 10000.327,
+        "p(95)": 10000.842900000001,
+        "p(99)": 10001.23258,
+        "avg": 8116.305800543662,
+        "min": 73.209,
+        "med": 9999.91
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "notification_update_succeeded{scenario:load_10rps}": {
+      "contains": "default",
+      "values": {
+        "count": 424,
+        "rate": 1.59821687245091
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "notification_update_attempted{scenario:load_10rps}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 569,
+        "rate": 2.144776887793792
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "notification_update_succeeded": {
+      "contains": "default",
+      "values": {
+        "count": 574,
+        "rate": 2.163623784874581
+      },
+      "thresholds": {
+        "count>=3750": {
+          "ok": false
+        }
+      },
+      "type": "counter"
+    },
+    "http_req_receiving": {
+      "values": {
+        "max": 1.108,
+        "p(90)": 0.146,
+        "p(95)": 0.195,
+        "p(99)": 0.41646999999999995,
+        "avg": 0.03617637102234258,
+        "min": 0,
+        "med": 0
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_duration{endpoint:game-update-notification,scenario:load_20rps}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 9999.921,
+        "max": 10004.152,
+        "p(90)": 10000.194,
+        "p(95)": 10000.448499999999,
+        "p(99)": 10000.991999999998,
+        "avg": 9999.969490960977,
+        "min": 9992.237
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{endpoint:game-update-notification,scenario:load_30rps}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 10001.0234,
+        "p(99)": 10001.28924,
+        "avg": 10000.136919011076,
+        "min": 9999.058,
+        "med": 9999.974,
+        "max": 10023.024,
+        "p(90)": 10000.8568
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 200,
+        "min": 50,
+        "max": 200
+      }
+    },
+    "http_req_blocked": {
+      "values": {
+        "p(99)": 0.7148799999999998,
+        "avg": 0.3605277589708878,
+        "min": 0.001,
+        "med": 0.4345,
+        "max": 9.273,
+        "p(90)": 0.536,
+        "p(95)": 0.561
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0.102,
+        "p(95)": 0.115,
+        "p(99)": 0.14646999999999996,
+        "avg": 0.0682308733920106,
+        "min": 0.005,
+        "med": 0.072,
+        "max": 8.104
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.19503907577302074,
+        "passes": 1722,
+        "fails": 7107
+      }
+    }
+  }
+}

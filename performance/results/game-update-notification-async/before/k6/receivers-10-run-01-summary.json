@@ -1,0 +1,302 @@
+{
+  "metadata": {
+    "test_phase": "before",
+    "test_run": "run-01",
+    "run_key": "20260909T060318-10-49500",
+    "game_id": 266,
+    "receiver_count": 10,
+    "title_prefix": "PERF_UPDATE_20260909T060318-10-49500_",
+    "rate": 1,
+    "duration": "30s",
+    "planned_requests": 30,
+    "successful_requests": 30,
+    "expected_notifications_for_successful_requests": 300,
+    "notification_delivery_verified": false,
+    "note": "HTTP 결과만 기록. 실제 알림 저장 건수와 수신자 중복은 별도 SQL로 검증한다."
+  },
+  "metrics": {
+    "iterations": {
+      "contains": "default",
+      "values": {
+        "count": 30,
+        "rate": 0.996494432236834
+      },
+      "type": "counter"
+    },
+    "notification_update_succeeded": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 30,
+        "rate": 0.996494432236834
+      },
+      "thresholds": {
+        "count==30": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 11.985,
+        "med": 82.67150000000001,
+        "max": 107.073,
+        "p(90)": 95.9082,
+        "p(95)": 96.58924999999999,
+        "p(99)": 103.88185999999999,
+        "avg": 77.71740625
+      }
+    },
+    "checks{endpoint:game-update-notification}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 90,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate==1": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0.1450499999999999,
+        "p(99)": 0.3810299999999999,
+        "avg": 0.07034374999999998,
+        "min": 0.009,
+        "med": 0.051,
+        "max": 0.47,
+        "p(90)": 0.10110000000000001
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 32552,
+        "rate": 1081.262891939114
+      }
+    },
+    "iteration_duration": {
+      "contains": "time",
+      "values": {
+        "max": 108.290709,
+        "p(90)": 97.29389139999999,
+        "p(95)": 98.0026352,
+        "p(99)": 105.40447153000001,
+        "avg": 80.89634873333334,
+        "min": 39.746583,
+        "med": 84.6875
+      },
+      "type": "trend"
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 90,
+        "fails": 0
+      }
+    },
+    "http_req_duration{endpoint:game-update-notification}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 80.26723333333332,
+        "min": 39.546,
+        "med": 83.233,
+        "max": 107.679,
+        "p(90)": 96.63850000000001,
+        "p(95)": 97.48585,
+        "p(99)": 104.82047
+      },
+      "thresholds": {
+        "p(95)>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.003,
+        "med": 0.012,
+        "max": 3.595,
+        "p(90)": 0.11680000000000007,
+        "p(95)": 0.3809499999999996,
+        "p(99)": 2.648259999999999,
+        "avg": 0.15178124999999987
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 32,
+        "rate": 1.0629273943859563
+      }
+    },
+    "vus_max": {
+      "contains": "default",
+      "values": {
+        "max": 2,
+        "value": 2,
+        "min": 2
+      },
+      "type": "gauge"
+    },
+    "http_req_duration": {
+      "contains": "time",
+      "values": {
+        "p(90)": 96.512,
+        "p(95)": 97.41115,
+        "p(99)": 104.62333,
+        "avg": 78.30390625,
+        "min": 12.232,
+        "med": 83.233,
+        "max": 107.679
+      },
+      "type": "trend"
+    },
+    "http_req_tls_handshaking": {
+      "values": {
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0,
+        "avg": 0,
+        "min": 0
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "vus": {
+      "contains": "default",
+      "values": {
+        "value": 0,
+        "min": 0,
+        "max": 0
+      },
+      "type": "gauge"
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 32
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.51615625,
+        "min": 0.169,
+        "med": 0.495,
+        "max": 0.996,
+        "p(90)": 0.8824000000000001,
+        "p(95)": 0.9386499999999999,
+        "p(99)": 0.9879399999999999
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 0.34841999999999995,
+        "avg": 0.022375,
+        "min": 0,
+        "med": 0,
+        "max": 0.416,
+        "p(90)": 0,
+        "p(95)": 0.14519999999999986
+      }
+    },
+    "notification_update_unexpected": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "count": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      }
+    },
+    "notification_update_attempted": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 30,
+        "rate": 0.996494432236834
+      },
+      "thresholds": {
+        "count==30": {
+          "ok": true
+        }
+      }
+    },
+    "dropped_iterations": {
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "http_req_failed{endpoint:game-update-notification}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 30,
+        "rate": 0,
+        "passes": 0
+      },
+      "thresholds": {
+        "rate==0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 12.232,
+        "med": 83.233,
+        "max": 107.679,
+        "p(90)": 96.512,
+        "p(95)": 97.41115,
+        "p(99)": 104.62333,
+        "avg": 78.30390625
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "rate": 467.4555381622988,
+        "count": 14073
+      }
+    }
+  }
+}
