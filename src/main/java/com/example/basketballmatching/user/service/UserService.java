@@ -55,7 +55,7 @@ public class UserService {
         log.info("유저 회원가입 시작 : {}", request.email());
 
 
-        /**
+        /*
          * DTO의 형식 검증(@Valid)와 별개로 비즈니스 규칙을 검증한다.
          * - 이메일 중복 검증
          * - 닉네임 중복 검증
@@ -65,21 +65,21 @@ public class UserService {
         validationByUser(request);
 
 
-        /**
+        /*
          * Redis에 email:auth:verified:{email} 키가 존재하는지 확인한다.
          * 인증되지 않은 이메일이면 회원가입을 허용하지 않고 예외 처리
          * 확인된 인증 번호는 재사용하지 않게 Redis에서 제거한다.
          */
         confirmEmailAuth(request);
 
-        /**
+        /*
          * 평문 비밀번호는 DB에 저장하지 않도록 단방향 해싱한다.
          * 로그인 시 평문 비밀번호와 DB에 저장된 해시값을
          * passwordEncoder.matches(평문, 해시값)로 비교한다.
          */
         String encodedPassword = passwordEncoder.encode(request.password());
 
-        /**
+        /*
          * 엔티티 생성 규칙을 UserEntity의 정적 팩토리 메서드에 위임한다.
          */
         UserEntity userEntity = UserEntity.create(
@@ -104,7 +104,7 @@ public class UserService {
 
         log.info("유저 회원가입 완료");
 
-        /**
+        /*
          * 비밀번호와 같은 민감정보는 노출하지 않도록
          * 응답 DTO로 변환한다.
          */
