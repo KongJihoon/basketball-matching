@@ -37,24 +37,32 @@ public class AuthService {
     private final BlackListStore blackListStore;
 
 
+    /**
+     * 로컬 회원의 이메일과 비밀번호를 검증하고
+     * 서비스 이용에 필요한 AccessToken과 RefreshToken 발급
+     *
+     * DB 조회는 읽기 전용 트랜잭션으로 수행
+     * 발급한 RefreshToken은 별도 저장소인 Redis에 저장한다.
+     */
     @Transactional(readOnly = true)
     public AuthTokenResponse login(String email, String password) {
 
         log.info("[유저 로그인 시작]: {}", email);
 
-
-
+        // 탈퇴하지 않은 활성 사용자를 이메일로 조회한다.
         UserEntity user = getActiveUser(email);
 
 
-
-        // 로그인 형식 검사
+        // 카카오 계정이 로컬 계정 로그인에 접근하면 차단한다.
         validateLocalLogin(user);
 
-        // 비밀번호 유효성 검사
+        /*
+         * 입력받은 평문 비밀번호와 DB의 해시값을 비교한다.
+         * 비밀번호를 복호화 하지 않고 PasswordEncoder.matches()를 사용.
+         */
         validatePassword(password, user);
 
-        // 블랙리스트 유저 검사
+        // 현재 제재 중인 사용자의 로그인을 차단한다.
         validateNotBlacklisted(user.getEmail());
 
 
@@ -135,23 +143,38 @@ public class AuthService {
         }
     }
 
+    /**
+     * 사용자가 입력한 평문 비밀번호와
+     * DB에 저장된 단방향 해시값을 비교한다.
+     */
     private void validatePassword(String password, UserEntity user) {
         if (password == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new CustomException(PASSWORD_NOT_MATCH);
         }
     }
 
+    /**
+     * 인증이 완료된 사용자에게 AccessToken과 RefreshToken 발급
+     * RefreshToken은 재발급 시 서버에서 검증할 수 있도록 Redis에 저장한다.
+     */
     private AuthTokenResponse issueTokens(UserEntity user) {
 
         String accessToken = issueAccessToken(user);
 
         String refreshToken = tokenProvider.createRefreshToken(user.getEmail());
 
+        /*
+         * RefreshToken을 이메일 기준으로 Redis에 저장한다.
+         * Redis TTL은 RefreshToken JWT 유효시간과 동일하게 설정한다.
+         */
         authTokenStore.saveRefreshToken(user.getEmail(), refreshToken, tokenProvider.getRefreshTokenExpirationMillis());
 
         return AuthTokenResponse.of(accessToken, refreshToken, user);
     }
 
+    /**
+     * Access Token에 인증과 인가에 필요한 사용자 정보를 담아 발급한다.
+     */
     private String issueAccessToken(UserEntity user) {
 
         return tokenProvider.createAccessToken(user.getEmail(), user.getName(), user.getUserType());
@@ -176,6 +199,9 @@ public class AuthService {
 
     }
 
+    /**
+     * 현재 제재 중인 사용자의 로그인을 차단한다.
+     */
     private void validateNotBlacklisted(String email) {
 
         if (blackListStore.isBlacklisted(email)) {
