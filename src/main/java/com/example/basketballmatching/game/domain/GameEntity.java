@@ -25,6 +25,10 @@ import static com.example.basketballmatching.global.exception.ErrorCode.*;
                 @Index(
                         name = "idx_game_list_active_start",
                         columnList = "deleted_date_time, start_date_time"
+                ),
+                @Index(
+                        name = "idx_game_list_filters_start",
+                        columnList = "city_name, game_status, match_format, field_status, deleted_date_time, start_date_time"
                 )
         },
         uniqueConstraints = {
