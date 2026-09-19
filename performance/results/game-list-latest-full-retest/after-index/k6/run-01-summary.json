@@ -1,0 +1,171 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "경기 목록 상태 코드가 200이다": {
+                    "name": "경기 목록 상태 코드가 200이다",
+                    "path": "::경기 목록 상태 코드가 200이다",
+                    "id": "ff57a1bd97740728738291744edae0db",
+                    "passes": 9000,
+                    "fails": 0
+                }
+            }
+    },
+    "metrics": {
+        "checks": {
+            "fails": 0,
+            "passes": 9000,
+            "value": 1
+        },
+        "http_req_waiting": {
+            "avg": 13.489148777777803,
+            "min": 11.74,
+            "med": 13.092500000000001,
+            "max": 40.586,
+            "p(90)": 15.123,
+            "p(95)": 15.593,
+            "p(99)": 16.84604
+        },
+        "http_req_receiving": {
+            "p(95)": 0.1750499999999996,
+            "p(99)": 0.22900999999999994,
+            "avg": 0.08609877777777791,
+            "min": 0.01,
+            "med": 0.067,
+            "max": 0.846,
+            "p(90)": 0.158
+        },
+        "http_req_connecting": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0.12202999999999976,
+            "avg": 0.0019083333333333326,
+            "min": 0,
+            "med": 0,
+            "max": 0.311
+        },
+        "data_sent": {
+            "count": 1989000,
+            "rate": 11049.862060888607
+        },
+        "http_req_duration{expected_response:true}": {
+            "max": 40.823,
+            "p(90)": 15.285,
+            "p(95)": 15.75405,
+            "p(99)": 17.025,
+            "avg": 13.588368111111153,
+            "min": 11.796,
+            "med": 13.1745
+        },
+        "dropped_iterations": {
+            "count": 0,
+            "rate": 0,
+            "thresholds": {
+                "count==0": false
+            }
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 1
+        },
+        "checks{endpoint:game-list}": {
+            "passes": 9000,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "http_req_blocked": {
+            "max": 2.725,
+            "p(90)": 0.008,
+            "p(95)": 0.01,
+            "p(99)": 0.14601999999999984,
+            "avg": 0.006395222222222469,
+            "min": 0,
+            "med": 0.003
+        },
+        "http_req_failed{endpoint:game-list}": {
+            "passes": 0,
+            "fails": 9000,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "data_received": {
+            "count": 34407950,
+            "rate": 191152.8915525149
+        },
+        "http_req_tls_handshaking": {
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "avg": 0
+        },
+        "http_req_sending": {
+            "med": 0.01,
+            "max": 0.824,
+            "p(90)": 0.024,
+            "p(95)": 0.027,
+            "p(99)": 0.036,
+            "avg": 0.01312055555555582,
+            "min": 0.003
+        },
+        "iteration_duration": {
+            "p(99)": 17.20675292,
+            "avg": 13.696709433777754,
+            "min": 11.834416,
+            "med": 13.2679165,
+            "max": 40.9405,
+            "p(90)": 15.45785,
+            "p(95)": 15.9620375
+        },
+        "iterations": {
+            "count": 9000,
+            "rate": 49.999375841124916
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_reqs": {
+            "count": 9000,
+            "rate": 49.999375841124916
+        },
+        "http_req_duration{endpoint:game-list}": {
+            "max": 40.823,
+            "p(90)": 15.285,
+            "p(95)": 15.75405,
+            "p(99)": 17.025,
+            "avg": 13.588368111111153,
+            "min": 11.796,
+            "med": 13.1745,
+            "thresholds": {
+                "p(95) < 1000": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 9000,
+            "value": 0
+        },
+        "http_req_duration": {
+            "med": 13.1745,
+            "max": 40.823,
+            "p(90)": 15.285,
+            "p(95)": 15.75405,
+            "p(99)": 17.025,
+            "avg": 13.588368111111153,
+            "min": 11.796
+        }
+    }
+}

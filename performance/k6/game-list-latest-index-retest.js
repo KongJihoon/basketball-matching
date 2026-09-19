@@ -6,7 +6,7 @@ import { check } from 'k6';
 const BASE_URL = "http://localhost:8080";
 
 
-const TEST_PHASE = 'before-index';
+const TEST_PHASE = 'after-index';
 
 const TEST_MODE = 'baseline';
 
