@@ -58,13 +58,14 @@ public interface GameRepository extends JpaRepository<GameEntity, Long> {
 
 
 
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select g
-            from GameEntity g
-            where g.gameId = :gameId
-            and g.deletedDateTime is null
-            """)
+        select g
+        from GameEntity  g
+        where g.gameId = :gameId
+        and g.deletedDateTime is null
+""")
     Optional<GameEntity> findActiveGameWithPessimisticLock(@Param("gameId") Long gameId);
 
 
