@@ -1,0 +1,188 @@
+{
+  "metrics": {
+    "game_join_success_duration_ms": {
+      "p(95)": 75.461,
+      "p(99)": 75.461,
+      "avg": 75.461,
+      "min": 75.461,
+      "med": 75.461,
+      "max": 75.461,
+      "p(90)": 75.461
+    },
+    "http_req_receiving": {
+      "p(90)": 5.04,
+      "p(95)": 5.2435,
+      "p(99)": 5.4063,
+      "avg": 3.412,
+      "min": 1.377,
+      "med": 3.412,
+      "max": 5.447
+    },
+    "http_req_duration": {
+      "p(99)": 151.82861,
+      "avg": 114.03049999999999,
+      "min": 75.461,
+      "med": 114.03049999999999,
+      "max": 152.6,
+      "p(90)": 144.8861,
+      "p(95)": 148.74304999999998
+    },
+    "game_join_unexpected": {
+      "count": 0,
+      "rate": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "http_reqs": {
+      "count": 2,
+      "rate": 8.537194421797164
+    },
+    "iteration_duration": {
+      "p(99)": 76.866792,
+      "avg": 76.866792,
+      "min": 76.866792,
+      "med": 76.866792,
+      "max": 76.866792,
+      "p(90)": 76.866792,
+      "p(95)": 76.866792
+    },
+    "game_join_full": {
+      "count": 0,
+      "rate": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "game_join_requests": {
+      "count": 1,
+      "rate": 4.268597210898582,
+      "thresholds": {
+        "count==1": false
+      }
+    },
+    "http_req_connecting": {
+      "min": 0.128,
+      "med": 0.1505,
+      "max": 0.173,
+      "p(90)": 0.16849999999999998,
+      "p(95)": 0.17074999999999999,
+      "p(99)": 0.17254999999999998,
+      "avg": 0.1505
+    },
+    "iterations": {
+      "count": 1,
+      "rate": 4.268597210898582
+    },
+    "http_req_waiting": {
+      "p(95)": 143.03945,
+      "p(99)": 145.96549,
+      "avg": 110.1215,
+      "min": 73.546,
+      "med": 110.1215,
+      "max": 146.697,
+      "p(90)": 139.3819
+    },
+    "http_req_duration{expected_response:true}": {
+      "p(90)": 144.8861,
+      "p(95)": 148.74304999999998,
+      "p(99)": 151.82861,
+      "avg": 114.03049999999999,
+      "min": 75.461,
+      "med": 114.03049999999999,
+      "max": 152.6
+    },
+    "http_req_blocked": {
+      "med": 1.461,
+      "max": 2.767,
+      "p(90)": 2.5058000000000002,
+      "p(95)": 2.6364,
+      "p(99)": 2.74088,
+      "avg": 1.4609999999999999,
+      "min": 0.155
+    },
+    "http_req_failed": {
+      "passes": 0,
+      "fails": 2,
+      "value": 0
+    },
+    "http_req_tls_handshaking": {
+      "p(99)": 0,
+      "avg": 0,
+      "min": 0,
+      "med": 0,
+      "max": 0,
+      "p(90)": 0,
+      "p(95)": 0
+    },
+    "http_req_sending": {
+      "p(95)": 0.5339,
+      "p(99)": 0.53718,
+      "avg": 0.497,
+      "min": 0.456,
+      "med": 0.497,
+      "max": 0.538,
+      "p(90)": 0.5298
+    },
+    "checks": {
+      "passes": 2,
+      "fails": 0,
+      "value": 1
+    },
+    "game_join_duration_ms": {
+      "p(95)": 75.461,
+      "p(99)": 75.461,
+      "avg": 75.461,
+      "min": 75.461,
+      "med": 75.461,
+      "max": 75.461,
+      "p(90)": 75.461
+    },
+    "game_join_success": {
+      "count": 1,
+      "rate": 4.268597210898582,
+      "thresholds": {
+        "count==1": false
+      }
+    },
+    "data_received": {
+      "count": 1631,
+      "rate": 6962.082050975588
+    },
+    "data_sent": {
+      "count": 635,
+      "rate": 2710.5592289205997
+    }
+  },
+  "root_group": {
+    "checks": {
+      "참가 성공 또는 정상적인 정원 초과": {
+        "name": "참가 성공 또는 정상적인 정원 초과",
+        "path": "::참가 성공 또는 정상적인 정원 초과",
+        "id": "bc2ec69fe07930c6bfece0cefde0ba65",
+        "passes": 1,
+        "fails": 0
+      }
+    },
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {
+      "setup": {
+        "path": "::setup",
+        "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+        "groups": {},
+        "checks": {
+          "테스트 사용자 로그인 성공": {
+            "name": "테스트 사용자 로그인 성공",
+            "path": "::setup::테스트 사용자 로그인 성공",
+            "id": "aa947bf8693aae0847de94306c9f3d6d",
+            "passes": 1,
+            "fails": 0
+          }
+        },
+        "name": "setup"
+      }
+    }
+  }
+}
