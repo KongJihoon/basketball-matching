@@ -188,7 +188,7 @@ class GameParticipantServiceIntegrationTest {
 
         assertEquals(2, game.getParticipantCount());
 
-        assertEquals(2, participantGameRepository.count());
+        assertEquals(2, participantGameRepository.countByGameEntity_GameId(gameId));
 
     }
 

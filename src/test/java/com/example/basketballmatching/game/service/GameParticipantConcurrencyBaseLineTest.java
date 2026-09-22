@@ -13,11 +13,9 @@ import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.relational.core.sql.In;
 
 import java.time.Clock;
 import java.time.LocalDate;

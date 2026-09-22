@@ -29,4 +29,6 @@ public interface ParticipantGameRepository extends JpaRepository<ParticipantGame
 
 
     Optional<ParticipantGameEntity> findByParticipantGameIdAndGameEntity_GameId(Long participantGameId, Long gameId);
+
+    long countByGameEntity_GameId(Long gameId);
 }
