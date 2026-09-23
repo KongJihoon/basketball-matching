@@ -53,6 +53,8 @@ public class GameParticipantService {
         GameEntity game = gameRepository.findActiveGameWithPessimisticLock(gameId)
                 .orElseThrow(() -> new CustomException(GAME_NOT_FOUND));
 
+        game.validateRecruiting();
+
         ParticipantGameEntity existingParticipation = participantGameRepository.findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
                 .orElse(null);
 

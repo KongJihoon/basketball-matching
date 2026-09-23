@@ -1,0 +1,188 @@
+{
+  "metrics": {
+    "http_reqs": {
+      "count": 2,
+      "rate": 7.83254028862911
+    },
+    "http_req_waiting": {
+      "min": 79.057,
+      "med": 121.01650000000001,
+      "max": 162.976,
+      "p(90)": 154.5841,
+      "p(95)": 158.78005,
+      "p(99)": 162.13681,
+      "avg": 121.01650000000001
+    },
+    "http_req_failed": {
+      "passes": 0,
+      "fails": 2,
+      "value": 0
+    },
+    "game_join_success_duration_ms": {
+      "p(90)": 80.181,
+      "p(95)": 80.181,
+      "p(99)": 80.181,
+      "avg": 80.181,
+      "min": 80.181,
+      "med": 80.181,
+      "max": 80.181
+    },
+    "http_req_tls_handshaking": {
+      "avg": 0,
+      "min": 0,
+      "med": 0,
+      "max": 0,
+      "p(90)": 0,
+      "p(95)": 0,
+      "p(99)": 0
+    },
+    "game_join_unexpected": {
+      "count": 0,
+      "rate": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "checks": {
+      "passes": 2,
+      "fails": 0,
+      "value": 1
+    },
+    "game_join_success": {
+      "count": 1,
+      "rate": 3.916270144314555,
+      "thresholds": {
+        "count==1": false
+      }
+    },
+    "game_join_full": {
+      "count": 0,
+      "rate": 0,
+      "thresholds": {
+        "count==0": false
+      }
+    },
+    "http_req_duration": {
+      "p(95)": 164.0983,
+      "p(99)": 167.63165999999998,
+      "avg": 124.34799999999998,
+      "min": 80.181,
+      "med": 124.34799999999998,
+      "max": 168.515,
+      "p(90)": 159.6816
+    },
+    "game_join_duration_ms": {
+      "med": 80.181,
+      "max": 80.181,
+      "p(90)": 80.181,
+      "p(95)": 80.181,
+      "p(99)": 80.181,
+      "avg": 80.181,
+      "min": 80.181
+    },
+    "iterations": {
+      "rate": 3.916270144314555,
+      "count": 1
+    },
+    "data_sent": {
+      "count": 635,
+      "rate": 2486.831541639742
+    },
+    "http_req_receiving": {
+      "avg": 3.0705,
+      "min": 1.101,
+      "med": 3.0705,
+      "max": 5.04,
+      "p(90)": 4.6461,
+      "p(95)": 4.84305,
+      "p(99)": 5.00061
+    },
+    "iteration_duration": {
+      "avg": 81.336292,
+      "min": 81.336292,
+      "med": 81.336292,
+      "max": 81.336292,
+      "p(90)": 81.336292,
+      "p(95)": 81.336292,
+      "p(99)": 81.336292
+    },
+    "data_received": {
+      "count": 1631,
+      "rate": 6387.436605377039
+    },
+    "game_join_requests": {
+      "count": 1,
+      "rate": 3.916270144314555,
+      "thresholds": {
+        "count==1": false
+      }
+    },
+    "http_req_blocked": {
+      "med": 1.807,
+      "max": 3.433,
+      "p(90)": 3.1077999999999997,
+      "p(95)": 3.2703999999999995,
+      "p(99)": 3.40048,
+      "avg": 1.807,
+      "min": 0.181
+    },
+    "http_req_connecting": {
+      "p(95)": 0.3679,
+      "p(99)": 0.37678,
+      "avg": 0.268,
+      "min": 0.157,
+      "med": 0.268,
+      "max": 0.379,
+      "p(90)": 0.3568
+    },
+    "http_req_duration{expected_response:true}": {
+      "avg": 124.34799999999998,
+      "min": 80.181,
+      "med": 124.34799999999998,
+      "max": 168.515,
+      "p(90)": 159.6816,
+      "p(95)": 164.0983,
+      "p(99)": 167.63165999999998
+    },
+    "http_req_sending": {
+      "avg": 0.261,
+      "min": 0.023,
+      "med": 0.261,
+      "max": 0.499,
+      "p(90)": 0.45139999999999997,
+      "p(95)": 0.47519999999999996,
+      "p(99)": 0.49423999999999996
+    }
+  },
+  "root_group": {
+    "checks": {
+      "참가 성공 또는 정상적인 정원 초과": {
+        "fails": 0,
+        "name": "참가 성공 또는 정상적인 정원 초과",
+        "path": "::참가 성공 또는 정상적인 정원 초과",
+        "id": "bc2ec69fe07930c6bfece0cefde0ba65",
+        "passes": 1
+      }
+    },
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {
+      "setup": {
+        "checks": {
+          "테스트 사용자 로그인 성공": {
+            "id": "aa947bf8693aae0847de94306c9f3d6d",
+            "passes": 1,
+            "fails": 0,
+            "name": "테스트 사용자 로그인 성공",
+            "path": "::setup::테스트 사용자 로그인 성공"
+          }
+        },
+        "name": "setup",
+        "path": "::setup",
+        "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+        "groups": {}
+      }
+    }
+  }
+}
