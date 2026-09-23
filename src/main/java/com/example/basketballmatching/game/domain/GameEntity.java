@@ -391,7 +391,7 @@ public class GameEntity extends BaseEntity {
         }
     }
 
-    private void validateRecruiting() {
+    public void validateRecruiting() {
         if (gameStatus == GameStatus.CLOSED || participantCount >= headCount) {
             throw new CustomException(FULL_HEADCOUNT_GAME);
         }
