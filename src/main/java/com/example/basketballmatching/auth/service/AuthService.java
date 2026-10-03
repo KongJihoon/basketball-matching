@@ -92,9 +92,17 @@ public class AuthService {
     }
 
 
+    /**
+     * 유효한 Refresh Token을 이용하여 새로운 AccessToken 발급
+     *
+     * Redis에 저장된 RefreshToken과 요청 토큰의 일치여부를 검사하고
+     * 현재 사용자 상태를 검증한 뒤에 새로운 AccessToken만 발급한다.
+     */
     @Transactional(readOnly = true)
     public AuthTokenResponse reissue(String refreshToken) {
 
+        // 요청 토큰의 서명과 만료 여부를 검증한다.
+        // Redis의 저장된 값과 비교하기 전에 만료된 RefreshToken의 접근을 제한한다.
         tokenProvider.validateRefreshToken(refreshToken);
 
         String email = tokenProvider.getEmailFromToken(refreshToken);
@@ -104,13 +112,17 @@ public class AuthService {
 
         String savedRefreshToken = authTokenStore.getRefreshToken(email);
 
-        // 재발금 유효성 검사
+        // 요청 토큰과 Redis의 저장된 RefreshToken의 일치 여부를 검사한다.
         validateReissue(refreshToken, savedRefreshToken);
 
+        // 재발급 유저의 탈퇴 가능성으로 활성 유저인지 검증
         UserEntity user = getActiveUser(email);
 
+        // 유저가 블랙리스트인지 검사
         validateNotBlacklisted(email);
 
+
+        // 기존 RefreshToken은 유지하고 새로운 AccessToken을 발급하고 반환한다.
         String accessToken = issueAccessToken(user);
 
         log.info("[토큰 재발급 완료] email={}", email);
@@ -188,6 +200,10 @@ public class AuthService {
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
+    /**
+     * 요청받은 RefreshToken이 서버에서 관리하는
+     * 현재 유효한 RefreshToken과 일치하는지 확인한다.
+     */
     private void validateReissue(String refreshToken, String savedRefreshToken) {
         if (savedRefreshToken == null) {
             throw new CustomException(NOT_FOUND_TOKEN);

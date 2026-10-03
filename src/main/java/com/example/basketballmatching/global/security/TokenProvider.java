@@ -83,6 +83,13 @@ public class TokenProvider {
         return refreshTokenExpirationMillis;
     }
 
+
+    /**
+     * 서버의 서명 키를 사용해 JWT를 검증하고 Claim을 반환
+     *
+     * 만료된 JWT는 만료 정보를 구분할 수 있도록
+     * ExpiredJwtException에 포함된 Claim을 반환한다.
+     */
     public Claims parseToken(String token) {
 
         try {
@@ -103,8 +110,16 @@ public class TokenProvider {
 
     }
 
+    /**
+     * JWT 이메일로 현재 사용자 정보를 조회하고
+     * Spring Security Authentication 객체로 변환한다.
+     */
     public Authentication getAuthentication(String token) {
 
+        /*
+         * 토큰 Claim의 권한을 바로 신뢰하지 않고
+         * DB에서 활성 사용자의 현재 권한을 다시 조회한다.
+         */
         UserDetails userDetails = userInfoDetailsService.loadUserByUsername(getEmailFromToken(token));
 
         return new UsernamePasswordAuthenticationToken(
@@ -138,12 +153,19 @@ public class TokenProvider {
 
     }
 
+    /**
+     * JWT의 subject에 저장된 사용자 이메일을 반환한다.
+     */
     public String getEmailFromToken(String token) {
         return parseToken(token).getSubject();
     }
 
 
-
+    /**
+     * RefreshToken의 존재여부와 만료되지 않은 JWT토큰인지 검증한다.
+     *
+     * parseToken() 과정에서 서명과 JWT 구조가 함께 검증된다.
+     */
     public void validateRefreshToken(String refreshToken) {
 
         if (refreshToken == null) {

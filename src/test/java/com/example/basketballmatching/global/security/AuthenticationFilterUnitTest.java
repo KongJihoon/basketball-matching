@@ -71,7 +71,7 @@ class AuthenticationFilterUnitTest {
     }
 
     @Test
-    @DisplayName("Authorization 헤더가 존재하지 않을 시 Fiter 실행")
+    @DisplayName("Authorization 헤더가 존재하지 않을 시 Filter 실행")
     void doFilter_withoutAuthorizationHeader() throws Exception {
         // given
 
