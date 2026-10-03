@@ -48,8 +48,12 @@ public class TokenProvider {
     }
 
 
+    /**
+     * 사용자 식별 정보와 권한을 Claim에 담아 AccessToken 생성
+     */
     public String createAccessToken(String email, String name, UserType userType) {
 
+        // 이메일을 JWT의 주 식별값인 subject로 사용한다.
         Claims claims = Jwts.claims().setSubject(email);
 
         claims.put("name", name);
@@ -59,7 +63,10 @@ public class TokenProvider {
 
 
     }
-
+    /**
+     * Access Token 재발급에 사용할 Refresh Token을 생성한다.
+     * 사용자 식별에 필요한 이메일만 subject에 포함한다.
+     */
     public String createRefreshToken(String email) {
 
 
@@ -76,6 +83,13 @@ public class TokenProvider {
         return refreshTokenExpirationMillis;
     }
 
+
+    /**
+     * 서버의 서명 키를 사용해 JWT를 검증하고 Claim을 반환
+     *
+     * 만료된 JWT는 만료 정보를 구분할 수 있도록
+     * ExpiredJwtException에 포함된 Claim을 반환한다.
+     */
     public Claims parseToken(String token) {
 
         try {
@@ -96,8 +110,16 @@ public class TokenProvider {
 
     }
 
+    /**
+     * JWT 이메일로 현재 사용자 정보를 조회하고
+     * Spring Security Authentication 객체로 변환한다.
+     */
     public Authentication getAuthentication(String token) {
 
+        /*
+         * 토큰 Claim의 권한을 바로 신뢰하지 않고
+         * DB에서 활성 사용자의 현재 권한을 다시 조회한다.
+         */
         UserDetails userDetails = userInfoDetailsService.loadUserByUsername(getEmailFromToken(token));
 
         return new UsernamePasswordAuthenticationToken(
@@ -131,12 +153,19 @@ public class TokenProvider {
 
     }
 
+    /**
+     * JWT의 subject에 저장된 사용자 이메일을 반환한다.
+     */
     public String getEmailFromToken(String token) {
         return parseToken(token).getSubject();
     }
 
 
-
+    /**
+     * RefreshToken의 존재여부와 만료되지 않은 JWT토큰인지 검증한다.
+     *
+     * parseToken() 과정에서 서명과 JWT 구조가 함께 검증된다.
+     */
     public void validateRefreshToken(String refreshToken) {
 
         if (refreshToken == null) {
@@ -158,6 +187,9 @@ public class TokenProvider {
     }
 
 
+    /**
+     * Claim과 만료시간을 기준으로 서명된 JWT를 생성한다.
+     */
     private String createToken(Claims claims, Long expirationMillis) {
 
         Date issuedAt = new Date();
@@ -167,6 +199,7 @@ public class TokenProvider {
                 .setClaims(claims)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiresAt)
+                // 서버의 비밀키로 서명해 토큰 위변조 여부를 검증할 수 있게 한다.
                 .signWith(key)
                 .compact();
     }

@@ -27,6 +27,9 @@ public class AuthTokenStore {
         );
     }
 
+    /**
+     * 이메일을 기준으로 Redis에 저장된 RefreshToken을 조회한다.
+     */
     public String getRefreshToken(String email) {
         return redisService.getData(refreshTokenKey(email));
     }

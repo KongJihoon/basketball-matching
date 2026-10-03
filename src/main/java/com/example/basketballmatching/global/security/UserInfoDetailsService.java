@@ -19,6 +19,10 @@ public class UserInfoDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    /**
+     * 이메일로 탈퇴하지 않은 사용자를 조회하여
+     * Spring Security가 이해할 수 있는 UserDetails로 변환한다.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
