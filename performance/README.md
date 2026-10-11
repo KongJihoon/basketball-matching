@@ -1,207 +1,33 @@
 # Performance tests
 
-이 디렉터리는 경기 목록 인덱스, 경기 참가 동시성, 목록 조회 N+1 개선 과정을 재현하기 위한 실행 스크립트와 측정 결과를 관리한다.
+경기 목록 인덱스, 경기 참가 동시성, 목록 조회 N+1 개선을 k6·Prometheus·Grafana로 검증한다.
 
-## 성능 검증 대상 API
+## 포트폴리오용 최신 결과
 
-```http
-GET /api/v1/games?page=0&size=10
-GET /api/v1/mypage/games/upcoming?page=0&size=100
-GET /api/v1/mypage/games/completed?page=0&size=100
-POST /api/v1/games/{gameId}/participations
-GET /api/v1/games/{gameId}/participants?page=0&size=20
-GET /api/v1/admin/reports?status=PENDING&page=0&size=20
-GET /api/v1/admin/blacklists?status=ACTIVE&page=0&size=20
-```
+최신 본 테스트 수치, 개선 전·후 README, Grafana 캡처와 k6 JSON 링크는 다음 문서에 모아 두었다.
 
-## 디렉터리 구조
+- [성능 개선 본 테스트 결과 허브](./results/README.md)
 
-```text
-performance/
-├── README.md
-├── grafana/
-│   ├── k6-latency-after-index.png
-│   ├── k6-latency-before-index.png
-│   ├── k6-load-profile-after-index.png
-│   ├── k6-load-profile-before-index.png
-│   ├── spring-cpu-after-index.png
-│   └── spring-cpu-before-index.png
-├── k6/
-│   └── game-list-index-test.js
-├── sql/
-│   ├── 10-seed-game-list-dataset.sql
-│   ├── 20-baseline-game-list-before-index.sql
-│   ├── 30-add-game-list-active-start-index.sql
-│   └── 31-drop-game-list-active-start-index.sql
-└── results/
-    └── game-list/
-        ├── before-index/
-        │   ├── k6/
-        │   │   └── run-01~03-summary.json
-        │   ├── raw/
-        │   │   ├── indexes-before.csv
-        │   │   ├── list-explain.csv
-        │   │   ├── count-explain.csv
-        │   │   └── *-explain-analyze-run-01~05.csv
-        │   ├── plan-before-count.png
-        │   ├── plan-before-list.png
-        │   └── summary.md
-        └── after-index/
-            ├── k6/
-            │   └── run-01~03-summary.json
-            ├── raw/
-            │   ├── indexes-after.csv
-            │   ├── list-explain.csv
-            │   ├── count-explain.csv
-            │   └── *-explain-analyze-run-01~05.csv
-            ├── plan-after-count.png
-            ├── plan-after-list.png
-            └── summary.md
-```
+| 주제 | 개선 전 | 개선 후 |
+|---|---|---|
+| 기본 경기 목록 | [Before](./results/game-list-index/before/README.md) | [After](./results/game-list-index/after/README.md) |
+| 복합 필터 | [Before](./results/game-list-filter-index/before/README.md) | [After](./results/game-list-filter-index/after/README.md) |
+| 최신순 정렬 | [Before](./results/game-list-latest-index/before/README.md) | [After](./results/game-list-latest-index/after/README.md) |
+| 경기 참가 동시성 | [Before](./results/game-participation-concurrency/before/README.md) | [After](./results/game-participation-concurrency/after/README.md), [1,000 VU](./results/game-participation-concurrency/1000-vu/README.md) |
+| 내 경기 목록 N+1 | [Before](./results/my-game-list-n-plus-one/before/README.md) | [After](./results/my-game-list-n-plus-one/after/README.md) |
 
-- `k6`: 인덱스 적용 전후에 동일하게 재사용할 API 부하 테스트 스크립트
-- `grafana`: k6 부하 프로파일, API 지연시간, 서버 자원 지표 캡처
-- `sql`: 테스트 데이터 생성 및 측정에 사용한 실행 가능한 SQL
-- `results`: 단계별 측정 결과와 원본 증거
-- `before-index`: 복합 인덱스 적용 전 Full Scan과 filesort가 발생한 기준선
-- `after-index`: `(deleted_date_time, start_date_time)` 복합 인덱스 적용 후 실행 계획, DB 실행시간, k6 부하 테스트 및 Grafana 지표
+## 재현 자료
 
-## 인덱스 적용 결과
+- k6 스크립트: [`k6`](./k6)
+- 실행 스크립트: [`scripts`](./scripts)
+- 데이터 생성·인덱스·정합성 검증 SQL: [`sql`](./sql)
+- 인덱스 전·후 본 테스트: [기본 목록](./results/game-list-index), [복합 필터](./results/game-list-filter-index), [최신순](./results/game-list-latest-index)
 
-기본 경기 목록 조회 조건과 정렬에 맞춰 다음 복합 인덱스를 적용했다.
+## 측정 원칙
 
-```sql
-CREATE INDEX idx_game_list_active_start
-    ON game_entity (deleted_date_time, start_date_time);
-```
-
-| 항목 | 적용 전 | 적용 후 | 개선 |
-|---|---:|---:|---:|
-| 목록 SQL 중앙값 | 254ms | 0.235ms | 99.91% 감소 |
-| COUNT SQL 중앙값 | 123ms | 60.8ms | 50.57% 감소 |
-| API 응답시간 p95 | 491.09ms | 44.83ms | 90.87% 감소 |
-
-목록 SQL은 Index Range Scan으로 변경되어 Full Scan과 filesort가 제거됐다. COUNT SQL은 정확한 전체 개수를 계산하기 위해 조건에 맞는 인덱스 엔트리를 계속 읽지만, 테이블 전체 스캔에서 커버링 인덱스 스캔으로 개선됐다.
-
-- [인덱스 적용 전 기준선](./results/game-list/before-index/summary.md)
-- [인덱스 적용 후 검증 결과](./results/game-list/after-index/summary.md)
-- [인덱스 적용 SQL](./sql/30-add-game-list-active-start-index.sql)
-- [인덱스 롤백 SQL](./sql/31-drop-game-list-active-start-index.sql)
-
-## 경기 목록 필터 인덱스
-
-기본 목록 인덱스 적용 후 지역, 경기 상태, 경기 형식 조합을 대상으로 별도 실험을 진행했다. 삭제 여부를 선두에 둔 1차 후보의 최신순 회귀를 확인하고, 지역을 선두로 이동한 필터 전용 인덱스를 최종 선택했다.
-
-```sql
-CREATE INDEX idx_game_list_filter
-    ON game_entity (
-        city_name,
-        game_status,
-        match_format,
-        deleted_date_time,
-        start_date_time,
-        game_id
-    );
-```
-
-| 시나리오 | COUNT 적용 전 | 적용 후 | API p95 적용 전 | 적용 후 |
-|---|---:|---:|---:|---:|
-| 서울 | 133ms | 44.3ms | 101.68ms | 31.62ms |
-| 서울 + 모집 중 + 3대3 | 138ms | 22.0ms | 133.88ms | 26.48ms |
-
-- [필터 인덱스 실험 개요](./results/game-list-filter/README.md)
-- [1차 후보 기각 근거](./results/game-list-filter/candidate-01-deleted-first/summary.md)
-- [최종 인덱스 검증 결과](./results/game-list-filter/after-index/summary.md)
-- [설계 결정 기록](../docs/adr/game/game-list-filter-index.md)
-
-## 경기 목록 최신순 인덱스
-
-최신순 목록의 전체 스캔과 filesort를 제거하고 COUNT까지 커버링하도록 다음 인덱스를 적용했다.
-
-```sql
-CREATE INDEX idx_game_list_latest
-    ON game_entity (
-        deleted_date_time,
-        created_at DESC,
-        game_id DESC,
-        start_date_time
-    );
-```
-
-| 지표 | 적용 전 | 적용 후 |
-|---|---:|---:|
-| Content SQL 중앙값 | 228ms | 0.103ms |
-| API 평균 중앙값 | 1,231.68ms | 48.28ms |
-| API p95 중앙값 | 5,461.72ms | 51.32ms |
-| dropped iteration | 484건 | 0건 |
-
-- [적용 전 기준선](./results/game-list-filter/before-latest-index/summary.md)
-- [1차 후보 기각 근거](./results/game-list-filter/candidate-01-latest-order/summary.md)
-- [최종 검증 결과](./results/game-list-filter/after-latest-index/summary.md)
-- [설계 결정 기록](../docs/adr/game/game-list-latest-index.md)
-
-## 목록 조회 N+1 개선
-
-응답 DTO 변환 과정에서 `LAZY` 연관관계의 일반 필드에 접근하면 페이지 항목 수에 비례해 추가 SELECT가 발생했다. 커스텀 QueryDSL 조회에는 Fetch Join을, Spring Data JPA 파생 쿼리에는 `EntityGraph`를 적용해 필요한 `ToOne` 연관관계만 본문 쿼리에서 함께 조회했다.
-
-| 대상 목록 | 검증 크기 | 개선 전 SELECT | 개선 후 SELECT | 결과 |
-|---|---:|---:|---:|---|
-| 내 예정·지난 경기 | 100건 | 103회 | 3회 | 97.09% 감소 |
-| 경기 참가자 | 20건 | 24회 | 4회 | 83.33% 감소 |
-| 관리자 블랙리스트 | 20건 | 23회 | 3회 | 86.96% 감소 |
-| 관리자 신고 | 20건 | 유효한 기준선 미확보 | 3회 | 쿼리 수 상수 유지 |
-
-경기 참가자와 블랙리스트 목록은 서로 다른 사용자 20명을 조회해 페이지 크기만큼 추가 SELECT가 발생하는 것을 재현했다. 신고 목록은 DTO가 `gameEntity`, `reportUser`, `targetUser`의 일반 필드를 읽는 세 개의 지연 로딩 경로를 분석했고, 서로 다른 연관 데이터 20건을 조회했을 때 SELECT 3회로 유지되는 것을 확인했다.
-
-모든 Fetch 대상은 `ManyToOne` 또는 식별자 기반의 단건 연관관계이다. 컬렉션 Fetch Join을 사용하지 않아 결과 행 증폭과 메모리 페이지네이션 문제를 피했고, COUNT 쿼리는 본문 조회와 분리해 전체 건수 정확성을 유지했다.
-
-- [내 경기 목록 개선 전 기준선](./results/my-game-list-n-plus-one/before/summary.md)
-- [내 경기 목록 개선 후 검증](./results/my-game-list-n-plus-one/after/summary.md)
-- [N+1 로딩 전략 결정 기록](../docs/adr/performance/n-plus-one-loading-strategy.md)
-- [목록 조회 N+1 리팩터링](../docs/refactoring/performance/list-query-n-plus-one-refactoring.md)
-
-## 경기 목록 인덱스 측정 원칙
-
-1. 인덱스 적용 전후에 같은 데이터와 같은 Hibernate 바인딩 값을 사용한다.
-2. 목록 SQL과 COUNT SQL을 별도로 측정한다.
-3. `EXPLAIN`과 `EXPLAIN ANALYZE` 원본을 모두 보관한다.
-4. `EXPLAIN ANALYZE`는 워밍업 후 5회 측정하고 중앙값을 비교한다.
-5. DB 측정과 k6 API 측정 결과를 혼동하지 않는다.
-6. 경기 목록 API 부하 테스트는 적용 전후 모두 20 RPS, 3분, 3회 조건으로 수행한다.
-7. k6 JSON을 정량 비교 원본으로 사용하고 Grafana 캡처는 자원 추세를 설명하는 시각 자료로 사용한다.
-
-## 경기 참가 동시성 개선
-
-정원 6명인 경기에 생성자 1명이 참가한 상태에서 일반 사용자 100명이 동시에 참가하는 시나리오를 검증했다. 락이 없을 때는 초과 승인과 집계 불일치, HTTP 500이 발생했다. 낙관적 락 무재시도는 DB 정합성을 회복했지만 충돌 요청 39건이 시스템 오류로 끝났고, 비관적 쓰기 락은 모든 초과 요청을 정상적인 도메인 응답으로 처리했다.
-
-| 항목 | 락 적용 전 | 낙관적 락 무재시도 | 비관적 락 적용 후 |
-|---|---:|---:|---:|
-| 성공한 일반 참가 | 12건 | 5건 | 5건 |
-| 정원 초과 정상 거절 | 52건 | 56건 | 95건 |
-| 시스템 오류 | 36건 | 39건 | 0건 |
-| 실제 `ACCEPT` | 13명 | 6명 | 6명 |
-| 초과 승인 | 7명 | 0명 | 0명 |
-| DB 정합성 판정 | `FAIL` | `PASS` | `PASS` |
-| 최종 선택 | 기각 | 기각 | **채택** |
-
-- [락 적용 전 기준선](./results/game-participation-concurrency/before-lock/summary.md)
-- [낙관적 락 무재시도 비교 실험](./results/game-participation-concurrency/optimistic-lock-no-retry/summary.md)
-- [비관적 락 적용 후 검증](./results/game-participation-concurrency/pessimistic-lock/summary.md)
-- [비관적 락 200·500·1,000명 부하 한계 탐색](./results/game-participation-concurrency/pessimistic-lock-load-limit/summary.md)
-- [동시성 제어 방식 결정 기록](../docs/adr/game/game-participation-concurrency-lock.md)
-- [k6 동시 참가 스크립트](./k6/game-participation-concurrency-test.js)
-- [테스트 실행 스크립트](./scripts/run-game-participation-concurrency-test.sh)
-- [테스트 경기 준비 SQL](./sql/game-participation-concurrency/20-prepare-participation-game.sql)
-- [정합성 검증 SQL](./sql/game-participation-concurrency/90-verify-participation-result.sql)
-
-### 비관적 락 단계별 부하 결과
-
-비관적 락을 최종 선택한 뒤 같은 경기의 남은 5자리에 요청을 집중시키는 규모를 200명, 500명, 1,000명으로 높였다.
-
-| VU | 참가 성공 | 정상 거절 | 시스템 오류 | p95 | DB 판정 |
-|---:|---:|---:|---:|---:|---|
-| 200 | 5 | 195 | 0 | 502.17ms | `PASS` |
-| 500 | 5 | 495 | 0 | 817.57ms | `PASS` |
-| 1,000 | 5 | 995 | 0 | 2,024.20ms | `PASS` |
-
-HikariCP 최대 크기 10에서 1,000 VU 테스트의 Active Connection은 최대 10, Pending Connection은 최대 198이었고 Connection Timeout은 0건이었다. 요청 규모에 따라 꼬리 지연은 증가했지만 검증한 1,000 VU 범위에서 정합성과 정상 응답을 유지했다. 이는 확인한 상한이며 실제 시스템 파괴 지점이나 운영 수용량을 의미하지 않는다.
+1. 개선 전·후에 동일한 데이터와 부하 조건을 사용한다.
+2. 스모크 테스트와 워밍 후 본 테스트를 3회 수행한다.
+3. API 비교는 k6 summary JSON을, DB 실행계획은 `EXPLAIN ANALYZE`를 정량 근거로 사용한다.
+4. Grafana는 응답시간, 처리량, HikariCP, CPU 추세를 설명하는 시각 증빙으로 사용한다.
+5. 동시성 테스트는 성능보다 DB 불변식과 비즈니스 응답 정확성을 우선한다.
+6. 로컬 테스트 결과를 운영 최대 처리량으로 표현하지 않는다.

@@ -48,7 +48,7 @@ QueryDSL content 쿼리에 `ManyToOne` 연관관계를 Fetch Join했다.
 | 20 | 23 | 3 |
 | 100 | 103 | 3 |
 
-세부 부하 결과는 [개선 전 기준선](../../../performance/results/my-game-list-n-plus-one/before/summary.md)과 [개선 후 검증](../../../performance/results/my-game-list-n-plus-one/after/summary.md)에 보관한다.
+세부 부하 결과는 [개선 전 기준선](../../../performance/results/my-game-list-n-plus-one/before/README.md)과 [개선 후 검증](../../../performance/results/my-game-list-n-plus-one/after/README.md)에 보관한다.
 
 ---
 

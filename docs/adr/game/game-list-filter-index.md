@@ -51,4 +51,4 @@
 
 보조 인덱스 추가로 저장공간과 쓰기 비용이 증가하지만, 실제 사용 빈도가 높은 지역 필터의 COUNT 및 API 응답시간 개선 효과가 더 크다고 판단했다.
 
-세부 실행계획과 원본 결과는 [`performance/results/game-list-filter`](../../../performance/results/game-list-filter/README.md)에 보관한다.
+최신 본 테스트 결과는 [복합 필터 인덱스 개선 전](../../../performance/results/game-list-filter-index/before/README.md)과 [개선 후](../../../performance/results/game-list-filter-index/after/README.md)에 보관한다.
