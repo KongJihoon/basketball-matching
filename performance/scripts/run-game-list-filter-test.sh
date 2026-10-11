@@ -15,7 +15,7 @@ PROJECT_ROOT="$(
 
 QUERY_CASE="${QUERY_CASE:-default}"
 TEST_MODE="${TEST_MODE:-smoke}"
-TEST_PHASE="${TEST_PHASE:-before-index}"
+TEST_PHASE="${TEST_PHASE:-before}"
 TEST_RUN="${TEST_RUN:-run-01}"
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 FILTER_DATE="${FILTER_DATE:-}"
@@ -28,7 +28,7 @@ TEST_ID="${TEST_PHASE}-${QUERY_CASE}-${TEST_MODE}-${TEST_RUN}"
 
 K6_SCRIPT="${PROJECT_ROOT}/performance/k6/game-list-filter-test.js"
 
-RESULT_DIRECTORY="${PROJECT_ROOT}/performance/results/game-list-filter/${TEST_PHASE}/k6/${TEST_MODE}"
+RESULT_DIRECTORY="${PROJECT_ROOT}/performance/results/game-list-filter-index/${TEST_PHASE}/k6/${TEST_MODE}"
 SUMMARY_FILE="${RESULT_DIRECTORY}/${QUERY_CASE}-${TEST_RUN}-summary.json"
 
 
