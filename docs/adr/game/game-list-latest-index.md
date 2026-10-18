@@ -51,4 +51,4 @@ COUNT에는 약 15.4%의 회귀가 있지만 Content와 COUNT 합계는 약 71.4
 
 보조 인덱스의 저장공간과 쓰기 비용은 증가한다. 또한 첫 페이지 중심의 결과이므로 깊은 페이지는 커서 기반 페이지네이션과 별도로 비교한다.
 
-세부 결과와 원본 자료는 [최신순 최종 검증 문서](../../../performance/results/game-list-filter/after-latest-index/summary.md)에 보관한다.
+최신 본 테스트 결과는 [최신순 인덱스 개선 전](../../../performance/results/game-list-latest-index/before/README.md)과 [개선 후](../../../performance/results/game-list-latest-index/after/README.md)에 보관한다.

@@ -26,7 +26,7 @@ GAME_ID="${GAME_ID:-}"
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 
-TEST_PHASE="${TEST_PHASE:-before-lock}"
+TEST_PHASE="${TEST_PHASE:-before}"
 
 TEST_RUN="${TEST_RUN:-run-01}"
 
@@ -71,7 +71,7 @@ if [[ -z "${GAME_ID}" ]]; then
     echo
     echo "예시:"
     echo "GAME_ID=1 \\"
-    echo "TEST_PHASE=before-lock \\"
+    echo "TEST_PHASE=before \\"
     echo "TEST_RUN=run-01 \\"
     echo "./performance/scripts/run-game-participation-concurrency-test.sh"
     exit 1
@@ -105,17 +105,16 @@ fi
 
 
 case "${TEST_PHASE}" in
-    before-lock|pessimistic-lock|optimistic-lock|pessimistic-lock-load-limit)
+    before|after|1000-vu)
         ;;
     *)
         echo "지원하지 않는 TEST_PHASE입니다."
         echo "입력값: ${TEST_PHASE}"
         echo
         echo "사용 가능한 값:"
-        echo "- before-lock"
-        echo "- pessimistic-lock"
-        echo "- optimistic-lock"
-        echo "- pessimistic-lock-load-limit"
+        echo "- before"
+        echo "- after"
+        echo "- 1000-vu"
         exit 1
         ;;
 esac
@@ -298,7 +297,7 @@ if [[ "${K6_EXIT_CODE}" -ne 0 ]]; then
     echo
     echo "일부 임계값을 충족하지 못했습니다."
     echo
-    echo "before-lock 단계라면 동시성 문제가"
+    echo "before 단계라면 동시성 문제가"
     echo "재현되어 발생한 정상적인 결과일 수 있습니다."
     echo
     echo "다음 항목을 확인하세요."

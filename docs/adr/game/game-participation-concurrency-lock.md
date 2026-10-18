@@ -82,4 +82,4 @@ Optional<GameEntity> findActiveGameWithPessimisticLock(
 - DB 다중화 구조에서 동일한 잠금 보장을 유지하기 어렵다.
 - 대기열, Redis 분산 락 또는 비동기 참가 처리의 필요성이 생긴다.
 
-세부 실험 자료는 [비관적 락 검증](../../../performance/results/game-participation-concurrency/pessimistic-lock/summary.md), [낙관적 락 무재시도 비교](../../../performance/results/game-participation-concurrency/optimistic-lock-no-retry/summary.md), [비관적 락 단계별 부하 탐색](../../../performance/results/game-participation-concurrency/pessimistic-lock-load-limit/summary.md)에 보관한다.
+최신 본 테스트 자료는 [락 적용 전](../../../performance/results/game-participation-concurrency/before/README.md), [락 적용 후](../../../performance/results/game-participation-concurrency/after/README.md), [1,000 VU 최종 검증](../../../performance/results/game-participation-concurrency/1000-vu/README.md)에 보관한다.

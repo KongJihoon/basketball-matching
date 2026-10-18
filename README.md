@@ -267,46 +267,28 @@ OAuth 로그인은 콜백 URI에서 장기 인증 토큰을 직접 노출하지 
 
 ### 50만 건 경기 목록 인덱스
 
-50만 건의 경기 데이터를 생성하고 목록 Content Query와 COUNT Query를 분리해 측정했습니다. `EXPLAIN ANALYZE` 5회 중앙값과 k6 20 RPS·3분·3회 결과를 비교했습니다.
+50만 건의 경기 데이터에서 기본 시작 시간순, 복합 필터, 최신순 조회를 각각 50 RPS로 3분간 3회 측정했습니다. 개선 전·후 3회 결과의 중앙값을 대표값으로 사용했습니다.
 
-### 기본 시작 시간순 조회
+| 시나리오 | 개선 전 p95 | 개선 후 p95 | 개선율 | 누락 변화 |
+|---|---:|---:|---:|---:|
+| 기본 시작 시간순 | 9,999.95ms | 39.10ms | 99.61% 감소 | 4,980건 → 0건 |
+| 복합 필터 | 4,772.04ms | 21.06ms | 99.56% 감소 | 528건 → 0건 |
+| 최신순 | 9,839.66ms | 40.70ms | 99.59% 감소 | 4,404건 → 0건 |
 
-```sql
-CREATE INDEX idx_game_list_active_start
-    ON game_entity (deleted_date_time, start_date_time);
-```
-
-| 지표 | 적용 전 | 적용 후 | 개선 |
-|---|---:|---:|---:|
-| 목록 SQL 중앙값 | 254ms | 0.235ms | 99.91% 감소 |
-| COUNT SQL 중앙값 | 123ms | 60.8ms | 50.57% 감소 |
-| API 응답시간 p95 | 491.09ms | 44.83ms | 90.87% 감소 |
-
-### 복합 필터 및 최신순 조회
-
-| 시나리오 | 적용 전 | 적용 후 | 결과 |
-|---|---:|---:|---:|
-| 서울 COUNT | 133ms | 44.3ms | 66.7% 감소 |
-| 서울 + 모집 중 + 3대3 COUNT | 138ms | 22.0ms | 84.1% 감소 |
-| 최신순 Content SQL 중앙값 | 228ms | 0.103ms | 99.95% 감소 |
-| 최신순 API p95 중앙값 | 5,461.72ms | 51.32ms | 99.1% 감소 |
-| 최신순 dropped iteration | 484건 | 0건 | 요청 누락 제거 |
-
-처음 추가한 인덱스가 다른 정렬 조건에 회귀를 만드는 것도 확인했습니다. 후보 인덱스를 바로 채택하지 않고 실행계획과 부하 테스트로 기각 근거를 남긴 뒤, 기본·필터·최신순 접근 패턴을 각각 담당하는 인덱스로 분리했습니다.
+기본 정렬에는 `(deleted_date_time, start_date_time)`, 복합 필터에는 `(city_name, game_status, match_format, deleted_date_time, start_date_time, game_id)`, 최신순에는 `(deleted_date_time, created_at DESC, game_id DESC, start_date_time)` 인덱스를 적용했습니다. 하나의 범용 인덱스에 의존하지 않고 실제 필터와 정렬 접근 패턴별로 인덱스 역할을 분리했습니다.
 
 ### 경기 참가 동시성 제어
 
-정원 6명인 경기의 남은 5자리에 100명이 동시에 참가하는 상황을 재현했습니다. 락이 없을 때는 초과 승인과 집계 불일치가 발생했고, 낙관적 락 무재시도는 DB 정합성은 복구했지만 충돌 요청 39건이 시스템 오류로 종료됐습니다. 비관적 쓰기 락을 적용해 남은 자리에 정확히 5명만 참가하고 나머지 요청을 정상적인 정원 초과 응답으로 처리했습니다.
+정원 6명인 경기의 남은 5자리에 서로 다른 사용자 100명이 동시에 참가하는 상황을 재현했습니다. 락이 없을 때는 회차별 9~11건이 성공해 정원을 초과했고 비정상 응답도 15건 발생했습니다. 경기 행을 `PESSIMISTIC_WRITE`로 조회하도록 변경한 후에는 모든 회차에서 성공 5건, 정상적인 정원 초과 95건, 비정상 응답 0건과 최종 `ACCEPT` 6명을 유지했습니다.
 
-| 항목 | 락 없음 | 낙관적 락 무재시도 | 비관적 락 |
+| 항목 | 개선 전 100 VU | 개선 후 100 VU | 최종 1,000 VU |
 |---|---:|---:|---:|
-| 참가 성공 | 12건 | 5건 | 5건 |
-| 정상 정원 초과 | 52건 | 56건 | 95건 |
-| 시스템 오류 | 36건 | 39건 | 0건 |
-| 최종 `ACCEPT` | 13명 | 6명 | 6명 |
+| 참가 성공 | 9~11건 | 5건 | 5건 |
+| 정상 정원 초과 | 74~76건 | 95건 | 995건 |
+| 비정상 응답 | 15건 | 0건 | 0건 |
 | DB 정합성 | FAIL | PASS | PASS |
 
-비관적 락 채택 후 200·500·1,000 VU로 동시 요청 규모를 높였으며, 1,000 VU에서 참가 성공 5건, 정상 거절 995건, 시스템 오류 0건과 p95 2,024.20ms를 기록했습니다. 정합성과 API 계약은 유지했지만 요청 규모에 따라 락·커넥션 대기가 지연으로 나타나는 트레이드오프도 확인했습니다.
+락 적용 후 사용자별 참가 이력 조회를 락 획득 전에 수행하고, 락 직후 경기 상태와 정원을 먼저 검증하도록 코드 위치를 조정했습니다. 1,000 VU 본 테스트 3회 중앙값은 정원 초과 응답 평균 `762.07ms`, p95 `1,112.65ms`였고 모든 요청이 의도한 비즈니스 응답으로 종료됐습니다. 1,000 VU는 한 경기에 순간적으로 요청이 집중되는 극단적 정합성 검증이며 운영 TPS나 절대 처리 한계를 뜻하지 않습니다.
 
 ### 목록 조회 N+1 제거
 
@@ -322,9 +304,9 @@ Repository 조회와 DTO 변환 경로를 연결해 `LAZY` 연관관계의 일�
 내 경기 목록은 요청당 SELECT를 103회에서 3회로 줄였고, 최대 200 RPS 스트레스 구간의 p95를 4,744.71ms에서 14.70ms로 단축했습니다. 같은 구간에서 dropped iteration 4,445건과 HikariCP Pending Connection 최대 189건이 모두 0건으로 감소했습니다.
 
 - [성능 테스트 재현 문서](performance/README.md)
-- [경기 목록 필터 실험](performance/results/game-list-filter/README.md)
-- [내 경기 N+1 개선 전 기준선](performance/results/my-game-list-n-plus-one/before/summary.md)
-- [내 경기 N+1 개선 후 검증](performance/results/my-game-list-n-plus-one/after/summary.md)
+- [최신 인덱스·동시성·N+1 본 테스트](performance/results/README.md)
+- [내 경기 N+1 개선 전 기준선](performance/results/my-game-list-n-plus-one/before/README.md)
+- [내 경기 N+1 개선 후 검증](performance/results/my-game-list-n-plus-one/after/README.md)
 - [필터 인덱스 설계 결정](docs/adr/game/game-list-filter-index.md)
 - [최신순 인덱스 설계 결정](docs/adr/game/game-list-latest-index.md)
 - [경기 참가 동시성 제어 결정](docs/adr/game/game-participation-concurrency-lock.md)

@@ -72,22 +72,32 @@ public class AuthService {
     }
 
 
-
-
+    /**
+     * OAuth 인증이 완료된 카카오 회원의 현재 상태를 검증하고
+     * 서비스 AccessToken과 RefreshToken 발급
+     *
+     * 비밀번호 인증은 카카오에서 완료했으므로 로컬 로그인과 달리 PasswordEncoder검증은 수행하지 않는다.
+     */
     @Transactional(readOnly = true)
     public AuthTokenResponse loginWithKakao(String email) {
 
         log.info("[카카오 로그인 검증 시작] email : {}", email);
 
+        // 회원 탈퇴 검증
         UserEntity user = getActiveUser(email);
 
-        // 로그인 형식 검사
+        // LOCAL 계정 사용자인지 검증
         validateKakaoLogin(user);
 
+        // 현재 제재중인 사용자인지 검증한다.
         validateNotBlacklisted(email);
 
         log.info("[카카오 로그인 완료] email : {}", email);
 
+        /*
+         * 모든 검증이 끝난 사용자에게
+         * 서비스 AccessToken과 RefreshToken 발급
+         */
         return issueTokens(user);
     }
 
