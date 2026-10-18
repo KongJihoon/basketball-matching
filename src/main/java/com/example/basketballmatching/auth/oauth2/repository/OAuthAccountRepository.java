@@ -11,6 +11,12 @@ import java.util.Optional;
 public interface OAuthAccountRepository extends JpaRepository<OAuthAccountEntity, Long> {
 
 
+    /**
+     * Provider와 Provider 사용자 ID로 OAuth 연결 정보를 조회
+     *
+     * 로그인 처리에서 연결된 사용자 정보도 바로 필요하므로
+     * Fetch Join을 사용해 OAuthAccountEntity와 UserEntity를 함께 조회한다.
+     */
     @Query("""
             select oauthAccount
             from OAuthAccountEntity oauthAccount
