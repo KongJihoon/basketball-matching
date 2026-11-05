@@ -1,7 +1,10 @@
 package com.example.basketballmatching.global.config;
 
 import com.example.basketballmatching.global.security.AuthenticationFilter;
+import com.example.basketballmatching.global.security.RestAccessDeniedHandler;
+import com.example.basketballmatching.global.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -21,6 +25,8 @@ public class SecurityConfig {
 
 
     private final AuthenticationFilter authenticationFilter;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     /**
      * Spring Security의 요청 인증/ 인가 규칙과
@@ -41,6 +47,12 @@ public class SecurityConfig {
                  * CSRF 보호 기능을 비활성화 한다.
                  */
                 .csrf(CsrfConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .requestCache(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 /*
                  * 회원가입·로그인 등 공개 API는 인증 없이 허용하고,
                  * 나머지 요청은 인증된 사용자만 접근할 수 있게 한다.
@@ -89,6 +101,17 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
+
+    @Bean
+    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterFilterRegistration(AuthenticationFilter filter) {
+
+        FilterRegistrationBean<AuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+
+        registration.setEnabled(false);
+
+        return registration;
+    }
+
 
 
 }

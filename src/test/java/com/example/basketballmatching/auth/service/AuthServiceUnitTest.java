@@ -10,6 +10,8 @@ import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Optional;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
@@ -52,6 +55,9 @@ class AuthServiceUnitTest {
 
     private static final String REFRESH_TOKEN =
             "refresh-token";
+
+    private static final String NEW_REFRESH_TOKEN =
+            "new-refresh-token";
 
     private static final String OTHER_REFRESH_TOKEN =
             "other-refresh-token";
@@ -234,65 +240,63 @@ class AuthServiceUnitTest {
     class ReissueAndLogout {
 
         @Test
-        @DisplayName("저장된 RefreshToken 일치 시 AccessToken 재발급")
+        @DisplayName("재발급 성공 시 새로운 토큰 쌍을 반환한다")
         void reissue_success() {
             // given
 
-            UserEntity user = createUser(LoginProvider.LOCAL);
+            Date expiresAt = stubReissue(true);
 
-            when(tokenProvider.getEmailFromToken(REFRESH_TOKEN))
-                    .thenReturn(EMAIL);
-
-            when(authTokenStore.getRefreshToken(EMAIL))
-                    .thenReturn(REFRESH_TOKEN);
-
-            when(userRepository.findByEmailAndDeletedDateTimeIsNull(EMAIL))
-                    .thenReturn(Optional.of(user));
-
-            when(tokenProvider.createAccessToken(EMAIL, NAME, UserType.USER))
-                    .thenReturn(ACCESS_TOKEN);
             // when
 
             AuthTokenResponse response = authService.reissue(REFRESH_TOKEN);
 
             // then
 
-            verify(tokenProvider).validateRefreshToken(REFRESH_TOKEN);
+            assertAll(
+                    () -> assertEquals(
+                            ACCESS_TOKEN,
+                            response.accessToken()
+                    ),
+                    () -> assertEquals(
+                            NEW_REFRESH_TOKEN,
+                            response.refreshToken()
+                    )
+            );
+            verify(authTokenStore).rotateRefreshToken(
+                    EMAIL,
+                    REFRESH_TOKEN,
+                    NEW_REFRESH_TOKEN,
+                    expiresAt.getTime()
+            );
 
-            assertEquals(ACCESS_TOKEN, response.accessToken());
-            assertEquals(REFRESH_TOKEN, response.refreshToken());
+            verify(tokenProvider).createRefreshToken(EMAIL, expiresAt);
 
             verify(tokenProvider, never()).createRefreshToken(EMAIL);
 
-            verify(authTokenStore, never()).saveRefreshToken(anyString(), anyString(), anyLong());
+            verify(authTokenStore, never())
+                    .saveRefreshToken(anyString(), anyString(), anyLong());
         }
 
         @Test
-        @DisplayName("저장된 RefreshToken이 일치하지 않으면 예외 발생")
+        @DisplayName("Redis 토큰 교체에 실패하면 재발급을 거절한다")
         void reissue_fail_tokenNotMatch() {
-            // given
+            Date expiresAt = stubReissue(false);
 
-            when(tokenProvider.getEmailFromToken(REFRESH_TOKEN))
-                    .thenReturn(EMAIL);
-
-            when(authTokenStore.getRefreshToken(EMAIL))
-                    .thenReturn(OTHER_REFRESH_TOKEN);
-
-            // when
-
-            CustomException exception = assertThrows(CustomException.class, () -> authService.reissue(REFRESH_TOKEN));
-
-            // then
+            CustomException exception = assertThrows(
+                    CustomException.class,
+                    () -> authService.reissue(REFRESH_TOKEN)
+            );
 
             assertEquals(INVALID_TOKEN, exception.getErrorCode());
 
-            verify(tokenProvider).validateRefreshToken(REFRESH_TOKEN);
-
-            verifyNoInteractions(userRepository);
-
-            verify(tokenProvider, never()).createAccessToken(anyString(), anyString(), any(UserType.class));
-
+            verify(authTokenStore).rotateRefreshToken(
+                    EMAIL,
+                    REFRESH_TOKEN,
+                    NEW_REFRESH_TOKEN,
+                    expiresAt.getTime()
+            );
         }
+
 
         @Test
         @DisplayName("로그아웃 성공")
@@ -346,5 +350,39 @@ class AuthServiceUnitTest {
                 .genderType(GenderType.MALE)
                 .loginProvider(loginProvider)
                 .build();
+    }
+
+
+    private Date stubReissue(boolean rotationSuccess) {
+
+        Date expiresAt = Date.from(
+                java.time.Instant.parse("2030-01-01T00:00:00Z")
+        );
+
+        Claims claims = Jwts.claims()
+                .setSubject(EMAIL)
+                .setExpiration(expiresAt);
+
+        when(tokenProvider.validateRefreshToken(REFRESH_TOKEN))
+                .thenReturn(claims);
+
+        when(userRepository.findByEmailAndDeletedDateTimeIsNull(EMAIL))
+                .thenReturn(Optional.of(createUser(LoginProvider.LOCAL)));
+
+        when(tokenProvider.createAccessToken(EMAIL, NAME, UserType.USER))
+                .thenReturn(ACCESS_TOKEN);
+
+        when(tokenProvider.createRefreshToken(EMAIL, expiresAt))
+                .thenReturn(NEW_REFRESH_TOKEN);
+
+        when(authTokenStore.rotateRefreshToken(
+                EMAIL,
+                REFRESH_TOKEN,
+                NEW_REFRESH_TOKEN,
+                expiresAt.getTime()
+        )).thenReturn(rotationSuccess);
+
+        return expiresAt;
+
     }
 }

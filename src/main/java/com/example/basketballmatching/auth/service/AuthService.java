@@ -6,11 +6,14 @@ import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Date;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 import static com.example.basketballmatching.user.type.LoginProvider.KAKAO;
@@ -103,27 +106,22 @@ public class AuthService {
 
 
     /**
-     * 유효한 Refresh Token을 이용하여 새로운 AccessToken 발급
-     *
-     * Redis에 저장된 RefreshToken과 요청 토큰의 일치여부를 검사하고
-     * 현재 사용자 상태를 검증한 뒤에 새로운 AccessToken만 발급한다.
+     * 기존 Refresh Token을 일회성으로 교체하고
+     * 새로운 Access Token과 Refresh Token을 반환한다.
      */
     @Transactional(readOnly = true)
     public AuthTokenResponse reissue(String refreshToken) {
 
         // 요청 토큰의 서명과 만료 여부를 검증한다.
         // Redis의 저장된 값과 비교하기 전에 만료된 RefreshToken의 접근을 제한한다.
-        tokenProvider.validateRefreshToken(refreshToken);
 
-        String email = tokenProvider.getEmailFromToken(refreshToken);
+        Claims claims = tokenProvider.validateRefreshToken(refreshToken);
+
+        String email = claims.getSubject();
+
+        Date expiresAt = claims.getExpiration();
 
         log.info("[토큰 재발급 시작]: {}", email);
-
-
-        String savedRefreshToken = authTokenStore.getRefreshToken(email);
-
-        // 요청 토큰과 Redis의 저장된 RefreshToken의 일치 여부를 검사한다.
-        validateReissue(refreshToken, savedRefreshToken);
 
         // 재발급 유저의 탈퇴 가능성으로 활성 유저인지 검증
         UserEntity user = getActiveUser(email);
@@ -131,12 +129,24 @@ public class AuthService {
         // 유저가 블랙리스트인지 검사
         validateNotBlacklisted(email);
 
+        String newAccessToken = issueAccessToken(user);
 
-        // 기존 RefreshToken은 유지하고 새로운 AccessToken을 발급하고 반환한다.
-        String accessToken = issueAccessToken(user);
+        String newRefreshToken = tokenProvider.createRefreshToken(email, expiresAt);
+
+        boolean rotated = authTokenStore.rotateRefreshToken(
+                email,
+                refreshToken,
+                newRefreshToken,
+                expiresAt.getTime()
+        );
+
+        if (!rotated) {
+            throw new CustomException(INVALID_TOKEN);
+        }
+
 
         log.info("[토큰 재발급 완료] email={}", email);
-        return AuthTokenResponse.of(accessToken, savedRefreshToken, user);
+        return AuthTokenResponse.of(newAccessToken, newRefreshToken, user);
     }
 
 

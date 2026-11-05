@@ -165,10 +165,10 @@ public class OAuthServiceIntegrationTest {
         );
 
         assertDoesNotThrow(
-                () -> tokenProvider.validateToken(response.accessToken())
+                () -> tokenProvider.validateAccessToken(response.accessToken())
         );
 
-        assertDoesNotThrow(() -> tokenProvider.validateToken(response.refreshToken()));
+        assertDoesNotThrow(() -> tokenProvider.validateRefreshToken(response.refreshToken()));
 
         assertEquals(
                 EMAIL,

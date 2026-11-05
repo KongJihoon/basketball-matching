@@ -56,6 +56,16 @@ public class AuthTokenStore {
         return redisService.getData(revokedAccessToken(accessToken)) != null;
     }
 
+    public boolean rotateRefreshToken(String email, String currentToken, String newToken, long expiresAtMillis) {
+
+        return redisService.compareAndSetUtil(
+                refreshTokenKey(email),
+                currentToken,
+                newToken,
+                expiresAtMillis
+        );
+    }
+
     private String revokedAccessToken(String accessToken) {
         return REVOKED_ACCESS_TOKEN_PREFIX + accessToken;
     }
@@ -64,5 +74,6 @@ public class AuthTokenStore {
 
         return REFRESH_TOKEN_PREFIX + email;
     }
+
 
 }

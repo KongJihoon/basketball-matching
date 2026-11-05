@@ -4,6 +4,9 @@ package com.example.basketballmatching.global.security;
 import com.example.basketballmatching.auth.service.AuthTokenStore;
 import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.global.exception.JwtAuthenticationException;
+import com.example.basketballmatching.global.exception.SecurityAccessDeniedException;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -36,6 +41,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private final BlackListStore blackListStore;
 
     private final SecurityErrorResponseWriter errorResponseWriter;
+
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
 
     /**
      * 요청마다 Authorization 헤더의 AccessToken을 확인하고,
@@ -68,11 +76,39 @@ public class AuthenticationFilter extends OncePerRequestFilter {
              * Security Filter는 Controller보다 먼저 실행되므로
              * 인증 예외를 HTTP 응답에 직접 작성한다.
              */
+            SecurityContextHolder.clearContext();
+
             log.warn("인증 실패: code={}", e.getErrorCode());
-            errorResponseWriter.write(response, e.getErrorCode());
+
+            if (e.getErrorCode() == USER_NOT_FOUND) {
+                authenticationEntryPoint.commence(request, response, new JwtAuthenticationException(INVALID_TOKEN, e));
+            } else if (e.getErrorCode().getHttpStatus() == HttpStatus.UNAUTHORIZED) {
+                authenticationEntryPoint.commence(
+                        request, response, new JwtAuthenticationException(e.getErrorCode(), e)
+                );
+            } else if (e.getErrorCode().getHttpStatus() == HttpStatus.FORBIDDEN) {
+                accessDeniedHandler.handle(
+                        request, response, new SecurityAccessDeniedException(e.getErrorCode(), e)
+                );
+            } else {
+                log.error("인증 처리 중 예상하지 못한 오류");
+                errorResponseWriter.write(response, INTERNAL_SERVER_ERROR);
+            }
+
+            return;
+        } catch (AuthenticationException e) {
+
+            SecurityContextHolder.clearContext();
+
+            authenticationEntryPoint.commence(request, response, e);
+
             return;
         } catch (Exception e) {
-            log.error("INTERNAL SERVER ERROR 발생", e);
+            SecurityContextHolder.clearContext();
+
+            // DB·Redis 장애 등을 INVALID_TOKEN으로 숨기지 않는다.
+            log.error("인증 처리 중 서버 오류", e);
+
             errorResponseWriter.write(response, INTERNAL_SERVER_ERROR);
             return;
         }
@@ -92,11 +128,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     private void authenticate(String accessToken) {
 
         // JWT의 서명 구조 및 만료 여부를 검증한다.
-        tokenProvider.validateToken(accessToken);
+        Claims claims = tokenProvider.validateAccessToken(accessToken);
 
 
         // JWT subject에 저장된 이메일을 추출한다.
-        String email = tokenProvider.getEmailFromToken(accessToken);
+        String email = claims.getSubject();
 
         /*
          * JWT가 유효하더라도 로그아웃, 블랙리스트 상태일 수 있기 땜누에
@@ -108,7 +144,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
          * 이메일로 현재 활성 사용자의 권한을 조회하고
          * Spring Security가 사용할 Authentication 객체를 생성한다.
          */
-        Authentication authentication = tokenProvider.getAuthentication(accessToken);
+        Authentication authentication = tokenProvider.getAuthentication(claims);
 
         // 이후 인가 과정에서 사용할 수 있도록 현재 요청의 SecurityContext에 Authentication을 저장한다.
         SecurityContextHolder.getContext().setAuthentication(authentication);

@@ -21,6 +21,7 @@ import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.Position;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,6 +89,8 @@ class AuthServiceIntegrationTest {
     private Clock clock;
 
     private final Set<String> createdRedisKeys = new HashSet<>();
+    @Autowired
+    private AuthTokenStore authTokenStore;
 
     @AfterEach
     void clearRedis() {
@@ -121,8 +128,8 @@ class AuthServiceIntegrationTest {
 
         );
 
-        assertDoesNotThrow(() -> tokenProvider.validateToken(response.accessToken()));
-        assertDoesNotThrow(() -> tokenProvider.validateToken(response.refreshToken()));
+        assertDoesNotThrow(() -> tokenProvider.validateAccessToken(response.accessToken()));
+        assertDoesNotThrow(() -> tokenProvider.validateRefreshToken(response.refreshToken()));
 
         assertEquals(EMAIL, tokenProvider.getEmailFromToken(response.accessToken()));
 
@@ -139,27 +146,183 @@ class AuthServiceIntegrationTest {
     void reissue_success() {
         // given
 
-        UserEntity user = saveLocalUser();
+        saveLocalUser();
 
         AuthTokenResponse loginResponse = login();
 
+        Claims previousClaims = tokenProvider.validateRefreshToken(loginResponse.refreshToken());
 
-        // when
+        AuthTokenResponse response = authService.reissue(loginResponse.refreshToken());
 
-        AuthTokenResponse reissueResponse = authService.reissue(
+        Claims newClaims = tokenProvider.validateRefreshToken(response.refreshToken());
+
+        assertAll(
+                () -> assertNotEquals(loginResponse.refreshToken(), response.refreshToken()),
+                () -> assertNotNull(newClaims.getId()),
+                () -> assertNotEquals(previousClaims.getId(), newClaims.getId()),
+                () -> assertEquals(previousClaims.getExpiration(), newClaims.getExpiration()),
+                () -> assertEquals(response.refreshToken(), redisService.getData(refreshTokenKey())),
+                () -> assertDoesNotThrow(
+                        () -> tokenProvider.validateAccessToken(response.accessToken())
+                )
+        );
+
+        long expectedRemainingSeconds = (newClaims.getExpiration().getTime() - System.currentTimeMillis()) / 1000;
+
+        Long redisTtlSeconds = redisService.getExpiration(refreshTokenKey());
+
+        assertNotNull(redisTtlSeconds);
+
+        assertTrue(redisTtlSeconds > 0);
+
+        assertTrue(Math.abs(redisTtlSeconds - expectedRemainingSeconds) <= 2);
+
+
+        AuthTokenResponse nextResponse =
+                authService.reissue(response.refreshToken());
+
+        assertNotEquals(
+                response.refreshToken(),
+                nextResponse.refreshToken()
+        );
+
+        assertEquals(
+                nextResponse.refreshToken(),
+                redisService.getData(refreshTokenKey())
+        );
+    }
+
+    @Test
+    @DisplayName("교체된 이전 Refresh는 재사용할 수 없다")
+    void reissue_fail_reusedRefreshToken() {
+        saveLocalUser();
+
+        AuthTokenResponse loginResponse = login();
+
+        AuthTokenResponse rotatedResponse = authService.reissue(
                 loginResponse.refreshToken()
         );
 
-        // then
+        CustomException exception = assertThrows(
+                CustomException.class,
+                () -> authService.reissue(
+                        loginResponse.refreshToken()
+                )
+        );
 
-        assertNotNull(reissueResponse.accessToken());
+        assertEquals(
+                ErrorCode.INVALID_TOKEN,
+                exception.getErrorCode()
+        );
 
-        assertEquals(loginResponse.refreshToken(), reissueResponse.refreshToken());
+        // 실패한 이전 토큰 요청이 현재 토큰을 변경하면 안 된다.
+        assertEquals(
+                rotatedResponse.refreshToken(),
+                redisService.getData(refreshTokenKey())
+        );
+    }
 
-        assertEquals(EMAIL, tokenProvider.getEmailFromToken(reissueResponse.accessToken()));
+    @Test
+    @DisplayName("Redis 키가 삭제되면 재발급을 거절하고 키를 재생성하지 않는다")
+    void reissue_fail_missingRefreshToken() {
+        saveLocalUser();
 
-        assertDoesNotThrow(() -> tokenProvider.validateToken(reissueResponse.accessToken()));
+        AuthTokenResponse loginResponse = login();
 
+        redisService.deleteData(refreshTokenKey());
+
+        CustomException exception = assertThrows(
+                CustomException.class,
+                () -> authService.reissue(
+                        loginResponse.refreshToken()
+                )
+        );
+
+        assertEquals(
+                ErrorCode.INVALID_TOKEN,
+                exception.getErrorCode()
+        );
+
+        assertNull(redisService.getData(refreshTokenKey()));
+    }
+
+    @Test
+    @DisplayName("같은 Refresh Token의 동시 교체는 정확히 하나만 성공한다.")
+    void rotateRefreshToken_concurrent() throws Exception{
+
+        String email = "rotation-" + UUID.randomUUID() + "@test.com";
+
+        String key = REFRESH_TOKEN_PREFIX + email;
+
+        createdRedisKeys.add(key);
+
+        String currentToken = tokenProvider.createRefreshToken(email);
+
+        Date expiresAt = tokenProvider.validateRefreshToken(currentToken).getExpiration();
+
+        String candidateA = tokenProvider.createRefreshToken(email, expiresAt);
+        String candidateB = tokenProvider.createRefreshToken(email, expiresAt);
+
+        assertNotEquals(candidateA, candidateB);
+
+        authTokenStore.saveRefreshToken(email, currentToken, expiresAt.getTime() - System.currentTimeMillis());
+
+
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        try {
+            Future<Boolean> resultA = executor.submit(() -> {
+                ready.countDown();
+
+                if (!start.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("시작 신호 대기 초과");
+                }
+
+                return authTokenStore.rotateRefreshToken(email, currentToken, candidateA, expiresAt.getTime());
+            });
+
+            Future<Boolean> resultB = executor.submit(() -> {
+                ready.countDown();
+
+                if (!start.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("시작 신호 대기 초과");
+                }
+
+                return authTokenStore.rotateRefreshToken(
+                        email,
+                        currentToken,
+                        candidateB,
+                        expiresAt.getTime()
+                );
+            });
+
+            assertTrue(ready.await(5, TimeUnit.SECONDS));
+
+            start.countDown();
+
+            boolean successA = resultA.get(10, TimeUnit.SECONDS);
+            boolean successB = resultB.get(10, TimeUnit.SECONDS);
+
+            int successCount = (successA ? 1 : 0) + (successB ? 1 : 0);
+
+            assertEquals(1, successCount);
+
+            String expectedToken = successA ? candidateA : candidateB;
+
+            assertEquals(expectedToken, redisService.getData(key));
+
+            assertFalse(authTokenStore.rotateRefreshToken(
+                    email, currentToken, candidateA, expiresAt.getTime()
+            ));
+        } finally {
+            start.countDown();
+            executor.shutdown();
+
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
     }
 
     @Test
