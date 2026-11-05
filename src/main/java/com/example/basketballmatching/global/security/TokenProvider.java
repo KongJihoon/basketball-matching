@@ -13,9 +13,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
 
@@ -32,6 +34,8 @@ public class TokenProvider {
 
     @Value("${spring.jwt.refresh-token-expiration}")
     private Long refreshTokenExpirationMillis;
+
+    private static final String TOKEN_USE_CLAIM = "token-use";
 
 
     private final UserInfoDetailsService userInfoDetailsService;
@@ -58,25 +62,45 @@ public class TokenProvider {
 
         claims.put("name", name);
         claims.put("userType", userType);
+        claims.put(TOKEN_USE_CLAIM, TokenUse.ACCESS.getClaimValue());
 
         return createToken(claims, accessTokenExpirationMillis);
 
 
     }
     /**
-     * Access Token 재발급에 사용할 Refresh Token을 생성한다.
-     * 사용자 식별에 필요한 이메일만 subject에 포함한다.
+     * 최초 로그인 시 설정된 유효기간으로 RefreshToken 발급
      */
     public String createRefreshToken(String email) {
 
 
-        Claims claims = Jwts.claims()
-                .setSubject(email);
+        Date expiresAt = new Date(System.currentTimeMillis() + refreshTokenExpirationMillis);
 
+        return createRefreshToken(email, expiresAt);
+    }
 
-        return createToken(claims, refreshTokenExpirationMillis);
+    /**
+     * 재발급 시 기존 만료 시각을 유지하면서 새로운 RefreshToken을 생성한다.
+     */
+    public String createRefreshToken(String email, Date expiresAt) {
 
+        Date issuedAt = new Date();
 
+        if (expiresAt == null || !expiresAt.after(issuedAt)) {
+            throw new CustomException(EXPIRED_TOKEN);
+        }
+
+        Claims claims = Jwts.claims().setSubject(email);
+
+        claims.put(TOKEN_USE_CLAIM, TokenUse.REFRESH.getClaimValue());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setId(UUID.randomUUID().toString())
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiresAt)
+                .signWith(key)
+                .compact();
     }
 
     public long getRefreshTokenExpirationMillis() {
@@ -114,40 +138,77 @@ public class TokenProvider {
      * JWT 이메일로 현재 사용자 정보를 조회하고
      * Spring Security Authentication 객체로 변환한다.
      */
-    public Authentication getAuthentication(String token) {
+    public Authentication getAuthentication(Claims validateClaims) {
 
         /*
          * 토큰 Claim의 권한을 바로 신뢰하지 않고
          * DB에서 활성 사용자의 현재 권한을 다시 조회한다.
          */
-        UserDetails userDetails = userInfoDetailsService.loadUserByUsername(getEmailFromToken(token));
+        UserDetails userDetails = userInfoDetailsService.loadUserByUsername(validateClaims.getSubject());
 
         return new UsernamePasswordAuthenticationToken(
                 userDetails, "", userDetails.getAuthorities()
         );
     }
 
-    public void validateToken(String token) {
+    public Claims validateAccessToken(String token) {
+        return validateToken(token, TokenUse.ACCESS);
+    }
+
+    /**
+     * RefreshToken의 존재여부와 만료되지 않은 JWT토큰인지 검증한다.
+     *
+     * parseToken() 과정에서 서명과 JWT 구조가 함께 검증된다.
+     */
+    public Claims validateRefreshToken(String token) {
+
+
+        return validateToken(token, TokenUse.REFRESH);
+
+    }
+
+    private Claims validateToken(String token, TokenUse expectedUse) {
+
+        if (!StringUtils.hasText(token)) {
+            throw new CustomException(NOT_FOUND_TOKEN);
+        }
 
         try {
 
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(key)
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseClaimsJws(token)
+                    .getBody();
 
-            if (claims.getBody().getExpiration().before(new Date())) {
+            Date expiration = claims.getExpiration();
+
+            if (expiration == null) {
+                throw new CustomException(INVALID_TOKEN);
+            }
+
+            if (!expiration.after(new Date())) {
                 throw new CustomException(EXPIRED_TOKEN);
             }
 
-        } catch (IllegalArgumentException e) {
-            throw new CustomException(NOT_FOUND_TOKEN);
-        } catch (MalformedJwtException e) {
-            throw new CustomException(INVALID_TOKEN);
-        } catch (UnsupportedJwtException e) {
-            throw new CustomException(UNSUPPORTED_TOKEN);
+            if (!StringUtils.hasText(claims.getSubject())) {
+                throw new CustomException(INVALID_TOKEN);
+            }
+
+            Object actualUse = claims.get(TOKEN_USE_CLAIM);
+
+            if (!expectedUse.getClaimValue().equals(actualUse)) {
+                throw new CustomException(INVALID_TOKEN);
+            }
+
+            return claims;
+
+
         } catch (ExpiredJwtException e) {
             throw new CustomException(EXPIRED_TOKEN);
-        } catch (JwtException e) {
+        } catch (UnsupportedJwtException e) {
+            throw new CustomException(UNSUPPORTED_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
             throw new CustomException(INVALID_TOKEN);
         }
 
@@ -161,24 +222,6 @@ public class TokenProvider {
     }
 
 
-    /**
-     * RefreshToken의 존재여부와 만료되지 않은 JWT토큰인지 검증한다.
-     *
-     * parseToken() 과정에서 서명과 JWT 구조가 함께 검증된다.
-     */
-    public void validateRefreshToken(String refreshToken) {
-
-        if (refreshToken == null) {
-            throw new CustomException(NOT_FOUND_TOKEN);
-        }
-
-        Claims claims = parseToken(refreshToken);
-
-        if (claims.getExpiration().before(new Date())) {
-            throw new CustomException(EXPIRED_TOKEN);
-        }
-
-    }
 
 
     public long getRemainingTime(String token) {

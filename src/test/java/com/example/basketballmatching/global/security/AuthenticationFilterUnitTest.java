@@ -3,6 +3,10 @@ package com.example.basketballmatching.global.security;
 import com.example.basketballmatching.auth.service.AuthTokenStore;
 import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.global.exception.JwtAuthenticationException;
+import com.example.basketballmatching.global.exception.SecurityAccessDeniedException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
@@ -20,8 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import static com.example.basketballmatching.global.exception.ErrorCode.*;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +53,12 @@ class AuthenticationFilterUnitTest {
 
     @Mock
     private FilterChain filterChain;
+
+    @Mock
+    private RestAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Mock
+    private RestAccessDeniedHandler accessDeniedHandler;
 
     @InjectMocks
     private AuthenticationFilter authenticationFilter;
@@ -94,8 +103,11 @@ class AuthenticationFilterUnitTest {
 
         setAuthorization();
 
-        when(tokenProvider.getEmailFromToken(ACCESS_TOKEN))
-                .thenReturn(EMAIL);
+        Claims claims = Jwts.claims().setSubject(EMAIL);
+
+
+        when(tokenProvider.validateAccessToken(ACCESS_TOKEN))
+                .thenReturn(claims);
 
         when(authTokenStore.isAccessTokenRevoked(ACCESS_TOKEN))
                 .thenReturn(false);
@@ -103,7 +115,7 @@ class AuthenticationFilterUnitTest {
         when(blackListStore.isBlacklisted(EMAIL))
                 .thenReturn(false);
 
-        when(tokenProvider.getAuthentication(ACCESS_TOKEN))
+        when(tokenProvider.getAuthentication(claims))
                 .thenReturn(authentication);
 
         // when
@@ -112,7 +124,6 @@ class AuthenticationFilterUnitTest {
 
         // then
 
-        verify(tokenProvider).validateToken(ACCESS_TOKEN);
 
         assertSame(authentication, SecurityContextHolder.getContext().getAuthentication());
 
@@ -123,14 +134,17 @@ class AuthenticationFilterUnitTest {
     }
 
     @Test
-    @DisplayName("로그아웃 처리된 유저 접근 시 401 예외 발생")
+    @DisplayName("로그아웃 토큰은 LOGOUT_USER 인증 오류로 전달한다")
     void doFilter_withRevokedAccessToken() throws Exception{
         // given
 
         setAuthorization();
 
-        when(tokenProvider.getEmailFromToken(ACCESS_TOKEN))
-                .thenReturn(EMAIL);
+        Claims claims = Jwts.claims().setSubject(EMAIL);
+
+
+        when(tokenProvider.validateAccessToken(ACCESS_TOKEN))
+                .thenReturn(claims);
 
         when(authTokenStore.isAccessTokenRevoked(ACCESS_TOKEN))
                 .thenReturn(true);
@@ -141,21 +155,29 @@ class AuthenticationFilterUnitTest {
 
         // then
 
-        verify(errorResponseWriter).write(response, LOGOUT_USER);
+        verify(authenticationEntryPoint).commence(
+                same(request),
+                same(response),
+                argThat(exception -> exception instanceof JwtAuthenticationException jwt && jwt.getErrorCode() == LOGOUT_USER)
+        );
 
-        verifyNoInteractions(blackListStore);
-        verify(filterChain, never()).doFilter(request, response);
+        verifyNoInteractions(blackListStore, accessDeniedHandler, errorResponseWriter);
 
+        verify(tokenProvider, never()).getAuthentication(any(Claims.class));
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    @DisplayName("블랙리스트 사용자 접근 시 403 예외 발생")
+    @DisplayName("제재 사용자는 BLACKLIST_USER 접근 거절 오류로 전달한다")
     void doFilter_withBlacklistUser() throws Exception{
         // given
         setAuthorization();
 
-        when(tokenProvider.getEmailFromToken(ACCESS_TOKEN))
-                .thenReturn(EMAIL);
+        Claims claims = Jwts.claims().setSubject(EMAIL);
+
+        when(tokenProvider.validateAccessToken(ACCESS_TOKEN))
+                .thenReturn(claims);
 
         when(authTokenStore.isAccessTokenRevoked(ACCESS_TOKEN))
                 .thenReturn(false);
@@ -169,22 +191,35 @@ class AuthenticationFilterUnitTest {
 
         // then
 
-        verify(errorResponseWriter).write(response, BLACKLIST_USER);
+        verify(accessDeniedHandler).handle(
+                same(request),
+                same(response),
+                argThat(exception -> exception instanceof SecurityAccessDeniedException denied
+                        && denied.getErrorCode() == BLACKLIST_USER
+                )
+        );
+
+        verifyNoInteractions(authenticationEntryPoint, errorResponseWriter);
+
+        verify(tokenProvider, never()).getAuthentication(any(Claims.class));
 
         verify(filterChain, never()).doFilter(request, response);
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+
 
     }
 
     @Test
-    @DisplayName("유효하지 않은 토큰 접근 시 인증실패 예외 발생")
+    @DisplayName("잘못된 토큰은 INVALID_TOKEN 인증 오류로 전달한다")
     void doFilter_withInvalidAccessToken() throws Exception{
         // given
 
         setAuthorization();
 
-        doThrow(
-                new CustomException(INVALID_TOKEN)
-        ).when(tokenProvider).validateToken(ACCESS_TOKEN);
+
+        when(tokenProvider.validateAccessToken(ACCESS_TOKEN))
+                .thenThrow(new CustomException(INVALID_TOKEN));
 
         // when
 
@@ -192,10 +227,21 @@ class AuthenticationFilterUnitTest {
 
         // then
 
-        verify(errorResponseWriter).write(response, INVALID_TOKEN);
-        verifyNoInteractions(authTokenStore, blackListStore);
+        verify(authenticationEntryPoint).commence(
+                same(request),
+                same(response),
+                argThat(exception -> exception instanceof JwtAuthenticationException jwt
+                    && jwt.getErrorCode() == INVALID_TOKEN
+                )
+        );
+
+        verifyNoInteractions(authTokenStore, blackListStore, accessDeniedHandler, errorResponseWriter);
+
+        verify(tokenProvider, never()).getAuthentication(any(Claims.class));
 
         verify(filterChain, never()).doFilter(request, response);
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
 
     }
 
@@ -206,9 +252,11 @@ class AuthenticationFilterUnitTest {
         // given
 
         setAuthorization();
+        Claims claims = Jwts.claims().setSubject(EMAIL);
 
-        when(tokenProvider.getEmailFromToken(ACCESS_TOKEN))
-                .thenReturn(EMAIL);
+
+        when(tokenProvider.validateAccessToken(ACCESS_TOKEN))
+                .thenReturn(claims);
 
         when(authTokenStore.isAccessTokenRevoked(ACCESS_TOKEN))
                 .thenReturn(false);
@@ -216,7 +264,7 @@ class AuthenticationFilterUnitTest {
         when(blackListStore.isBlacklisted(EMAIL))
                 .thenReturn(false);
 
-        when(tokenProvider.getAuthentication(ACCESS_TOKEN))
+        when(tokenProvider.getAuthentication(claims))
                 .thenReturn(authentication);
 
         doThrow(

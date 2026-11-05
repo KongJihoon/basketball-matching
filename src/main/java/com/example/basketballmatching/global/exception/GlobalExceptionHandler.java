@@ -4,6 +4,8 @@ import com.example.basketballmatching.global.exception.dto.ErrorResponse;
 import com.example.basketballmatching.global.exception.dto.FieldErrorDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -69,6 +71,11 @@ public class GlobalExceptionHandler {
 
 
         return new ResponseEntity<>(ErrorResponse.of(errorCode, details), errorCode.getHttpStatus());
+    }
+
+    @ExceptionHandler({AuthenticationException.class, AccessDeniedException.class})
+    public void propagateSecurityException(RuntimeException exception) {
+        throw exception;
     }
 
     @ExceptionHandler(Exception.class)
