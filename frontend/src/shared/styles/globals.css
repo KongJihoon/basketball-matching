@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+
+:root {
+  --color-primary: #00c471;
+  --color-primary-hover: #00a760;
+  --color-text: #212529;
+  --color-background: #ffffff;
+
+  --app-surface: #f8f9fa;
+  --app-border: #dee2e6;
+  --app-muted: #495057;
+  --app-brand-soft: #e6f9f0;
+  --app-brand-ink: #087f4b;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@theme inline {
+  --color-brand: var(--color-primary);
+  --color-brand-hover: var(--color-primary-hover);
+  --color-page: var(--color-background);
+  --color-foreground: var(--color-text);
+  --color-surface: var(--app-surface);
+  --color-line: var(--app-border);
+  --color-muted: var(--app-muted);
+  --color-brand-soft: var(--app-brand-soft);
+  --color-brand-ink: var(--app-brand-ink);
+}
+
+body {
+  margin: 0;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--app-brand-ink);
+  outline-offset: 4px;
+}
+
+::selection {
+  color: var(--color-text);
+  background-color: var(--app-brand-soft);
+}
