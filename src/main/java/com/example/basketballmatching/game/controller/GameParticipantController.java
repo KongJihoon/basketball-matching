@@ -2,6 +2,7 @@ package com.example.basketballmatching.game.controller;
 
 import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
+import com.example.basketballmatching.game.dto.response.MyGameParticipantResponse;
 import com.example.basketballmatching.game.service.GameParticipantService;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -159,5 +161,25 @@ public class GameParticipantController {
                 CheckResponse.of(true, "참가자를 강퇴하였습니다.")
         );
 
+    }
+
+    @Operation(summary = "내 경기 참가 상태 조회")
+    @ApiResponse(responseCode = "200", description = "내 참가 상태 조회 성공")
+    @ApiResponse(responseCode = "401", description = "인증 필요")
+    @ApiResponse(responseCode = "403", description = "일반 사용자 권한 필요")
+    @ApiResponse(responseCode = "404", description = "경기를 찾을 수 없음")
+    @GetMapping("/{gameId}/participations/me")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<CommonResponse<MyGameParticipantResponse>> getMyParticipation(
+            @PathVariable("gameId") Long gameId,
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
+    ) {
+        Long userId = userInfoDetails.getUserEntity().getUserId();
+
+        MyGameParticipantResponse response = gameParticipantService.getMyParticipant(gameId, userId);
+
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(CommonResponse.of("내 참가 상태 조회가 완료되었습니다.", response));
     }
 }

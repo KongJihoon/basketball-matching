@@ -5,6 +5,12 @@ import { logout, refreshSession } from '../../features/auth/auth.api';
 import type { AuthSession } from '../../features/auth/auth.api';
 import { ApiError } from '../../shared/api/http';
 
+export type AppOutletContext = {
+  session: AuthSession | null;
+  restoring: boolean;
+  openParticipationLogin: () => void;
+};
+
 const menuClassName =
   'inline-flex min-h-10 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-muted hover:bg-surface';
 
@@ -15,7 +21,8 @@ export function AppLayout() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [authError, setAuthError] = useState('');
   const logoutInFlight = useRef(false);
-  const loginRequested = searchParams.get('login') === '1';
+  const loginMode = searchParams.get('login');
+  const loginRequested = loginMode === '1' || loginMode === 'participation';
 
   useEffect(() => {
     let active = true;
@@ -40,15 +47,15 @@ export function AppLayout() {
     };
   }, []);
 
-  function openLogin() {
+  function openLogin(mode: '1' | 'participation') {
     setAuthError('');
     setSearchParams(
       (current) => {
         const next = new URLSearchParams(current);
-        next.set('login', '1');
+        next.set('login', mode);
         return next;
       },
-      { preventScrollReset: true },
+      { replace: true, preventScrollReset: true },
     );
   }
 
@@ -63,7 +70,7 @@ export function AppLayout() {
     );
   }
 
-  async function handleLoout() {
+  async function handleLogout() {
     if (!session || logoutInFlight.current) return;
 
     logoutInFlight.current = true;
@@ -108,6 +115,12 @@ export function AppLayout() {
     }
   }
 
+  const outletContext: AppOutletContext = {
+    session,
+    restoring,
+    openParticipationLogin: () => openLogin('participation'),
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-page text-foreground">
       <a
@@ -149,14 +162,14 @@ export function AppLayout() {
                   type="button"
                   disabled={loggingOut}
                   className={`${menuClassName} disabled:opacity-60`}
-                  onClick={() => void handleLoout()}
+                  onClick={() => void handleLogout()}
                 >
                   {loggingOut ? '로그아웃 중...' : '로그아웃'}
                 </button>
               </>
             ) : (
               <>
-                <button type="button" className={menuClassName} onClick={openLogin}>
+                <button type="button" className={menuClassName} onClick={() => openLogin('1')}>
                   로그인
                 </button>
                 <Link
@@ -182,7 +195,7 @@ export function AppLayout() {
         tabIndex={-1}
         className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12"
       >
-        <Outlet />
+        <Outlet context={outletContext} />
       </main>
 
       <footer className="border-t border-line bg-surface">
@@ -193,6 +206,7 @@ export function AppLayout() {
 
       {!restoring && !session && loginRequested && (
         <LoginModal
+          forParticipation={loginMode === 'participation'}
           onClose={closeLogin}
           onSuccess={(nextSession) => {
             setSession(nextSession);

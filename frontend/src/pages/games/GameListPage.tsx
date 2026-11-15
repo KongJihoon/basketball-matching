@@ -309,11 +309,18 @@ export function GameListPage() {
               >
                 전체 예정
               </button>
-              <label className="flex flex-col gap-1 text-sm font-medium">
-                정렬
+              <div className="flex max-w-full items-center gap-2 text-sm font-medium">
+                <label
+                  htmlFor="game-list-sort"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-line bg-brand-soft px-4 text-brand-ink"
+                >
+                  정렬
+                </label>
                 <select
+                  id="game-list-sort"
                   value={sortType}
                   onChange={(event) => changeCondition('sortType', event.currentTarget.value)}
+                  className="min-h-11 min-w-0 cursor-pointer rounded-xl border border-line bg-page px-3"
                 >
                   {Object.entries(sortLabels).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -321,7 +328,7 @@ export function GameListPage() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
           </div>
 

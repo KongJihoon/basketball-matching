@@ -5,6 +5,7 @@ import com.example.basketballmatching.game.domain.GameEntity;
 import com.example.basketballmatching.game.domain.ParticipantGameEntity;
 import com.example.basketballmatching.game.dto.response.GameParticipantListResponse;
 import com.example.basketballmatching.game.dto.response.GameParticipantResponse;
+import com.example.basketballmatching.game.dto.response.MyGameParticipantResponse;
 import com.example.basketballmatching.game.event.GameParticipantKickedOutEvent;
 import com.example.basketballmatching.game.repository.GameRepository;
 import com.example.basketballmatching.game.repository.ParticipantGameRepository;
@@ -146,6 +147,19 @@ public class GameParticipantService {
         ));
 
 
+    }
+
+    @Transactional(readOnly = true)
+    public MyGameParticipantResponse getMyParticipant(Long gameId, Long userId) {
+        getActiveUser(userId);
+        getActiveUser(gameId);
+
+        return participantGameRepository
+                .findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
+                .map(participation -> new MyGameParticipantResponse(
+                        participation.getParticipantGameId(),
+                        participation.getParticipantGameStatus()
+                )).orElseGet(() -> new MyGameParticipantResponse(null, null));
     }
 
     private void validateParticipantListAccess(Long gameId, Long userId) {
