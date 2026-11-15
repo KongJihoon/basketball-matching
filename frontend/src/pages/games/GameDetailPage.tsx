@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useOutletContext, useParams, useSearchParams } from 'react-router';
 import type { AppOutletContext } from '../../app/layouts/AppLayout';
 import { GameVenueMap } from '../../features/games/GameVenueMap';
 import { getGameDetail } from '../../features/games/game-detail.api';
 import type { GameDetail } from '../../features/games/game-detail.api';
 import { ApiError } from '../../shared/api/http';
+import {
+  cancelGameParticipation,
+  getMyGameParticipation,
+  joinGame,
+} from '../../features/games/game-participation.api';
+import { GameParticipationDialog } from '../../features/games/GameParticipationDialog';
 
 const matchFormatLabels: Record<GameDetail['matchFormat'], string> = {
   THREE_ON_THREE: '3대3',
@@ -36,7 +42,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
 const actionClassName =
   'inline-flex min-h-11 items-center rounded-xl border border-line bg-page px-4 text-sm font-semibold hover:bg-surface disabled:opacity-50';
 
-const joinCutoffMs = 30 * 60 * 1000;
+const primaryButtonClassName =
+  'min-h-12 w-full rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors enabled:hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted';
+
+const participationCutoffMs = 30 * 60 * 1000;
 
 function GameDateTime({ value }: { value: string }) {
   const dateTime = `${value}+09:00`;
@@ -44,22 +53,207 @@ function GameDateTime({ value }: { value: string }) {
   return <time dateTime={dateTime}>{dateTimeFormatter.format(new Date(dateTime))}</time>;
 }
 
-function GameDetailContent({ game }: { game: GameDetail }) {
+function participationErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiError && error.status === 401) {
+    return '로그인 세션을 확인해 주세요. 페이지를 새로고침 한 뒤에 다시 시도할 수 있습니다.';
+  }
+
+  return error instanceof ApiError ? error.message : fallback;
+}
+
+type MemberParticipationActionsProps = {
+  game: GameDetail;
+  gameId: string;
+  userId: number;
+  accessToken: string;
+  deadline: number;
+  hasOpenSpot: boolean;
+};
+
+function MemberParticipationActions({
+  game,
+  gameId,
+  userId,
+  accessToken,
+  deadline,
+  hasOpenSpot,
+}: MemberParticipationActionsProps) {
+  const queryClient = useQueryClient();
+  const [checkedAt, setCheckedAt] = useState(() => Date.now());
+  const [confirmationAction, setConfirmationAction] = useState<'join' | 'cancel' | null>(null);
+  const participationKey = ['my-game-participation', gameId, userId] as const;
+
+  const participantQuery = useQuery({
+    queryKey: participationKey,
+    queryFn: ({ signal }) => getMyGameParticipation(gameId, accessToken, signal),
+    retry: false,
+  });
+
+  const participationMutation = useMutation({
+    mutationFn: async (action: 'join' | 'cancel') => {
+      if (action === 'join') {
+        await joinGame(gameId, accessToken);
+      } else {
+        await cancelGameParticipation(gameId, accessToken);
+      }
+    },
+    retry: false,
+    onSuccess: () => setConfirmationAction(null),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: participationKey }),
+        queryClient.invalidateQueries({ queryKey: ['game-detail', gameId] }),
+        queryClient.invalidateQueries({ queryKey: ['games'] }),
+      ]);
+    },
+  });
+
+  if (participantQuery.isPending) {
+    return (
+      <p role="status" className="mt-5 text-sm text-muted">
+        내 참가 상태를 확인하고 있어요.
+      </p>
+    );
+  }
+
+  if (!participantQuery.data) {
+    return (
+      <div className="mt-5 space-y-2">
+        <p role="alert" className="text-sm text-red-700">
+          {participationErrorMessage(participantQuery.error, '내 참가 상태를 확인하지 못했어요.')}
+        </p>
+        <button
+          type="button"
+          disabled={participantQuery.isFetching}
+          className={actionClassName}
+          onClick={() => void participantQuery.refetch()}
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
+  const { status } = participantQuery.data;
+  const isAccepted = status === 'ACCEPT';
+  const canRejoin = status === null || status === 'CANCEL';
+  const beforeDeadline = checkedAt < deadline;
+  const action = isAccepted ? 'cancel' : 'join';
+  const canSubmit =
+    !participantQuery.isError && beforeDeadline && (isAccepted || (canRejoin && hasOpenSpot));
+  const isBusy = participationMutation.isPending || participantQuery.isFetching;
+  const canConfirm = canSubmit && !isBusy && confirmationAction === action;
+
+  let buttonLabel = '신청하기';
+  if (isAccepted) {
+    buttonLabel = beforeDeadline ? '참가 취소' : '취소 기한 종료';
+  } else if (!canRejoin) {
+    buttonLabel = '신청 불가';
+  } else if (!beforeDeadline || !hasOpenSpot) {
+    buttonLabel = '모집 종료';
+  }
+
+  const queryError = participantQuery.isError
+    ? participationErrorMessage(participantQuery.error, '내 참가 상태를 다시 확인하지 못했어요.')
+    : undefined;
+
+  let dialogError = queryError;
+  if (participationMutation.isError) {
+    dialogError = participationErrorMessage(
+      participationMutation.error,
+      '참가 요청을 처리하지 못했어요.',
+    );
+  } else if (!dialogError && !isBusy && (!canSubmit || confirmationAction !== action)) {
+    dialogError = '신청 또는 취소 조건이 바뀌었어요. 창을 닫고 현재 상태를 확인해 주세요.';
+  }
+
+  function openConfirmation() {
+    const now = Date.now();
+    setCheckedAt(now);
+    if (isBusy || !canSubmit || now >= deadline) return;
+
+    participationMutation.reset();
+    setConfirmationAction(action);
+  }
+
+  function confirmParticipation() {
+    const now = Date.now();
+    setCheckedAt(now);
+    if (!confirmationAction || !canConfirm || now >= deadline) return;
+
+    participationMutation.mutate(confirmationAction);
+  }
+
+  return (
+    <div className="mt-5 space-y-2">
+      <button
+        type="button"
+        disabled={!canSubmit || isBusy}
+        aria-haspopup={canSubmit ? 'dialog' : undefined}
+        className={primaryButtonClassName}
+        onClick={openConfirmation}
+      >
+        {participationMutation.isPending ? '처리 중…' : buttonLabel}
+      </button>
+
+      {confirmationAction && (
+        <GameParticipationDialog
+          action={confirmationAction}
+          gameTitle={game.title}
+          startTime={dateTimeFormatter.format(new Date(`${game.startDateTime}+09:00`))}
+          placeName={game.placeName}
+          conditions={`${matchFormatLabels[game.matchFormat]} · ${genderLabels[game.matchGenderType]}`}
+          isPending={participationMutation.isPending}
+          canConfirm={canConfirm}
+          errorMessage={dialogError}
+          onClose={() => setConfirmationAction(null)}
+          onConfirm={confirmParticipation}
+        />
+      )}
+
+      {queryError && !confirmationAction && (
+        <div className="space-y-2">
+          <p role="alert" className="text-sm text-red-700">
+            {queryError}
+          </p>
+          <button
+            type="button"
+            disabled={participantQuery.isFetching}
+            className={actionClassName}
+            onClick={() => void participantQuery.refetch()}
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+
+      {participationMutation.isSuccess && (
+        <p role="status" className="text-sm text-brand-ink">
+          {participationMutation.variables === 'cancel'
+            ? '참가를 취소했어요.'
+            : '참가가 확정됐어요.'}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function GameDetailContent({ game, gameId }: { game: GameDetail; gameId: string }) {
   const { session, restoring, openParticipationLogin } = useOutletContext<AppOutletContext>();
   const [checkedAt, setCheckedAt] = useState(() => Date.now());
   const startsAt = Date.parse(`${game.startDateTime}+09:00`);
   const endsAt = Date.parse(`${game.endDateTime}+09:00`);
   const schedule = checkedAt >= endsAt ? '종료' : checkedAt >= startsAt ? '진행 중' : '예정';
   const recruiting = game.gameStatus === 'RECRUITING';
-  const joinDeadline = startsAt - joinCutoffMs;
-  const canRequestJoin =
-    recruiting && game.participantCount < game.headCount && checkedAt < joinDeadline;
+  const deadline = startsAt - participationCutoffMs;
+  const hasOpenSpot = recruiting && game.participantCount < game.headCount;
+  const canRequestJoin = hasOpenSpot && checkedAt < deadline;
 
   function handleGuestJoin() {
     const now = Date.now();
     setCheckedAt(now);
 
-    if (canRequestJoin && now < joinDeadline) {
+    if (canRequestJoin && now < deadline) {
       openParticipationLogin();
     }
   }
@@ -126,11 +320,24 @@ function GameDetailContent({ game }: { game: GameDetail }) {
               disabled={!canRequestJoin}
               aria-haspopup={canRequestJoin ? 'dialog' : undefined}
               onClick={handleGuestJoin}
-              className="mt-5 min-h-12 w-full rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors enabled:hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+              className={`mt-5 ${primaryButtonClassName}`}
             >
               {canRequestJoin ? '신청하기' : '모집 종료'}
             </button>
-          ) : null}
+          ) : (
+            session.user.userType === 'USER' &&
+            session.user.userId !== game.creatorId && (
+              <MemberParticipationActions
+                key={session.user.userId}
+                game={game}
+                gameId={gameId}
+                userId={session.user.userId}
+                accessToken={session.accessToken}
+                deadline={deadline}
+                hasOpenSpot={hasOpenSpot}
+              />
+            )
+          )}
         </aside>
 
         <div>
@@ -231,7 +438,7 @@ function GameDetailQuery({ gameId }: { gameId: string }) {
     );
   }
 
-  return <GameDetailContent game={query.data} />;
+  return <GameDetailContent game={query.data} gameId={gameId} />;
 }
 
 export function GameDetailPage() {

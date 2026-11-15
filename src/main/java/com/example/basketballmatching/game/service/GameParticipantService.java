@@ -152,7 +152,7 @@ public class GameParticipantService {
     @Transactional(readOnly = true)
     public MyGameParticipantResponse getMyParticipant(Long gameId, Long userId) {
         getActiveUser(userId);
-        getActiveUser(gameId);
+        getActiveGame(gameId);
 
         return participantGameRepository
                 .findByGameEntity_GameIdAndUserEntity_UserId(gameId, userId)
