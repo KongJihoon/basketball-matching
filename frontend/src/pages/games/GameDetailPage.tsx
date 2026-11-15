@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useOutletContext, useParams, useSearchParams } from 'react-router';
+import type { AppOutletContext } from '../../app/layouts/AppLayout';
 import { GameVenueMap } from '../../features/games/GameVenueMap';
 import { getGameDetail } from '../../features/games/game-detail.api';
 import type { GameDetail } from '../../features/games/game-detail.api';
@@ -35,6 +36,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
 const actionClassName =
   'inline-flex min-h-11 items-center rounded-xl border border-line bg-page px-4 text-sm font-semibold hover:bg-surface disabled:opacity-50';
 
+const joinCutoffMs = 30 * 60 * 1000;
+
 function GameDateTime({ value }: { value: string }) {
   const dateTime = `${value}+09:00`;
 
@@ -42,11 +45,24 @@ function GameDateTime({ value }: { value: string }) {
 }
 
 function GameDetailContent({ game }: { game: GameDetail }) {
-  const [openedAt] = useState(() => Date.now());
+  const { session, restoring, openParticipationLogin } = useOutletContext<AppOutletContext>();
+  const [checkedAt, setCheckedAt] = useState(() => Date.now());
   const startsAt = Date.parse(`${game.startDateTime}+09:00`);
   const endsAt = Date.parse(`${game.endDateTime}+09:00`);
-  const schedule = openedAt >= endsAt ? '종료' : openedAt >= startsAt ? '진행 중' : '예정';
+  const schedule = checkedAt >= endsAt ? '종료' : checkedAt >= startsAt ? '진행 중' : '예정';
   const recruiting = game.gameStatus === 'RECRUITING';
+  const joinDeadline = startsAt - joinCutoffMs;
+  const canRequestJoin =
+    recruiting && game.participantCount < game.headCount && checkedAt < joinDeadline;
+
+  function handleGuestJoin() {
+    const now = Date.now();
+    setCheckedAt(now);
+
+    if (canRequestJoin && now < joinDeadline) {
+      openParticipationLogin();
+    }
+  }
 
   return (
     <article aria-labelledby="game-detail-title" className="space-y-6">
@@ -61,12 +77,13 @@ function GameDetailContent({ game }: { game: GameDetail }) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
         <aside
-          aria-labelledby="game_summary_title"
-          className="self-start rounded-2xl border border-ling bg-page p-5 lg:col-start-2 lg:row-start-1"
+          aria-labelledby="game-summary-title"
+          className="self-start rounded-2xl border border-line bg-page p-5 lg:col-start-2 lg:row-start-1"
         >
           <h2 id="game-summary-title" className="text-lg font-bold">
             모집 예약
           </h2>
+
           <div className="mt-3 flex flex-wrap gap-2 text-sm font-semibold">
             <span className="rounded-full bg-surface px-3 py-1 text-muted">{schedule}</span>
             <span
@@ -98,6 +115,22 @@ function GameDetailContent({ game }: { game: GameDetail }) {
               </dd>
             </div>
           </dl>
+
+          {restoring ? (
+            <p role="status" className="mt-5 text-sm text-muted">
+              로그인 상태를 확인하고 있어요.
+            </p>
+          ) : !session ? (
+            <button
+              type="button"
+              disabled={!canRequestJoin}
+              aria-haspopup={canRequestJoin ? 'dialog' : undefined}
+              onClick={handleGuestJoin}
+              className="mt-5 min-h-12 w-full rounded-xl bg-brand px-4 text-sm font-bold text-white transition-colors enabled:hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-surface disabled:text-muted"
+            >
+              {canRequestJoin ? '신청하기' : '모집 종료'}
+            </button>
+          ) : null}
         </aside>
 
         <div>

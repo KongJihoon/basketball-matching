@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { Link, useLocation } from 'react-router';
 import { ApiError } from '../../shared/api/http';
-import { Link } from 'react-router';
 import { login } from './auth.api';
 import type { AuthSession } from './auth.api';
+import { rememberKakaoGameReturn } from './kakao-return';
 
 type LoginModalProps = {
+  forParticipation: boolean;
   onClose: () => void;
   onSuccess: (session: AuthSession) => void;
 };
 
 const inputClassName = 'mt-1.5 h-12 w-full rounded-lg border border-line bg-page px-3 text-sm';
 
-export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
+export function LoginModal({ forParticipation, onClose, onSuccess }: LoginModalProps) {
+  const { pathname, search } = useLocation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const submitting = useRef(false);
@@ -67,6 +70,7 @@ export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
     <dialog
       ref={dialogRef}
       aria-labelledby="login-title"
+      aria-describedby={forParticipation ? 'login-description' : undefined}
       onCancel={(event) => {
         event.preventDefault();
         close();
@@ -84,11 +88,17 @@ export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
           <span aria-hidden="true">×</span>
         </button>
 
-        <h1 id="login-title" className="mb-6 pr-8 text-xl font-bold text-brand-ink">
+        <h1 id="login-title" className="pr-8 text-xl font-bold text-brand-ink">
           Basketball Matching 로그인
         </h1>
 
-        <form onSubmit={handleSubmit} onChange={() => setErrorMessage('')}>
+        {forParticipation && (
+          <p id="login-description" className="mt-2 text-sm text-muted">
+            경기에 신청하려면 로그인해 주세요.
+          </p>
+        )}
+
+        <form className="mt-6" onSubmit={handleSubmit} onChange={() => setErrorMessage('')}>
           <fieldset disabled={pending} className="space-y-4">
             <label className="block text-sm font-medium">
               이메일
@@ -115,7 +125,6 @@ export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
                   required
                   className={`${inputClassName} pr-20`}
                 />
-
                 <button
                   type="button"
                   aria-controls="login-password"
@@ -135,7 +144,7 @@ export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
 
             <button
               type="submit"
-              className=" h-12 w-full rounded-lg bg-brand text-sm font-semibold text-white enabled:hover:bg-brand-hover disabled:opacity-60"
+              className="h-12 w-full rounded-lg bg-brand text-sm font-semibold text-white enabled:hover:bg-brand-hover disabled:opacity-60"
             >
               {pending ? '로그인 중...' : '로그인'}
             </button>
@@ -162,6 +171,7 @@ export function LoginModal({ onClose, onSuccess }: LoginModalProps) {
 
               <a
                 href="/api/v1/auth/oauth2/kakao/authorization"
+                onClick={() => rememberKakaoGameReturn(forParticipation ? pathname + search : null)}
                 className="mt-4 block w-full rounded-lg transition-opacity hover:opacity-90"
               >
                 <img

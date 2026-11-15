@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { exchangeKakaoLoginTicket } from '../../features/auth/auth.api';
+import { takeKakaoGameReturn } from '../../features/auth/kakao-return';
 import { SignupDetailsForm } from '../../features/auth/SignupDetailsForm';
 import { ApiError } from '../../shared/api/http';
 
@@ -39,9 +40,8 @@ function readKakaoCallback(): KakaoCallback {
     message: '카카오 로그인 정보가 없거나 만료되었습니다. 다시 시도해 주세요.',
   };
 }
-
-function openGames() {
-  window.location.replace('/games');
+function openReturnPage() {
+  window.location.replace(takeKakaoGameReturn());
 }
 
 export function KakaoCompletePage() {
@@ -63,7 +63,7 @@ export function KakaoCompletePage() {
 
     void exchangeRequest.current.then(
       () => {
-        if (active) openGames();
+        if (active) openReturnPage();
       },
       (error: unknown) => {
         if (!active) return;
@@ -80,7 +80,6 @@ export function KakaoCompletePage() {
       active = false;
     };
   }, [callback]);
-
   return (
     <main className="grid min-h-dvh place-items-center bg-surface px-4 py-8 text-foreground">
       <section
@@ -97,8 +96,8 @@ export function KakaoCompletePage() {
             <SignupDetailsForm
               mode="kakao"
               ticket={callback.ticket}
-              onBack={() => void navigate('/games', { replace: true })}
-              onComplete={openGames}
+              onBack={() => void navigate(takeKakaoGameReturn(), { replace: true })}
+              onComplete={openReturnPage}
             />
           </>
         ) : callback.type === 'login' && !exchangeError ? (
@@ -113,6 +112,7 @@ export function KakaoCompletePage() {
             <Link
               to="/login"
               replace
+              onClick={() => takeKakaoGameReturn()}
               className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-brand-soft px-4 text-sm font-semibold text-brand-ink"
             >
               로그인으로 돌아가기
