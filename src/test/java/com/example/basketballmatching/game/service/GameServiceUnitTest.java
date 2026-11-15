@@ -15,6 +15,7 @@ import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.*;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.exception.ErrorCode;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -375,7 +376,7 @@ class GameServiceUnitTest {
             Long userId, String email, String nickname
     ) {
 
-        return UserEntity.builder()
+        return UserFixtures.builder()
                 .userId(userId)
                 .email(email)
                 .password("encoded-password")

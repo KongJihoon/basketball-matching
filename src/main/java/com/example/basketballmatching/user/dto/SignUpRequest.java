@@ -94,14 +94,19 @@ public record SignUpRequest(
         )
         String phone,
 
-        @Schema(
-                description = "주소",
-                example = "서울특별시 강남구"
-        )
-        @NotBlank(
-                message = "주소를 입력해주세요."
-        )
+        @Schema(description = "기본 주소", example = "서울특별시 중구 세종대로 110")
+        @NotBlank(message = "주소를 입력해주세요.")
+        @Size(max = 255, message = "주소는 255자 이하여야 합니다.")
         String address,
+
+        @Schema(description = "상세 주소", example = "101동 301호")
+        @Size(max = 255, message = "상세 주소는 255자 이하여야 합니다.")
+        String addressDetail,
+
+        @Schema(description = "5자리 우편번호", example = "04524")
+        @NotBlank(message = "우편번호를 입력해주세요.")
+        @Pattern(regexp = "^[0-9]{5}$", message = "우편번호는 숫자 5자리여야 합니다.")
+        String zipCode,
 
         @Schema(
                 description = "포지션",

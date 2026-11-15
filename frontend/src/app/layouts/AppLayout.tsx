@@ -1,6 +1,113 @@
-import { Link, NavLink, Outlet } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useSearchParams } from 'react-router';
+import { LoginModal } from '../../features/auth/LoginModal';
+import { logout, refreshSession } from '../../features/auth/auth.api';
+import type { AuthSession } from '../../features/auth/auth.api';
+import { ApiError } from '../../shared/api/http';
+
+const menuClassName =
+  'inline-flex min-h-10 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-muted hover:bg-surface';
 
 export function AppLayout() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [restoring, setRestoring] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const logoutInFlight = useRef(false);
+  const loginRequested = searchParams.get('login') === '1';
+
+  useEffect(() => {
+    let active = true;
+
+    async function restore() {
+      try {
+        const restored = await refreshSession();
+        if (active) setSession(restored);
+      } catch (error) {
+        if (active && !(error instanceof ApiError && error.status === 401)) {
+          setAuthError('로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요.');
+        }
+      } finally {
+        if (active) setRestoring(false);
+      }
+    }
+
+    void restore();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function openLogin() {
+    setAuthError('');
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set('login', '1');
+        return next;
+      },
+      { preventScrollReset: true },
+    );
+  }
+
+  function closeLogin() {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete('login');
+        return next;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  }
+
+  async function handleLoout() {
+    if (!session || logoutInFlight.current) return;
+
+    logoutInFlight.current = true;
+    setLoggingOut(true);
+    setAuthError('');
+
+    try {
+      try {
+        await logout(session.accessToken);
+      } catch (error) {
+        if (!(error instanceof ApiError && error.errorCode === 'EXPIRED_TOKEN')) {
+          throw error;
+        }
+
+        const renewed = await refreshSession();
+
+        if (renewed.user.userId !== session.user.userId) {
+          setSession(renewed);
+          setAuthError('로그인 계정이 바뀌었습니다. 계정을 확인한 뒤 다시 눌러 주세요.');
+          return;
+        }
+
+        setSession(renewed);
+        await logout(renewed.accessToken);
+      }
+
+      setSession(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setSession(null);
+        setAuthError('로그인 세션이 만료되었습니다.');
+      } else {
+        setAuthError(
+          error instanceof ApiError
+            ? error.message
+            : '로그아웃을 완료하지 못했습니다. 다시 시도해 주세요.',
+        );
+      }
+    } finally {
+      logoutInFlight.current = false;
+      setLoggingOut(false);
+    }
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-page text-foreground">
       <a
@@ -28,8 +135,46 @@ export function AppLayout() {
             >
               경기 찾기
             </NavLink>
+
+            {restoring ? (
+              <span role="status" className="px-3 text-sm text-muted">
+                로그인 확인 중...
+              </span>
+            ) : session ? (
+              <>
+                <span className="max-w-40 truncate px-2 text-sm font-semibold text-foreground">
+                  {session.user.nickname}
+                </span>
+                <button
+                  type="button"
+                  disabled={loggingOut}
+                  className={`${menuClassName} disabled:opacity-60`}
+                  onClick={() => void handleLoout()}
+                >
+                  {loggingOut ? '로그아웃 중...' : '로그아웃'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className={menuClassName} onClick={openLogin}>
+                  로그인
+                </button>
+                <Link
+                  to="/signup"
+                  className={`${menuClassName} bg-brand-soft text-brand-ink hover:bg-brand-soft`}
+                >
+                  회원가입
+                </Link>
+              </>
+            )}
           </nav>
         </div>
+
+        {authError && (
+          <p role="alert" className="mx-auto max-w-6xl text-sm text-red-700 sm:px-6">
+            {authError}
+          </p>
+        )}
       </header>
 
       <main
@@ -45,6 +190,17 @@ export function AppLayout() {
           함께 뛰는 즐거움, Basketball Matching
         </div>
       </footer>
+
+      {!restoring && !session && loginRequested && (
+        <LoginModal
+          onClose={closeLogin}
+          onSuccess={(nextSession) => {
+            setSession(nextSession);
+            setAuthError('');
+            closeLogin();
+          }}
+        />
+      )}
     </div>
   );
 }

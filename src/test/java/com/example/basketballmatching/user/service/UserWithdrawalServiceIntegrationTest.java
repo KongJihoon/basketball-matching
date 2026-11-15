@@ -244,11 +244,13 @@ class UserWithdrawalServiceIntegrationTest {
                         ),
                         "010-1111-2222",
                         "서울특별시 강남구",
+                        "상세주소",
+                        "12345",
                         Position.GUARD,
                         GenderType.MALE
                 );
 
-        user.setEmailAuth();
+        user.verifiedEmail();
 
         UserEntity savedUser =
                 userRepository.saveAndFlush(user);

@@ -258,6 +258,8 @@ class GameServiceIntegrationTest {
                 LocalDate.of(1997, 1, 1),
                 phone,
                 "서울특별시 송파구",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
         );

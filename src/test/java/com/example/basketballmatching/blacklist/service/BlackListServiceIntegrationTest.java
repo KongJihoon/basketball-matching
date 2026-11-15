@@ -13,6 +13,7 @@ import com.example.basketballmatching.report.domain.ReportEntity;
 import com.example.basketballmatching.report.repository.ReportRepository;
 import com.example.basketballmatching.report.type.ReportType;
 import com.example.basketballmatching.support.IntegrationTest;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -296,7 +297,7 @@ class BlackListServiceIntegrationTest {
             String phone,
             UserType userType
     ) {
-        UserEntity user = UserEntity.builder()
+        UserEntity user = UserFixtures.builder()
                 .email(email)
                 .password("encoded-password")
                 .nickname(nickname)

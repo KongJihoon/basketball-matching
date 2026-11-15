@@ -3,6 +3,7 @@ package com.example.basketballmatching.user.service;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
 import com.example.basketballmatching.support.IntegrationTest;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.dto.SignUpRequest;
 import com.example.basketballmatching.user.dto.SignUpResponse;
@@ -90,6 +91,8 @@ class UserServiceIntegrationTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1111-0000",
                 "서울특별시 강남구",
+                "상세주소",
+                "12345",
                 Position.GUARD,
                 GenderType.MALE
         );
@@ -343,7 +346,7 @@ class UserServiceIntegrationTest {
 
     private UserEntity saveUser(String email, String nickname, String rawPassword) {
 
-        UserEntity user = UserEntity.builder()
+        UserEntity user = UserFixtures.builder()
                 .email(email)
                 .password(
                         passwordEncoder.encode(rawPassword)

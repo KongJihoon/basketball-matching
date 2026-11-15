@@ -7,6 +7,7 @@ import com.example.basketballmatching.notifications.dto.response.NotificationRes
 import com.example.basketballmatching.notifications.dto.response.ReadNotificationResponse;
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
 import com.example.basketballmatching.support.IntegrationTest;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -247,7 +248,7 @@ class NotificationServiceIntegrationTest {
             String nickname,
             String phone
     ) {
-        UserEntity user = UserEntity.builder()
+        UserEntity user = UserFixtures.builder()
                 .email(email)
                 .password("encoded-password")
                 .nickname(nickname)

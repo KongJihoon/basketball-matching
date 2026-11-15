@@ -90,13 +90,15 @@ public class UserService {
                 request.birth(),
                 request.phone(),
                 request.address(),
+                request.addressDetail(),
+                request.zipCode(),
                 request.position(),
                 request.genderType()
         );
 
 
         // 이메일 인증을 통과한 사용자이므로 인증 상태를 true로 전환한다.
-        userEntity.setEmailAuth();
+        userEntity.verifiedEmail();
 
 
         UserEntity savedUserEntity = userRepository.save(userEntity);

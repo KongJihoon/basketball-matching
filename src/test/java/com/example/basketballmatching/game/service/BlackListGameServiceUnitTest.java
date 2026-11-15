@@ -7,6 +7,7 @@ import com.example.basketballmatching.game.dto.GameCancelNotificationDto;
 import com.example.basketballmatching.game.repository.query.GameQueryRepository;
 import com.example.basketballmatching.game.type.GameStatus;
 import com.example.basketballmatching.game.type.ParticipantGameStatus;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.type.GenderType;
 import com.example.basketballmatching.user.type.LoginProvider;
@@ -238,7 +239,7 @@ class BlackListGameServiceUnitTest {
     }
 
     private UserEntity createUser(Long userId, String email, String nickname) {
-        return UserEntity.builder()
+        return UserFixtures.builder()
                 .userId(userId)
                 .email(email)
                 .password("encoded-password")

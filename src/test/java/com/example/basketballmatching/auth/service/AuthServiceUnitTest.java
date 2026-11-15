@@ -4,6 +4,7 @@ import com.example.basketballmatching.auth.dto.AuthTokenResponse;
 import com.example.basketballmatching.blacklist.service.BlackListStore;
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.security.TokenProvider;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -332,7 +333,7 @@ class AuthServiceUnitTest {
     private UserEntity createUser(
             LoginProvider loginProvider
     ) {
-        return UserEntity.builder()
+        return UserFixtures.builder()
                 .userId(USER_ID)
                 .email(EMAIL)
                 .password(ENCODED_PASSWORD)

@@ -3,6 +3,7 @@ package com.example.basketballmatching.user.service;
 
 import com.example.basketballmatching.global.exception.CustomException;
 import com.example.basketballmatching.global.service.RedisService;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.dto.*;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -907,6 +908,8 @@ class UserServiceUnitTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1111-0000",
                 "서울특별시 강남구",
+                "상세주소",
+                "12345",
                 Position.GUARD,
                 GenderType.MALE
         );
@@ -927,7 +930,7 @@ class UserServiceUnitTest {
 
     private UserEntity createUser() {
 
-        return UserEntity.builder()
+        return UserFixtures.builder()
                 .userId(USER_ID)
                 .email(EMAIL)
                 .password(ENCODED_CURRENT_PASSWORD)

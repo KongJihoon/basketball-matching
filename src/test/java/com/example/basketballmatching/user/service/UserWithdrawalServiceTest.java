@@ -4,6 +4,7 @@ import com.example.basketballmatching.game.dto.GameCancelNotificationDto;
 import com.example.basketballmatching.game.dto.UserWithdrawalGameResultDto;
 import com.example.basketballmatching.game.service.UserWithdrawalGameService;
 import com.example.basketballmatching.global.exception.CustomException;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.event.UserWithdrawnEvent;
 import com.example.basketballmatching.user.repository.UserRepository;
@@ -172,7 +173,7 @@ class UserWithdrawalServiceTest {
 
     private UserEntity createUser() {
 
-        return UserEntity.builder()
+        return UserFixtures.builder()
                 .userId(USER_ID)
                 .email(EMAIL)
                 .build();

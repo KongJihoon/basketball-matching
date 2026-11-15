@@ -3,6 +3,7 @@ package com.example.basketballmatching.auth.controller;
 
 import com.example.basketballmatching.auth.dto.*;
 import com.example.basketballmatching.auth.service.AuthService;
+import com.example.basketballmatching.auth.support.BrowserAuthResponses;
 import com.example.basketballmatching.global.dto.CheckResponse;
 import com.example.basketballmatching.global.dto.CommonResponse;
 import com.example.basketballmatching.global.exception.dto.ErrorResponse;
@@ -12,25 +13,36 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/auth")
 @Tag(name = "AUTH")
 public class AuthController {
 
 
 
+
     private final AuthService authService;
 
+    private final BrowserAuthResponses browserAuthResponses;
+
+
+    @Operation(summary = "브라우저용 CSRF 토큰 조회")
+    @GetMapping("/csrf")
+    public ResponseEntity<CsrfTokenResponse> csrf(CsrfToken csrfToken) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(new CsrfTokenResponse(csrfToken.getHeaderName(), csrfToken.getToken()));
+    }
 
     /**
         유저 로그인
@@ -41,15 +53,15 @@ public class AuthController {
             content = {@Content(mediaType = "application/json",
             schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse<AuthTokenResponse>> loginUser(
+    public ResponseEntity<CommonResponse<BrowserAuthResponse>> loginUser(
             @RequestBody @Valid LoginRequest request
             ) {
 
 
         AuthTokenResponse response = authService.login(request.email(), request.password());
 
-        return ResponseEntity.ok(
-                CommonResponse.of("로그인에 성공하였습니다.", response)
+        return browserAuthResponses.session(
+                HttpStatus.OK, "로그인에 성공하였습니다", response
         );
 
     }
@@ -64,16 +76,16 @@ public class AuthController {
     content = {@Content(mediaType = "application/json",
     schema = @Schema(implementation = ErrorResponse.class))})
     @PostMapping("/token/refresh")
-    public ResponseEntity<CommonResponse<AuthTokenResponse>> reissue(
-            @RequestBody @Valid TokenRefreshRequest request
+    public ResponseEntity<CommonResponse<BrowserAuthResponse>> reissue(
+            @CookieValue(name = BrowserAuthResponses.REFRESH_COOKIE_NAME, required = false) String refreshToken
             ) {
 
-        AuthTokenResponse response = authService.reissue(request.refreshToken());
+        AuthTokenResponse response = authService.reissue(refreshToken);
 
 
 
-        return ResponseEntity.ok(
-                CommonResponse.of("토큰 재발급에 성공하였습니다.", response)
+        return browserAuthResponses.session(
+                HttpStatus.OK, "토큰 재발급에 성공하였습니다.", response
         );
     }
 
@@ -88,37 +100,25 @@ public class AuthController {
     @PostMapping("/logout")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<CheckResponse> logoutUser(
-            HttpServletRequest request, @AuthenticationPrincipal UserInfoDetails userInfoDetails
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @AuthenticationPrincipal UserInfoDetails userInfoDetails
             ) {
 
-        String accessToken = resolveAccessToken(request);
+        String accessToken = authorization.substring("Bearer ".length()).trim();
 
         authService.logoutUser(userInfoDetails.getUsername(), accessToken);
 
-        return ResponseEntity.ok(
-                CheckResponse.of(true, "로그아웃을 완료하였습니다.")
-        );
-
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.SET_COOKIE, browserAuthResponses.expiredRefreshCookie())
+                .body(CheckResponse.of(true, "로그아웃을 완료했습니다."));
     }
 
 
-    private String resolveAccessToken(
-            HttpServletRequest request
-    ) {
-        String authorization =
-                request.getHeader(
-                        HttpHeaders.AUTHORIZATION
-                );
 
-        if (authorization == null ||
-                !authorization.startsWith(
-                        "Bearer "
-                )) {
-            return null;
-        }
 
-        return authorization
-                .substring(7)
-                .trim();
-    }
+
+
+
+
 }

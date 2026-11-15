@@ -403,6 +403,8 @@ class AuthServiceIntegrationTest {
                 LocalDate.of(1995, 01, 01),
                 "010-1234-5678",
                 "서울특별시",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
 
@@ -427,6 +429,8 @@ class AuthServiceIntegrationTest {
                         LocalDate.of(1990, 1, 1),
                         "010-9999-9999",
                         "서울특별시",
+                        "101동 301호",
+                        "04524",
                         Position.GUARD,
                         GenderType.MALE
                 )
