@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { getGames } from '../../features/games/game.api';
 import type {
   CityName,
@@ -120,42 +120,51 @@ function FilterGroup({ label, options, value, onChange }: FilterGroupProps) {
   );
 }
 
-function GameListRow({ game }: { game: GameListItem }) {
+function GameListRow({ game, listSearch }: { game: GameListItem; listSearch: string }) {
   const date = game.startDateTime.slice(0, 10);
   const time = game.startDateTime.slice(11, 16);
   const badgeClassName =
     game.gameStatus === 'RECRUITING' ? 'bg-brand-soft text-brand-ink' : 'bg-surface text-muted';
 
   return (
-    <li className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-3 px-3 py-5 sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:gap-5 sm:px-5">
-      <time dateTime={game.startDateTime} className="flex flex-col">
-        <span className="text-xs text-muted">{date}</span>
-        <span className="mt-1 text-xl font-bold tabular-nums">{time}</span>
-      </time>
+    <li>
+      <Link
+        to={{ pathname: `/games/${game.gameId}`, search: listSearch }}
+        className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-3 px-3 py-5 hover:bg-surface focus-visible:outline-offset-[-2px] sm:grid-cols-[6rem_minmax(0,1fr)_auto] sm:gap-5 sm:px-5"
+      >
+        <time dateTime={game.startDateTime} className="flex flex-col">
+          <span className="text-xs text-muted">{date}</span>
+          <span className="mt-1 text-xl font-bold tabular-nums">{time}</span>
+        </time>
 
-      <div className="min-w-0">
-        <h3 className="break-words font-bold">{game.title}</h3>
-        <p className="mt-1 break-words text-sm">{game.placeName}</p>
-        <p className="mt-1 break-words text-sm text-muted">{game.address}</p>
-        <p className="mt-2 text-sm text-muted">
-          {matchFormatLabels[game.matchFormat]} · {genderLabels[game.matchGenderType]}
-        </p>
-      </div>
+        <div className="min-w-0">
+          <h3 className="wrap-break-word font-bold">{game.title}</h3>
+          <p className="mt-1 wrap-break-word text-sm">{game.placeName}</p>
+          <p className="mt-1 wrap-break-word text-sm text-muted">{game.address}</p>
+          <p className="mt-2 text-sm text-muted">
+            {matchFormatLabels[game.matchFormat]} · {genderLabels[game.matchGenderType]}
+          </p>
+        </div>
 
-      <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3 sm:flex-col sm:items-end sm:justify-self-end">
-        <span className={`rounded-full px-3 py-1 text-sm font-semibold ${badgeClassName}`}>
-          {statusLabels[game.gameStatus]}
-        </span>
-        <span className="text-sm text-muted">
-          참가 {game.participantCount}/{game.headCount}명
-        </span>
-      </div>
+        <div className="col-start-2 flex flex-wrap items-center gap-2 sm:col-start-3 sm:flex-col sm:items-end sm:justify-self-end">
+          <span className={`rounded-full px-3 py-1 text-sm font-semibold ${badgeClassName}`}>
+            {statusLabels[game.gameStatus]}
+          </span>
+          <span className="text-sm text-muted">
+            참가 {game.participantCount}/{game.headCount}명
+          </span>
+        </div>
+      </Link>
     </li>
   );
 }
 
 export function GameListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const listParams = new URLSearchParams(searchParams);
+  listParams.delete('login');
+  const listSearch = listParams.toString();
 
   const conditions: GameListParams = {
     page: readPage(searchParams.get('page')),
@@ -343,7 +352,7 @@ export function GameListPage() {
               {games.content.length > 0 ? (
                 <ul className="divide-y divide-line border-b border-line">
                   {games.content.map((game) => (
-                    <GameListRow key={game.gameId} game={game} />
+                    <GameListRow key={game.gameId} game={game} listSearch={listSearch} />
                   ))}
                 </ul>
               ) : (
