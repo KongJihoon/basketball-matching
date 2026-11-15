@@ -95,10 +95,10 @@ public class GameEntity extends BaseEntity {
     @Column(nullable = false)
     private String address;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Double latitude;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Double longitude;
 
     @Column(nullable = false)

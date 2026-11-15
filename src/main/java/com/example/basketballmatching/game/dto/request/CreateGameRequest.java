@@ -54,10 +54,12 @@ public record CreateGameRequest(
         @NotBlank(message = "경기 주소를 입력해주세요.")
         String address,
 
-        @Schema(name = "latitude", description = "위도", example = "37.515")
+        @Schema(name = "latitude", description = "위도", example = "37.515", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "경기장 위도를 입력해주세요.")
         Double latitude,
 
-        @Schema(name = "longitude", description = "경도", example = "127.073")
+        @Schema(name = "longitude", description = "경도", example = "127.073", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotNull(message = "경기장 경도를 입력해주세요.")
         Double longitude
 
 
