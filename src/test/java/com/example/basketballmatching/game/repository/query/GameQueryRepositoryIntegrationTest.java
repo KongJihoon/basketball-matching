@@ -69,6 +69,8 @@ class GameQueryRepositoryIntegrationTest {
                         LocalDate.of(1997, 1, 1),
                         "010-3333-3333",
                         "서울특별시 송파구",
+                        "101동 301호",
+                        "04524",
                         Position.GUARD,
                         GenderType.MALE
                 )

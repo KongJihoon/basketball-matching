@@ -239,6 +239,8 @@ class OAuthAccountServiceUnitTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1111-2222",
                 "서울특별시 강남구",
+                "상세주소",
+                "21098",
                 Position.GUARD,
                 GenderType.MALE,
                 LoginProvider.KAKAO
@@ -254,6 +256,8 @@ class OAuthAccountServiceUnitTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1234-5678",
                 "서울특별시 강남구",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
         );
@@ -267,6 +271,8 @@ class OAuthAccountServiceUnitTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1234-5678",
                 "서울특별시 강남구",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
         );

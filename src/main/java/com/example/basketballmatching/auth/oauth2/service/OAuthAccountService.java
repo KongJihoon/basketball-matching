@@ -103,6 +103,8 @@ public class OAuthAccountService {
                 request.birth(),
                 request.phone(),
                 request.address(),
+                request.addressDetail(),
+                request.zipCode(),
                 request.position(),
                 request.genderType(),
                 loginProvider

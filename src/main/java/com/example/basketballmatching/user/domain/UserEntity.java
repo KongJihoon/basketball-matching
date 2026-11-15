@@ -6,19 +6,14 @@ import com.example.basketballmatching.user.type.LoginProvider;
 import com.example.basketballmatching.user.type.Position;
 import com.example.basketballmatching.user.type.UserType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity extends BaseEntity {
 
     @Id
@@ -46,6 +41,12 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private String address;
 
+    @Column(name = "address_detail", length = 255)
+    private String addressDetail;
+
+    @Column(name = "zip_code", length = 5)
+    private String zipCode;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Position position;
@@ -62,14 +63,89 @@ public class UserEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private LoginProvider loginProvider;
 
-    @Builder.Default
-    private boolean emailAuth = false;
+    private boolean emailAuth;
 
     private LocalDateTime deletedDateTime;
 
+    @Builder(access = AccessLevel.PRIVATE)
+    private UserEntity(
+            String email,
+            String password,
+            String nickname,
+            String name,
+            LocalDate birth,
+            String phone,
+            String address,
+            String addressDetail,
+            String zipCode,
+            Position position,
+            GenderType genderType,
+            LoginProvider loginProvider,
+            boolean emailAuth,
+            UserType userType
+    ) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.name = name;
+        this.birth = birth;
+        this.phone = phone;
+        this.address = address;
+        this.addressDetail = addressDetail == null || addressDetail.isBlank() ? null : addressDetail.strip();
+        this.zipCode = zipCode;
+        this.position = position;
+        this.genderType = genderType;
+        this.loginProvider = loginProvider;
+        this.emailAuth = emailAuth;
+        this.userType = UserType.USER;
+    }
 
 
-    public void setEmailAuth() {
+    public static UserEntity create(
+            String email, String password, String nickname, String name,
+            LocalDate birth, String phone, String address,
+            String addressDetail, String zipCode,
+            Position position, GenderType genderType
+    ) {
+        return UserEntity.builder()
+                .email(email)
+                .password(password)
+                .nickname(nickname)
+                .name(name)
+                .birth(birth)
+                .phone(phone)
+                .address(address)
+                .addressDetail(addressDetail)
+                .zipCode(zipCode)
+                .position(position)
+                .genderType(genderType)
+                .loginProvider(LoginProvider.LOCAL)
+                .build();
+    }
+
+    public static UserEntity createOAuth(
+            String email, String nickname, String name,
+            LocalDate birth, String phone, String address,
+            String addressDetail, String zipCode,
+            Position position, GenderType genderType, LoginProvider loginProvider
+    ) {
+        return UserEntity.builder()
+                .email(email)
+                .nickname(nickname)
+                .name(name)
+                .birth(birth)
+                .phone(phone)
+                .address(address)
+                .addressDetail(addressDetail)
+                .zipCode(zipCode)
+                .position(position)
+                .genderType(genderType)
+                .loginProvider(loginProvider)
+                .emailAuth(true)
+                .build();
+    }
+
+    public void verifiedEmail() {
         this.emailAuth = true;
     }
 
@@ -102,42 +178,6 @@ public class UserEntity extends BaseEntity {
 
         this.password = password;
 
-    }
-
-    public static UserEntity create(String email, String password, String nickname, String name, LocalDate birth, String phone, String address, Position position, GenderType genderType) {
-
-        return UserEntity.builder()
-                .email(email)
-                .password(password)
-                .nickname(nickname)
-                .name(name)
-                .birth(birth)
-                .phone(phone)
-                .address(address)
-                .position(position)
-                .userType(UserType.USER)
-                .genderType(genderType)
-                .loginProvider(LoginProvider.LOCAL)
-                .build();
-
-    }
-
-    public static UserEntity createOAuth(String email, String nickname, String name, LocalDate birth, String phone, String address, Position position, GenderType genderType, LoginProvider loginProvider) {
-
-        return UserEntity.builder()
-                .email(email)
-                .password(null)
-                .nickname(nickname)
-                .name(name)
-                .birth(birth)
-                .phone(phone)
-                .address(address)
-                .position(position)
-                .userType(UserType.USER)
-                .genderType(genderType)
-                .loginProvider(loginProvider)
-                .emailAuth(true)
-                .build();
     }
 
     public void withdraw(LocalDateTime withdrawnAt) {

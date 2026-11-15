@@ -8,6 +8,7 @@ import com.example.basketballmatching.notifications.repository.EmitterRepository
 import com.example.basketballmatching.notifications.repository.NotificationQueryRepository;
 import com.example.basketballmatching.notifications.repository.NotificationRepository;
 import com.example.basketballmatching.notifications.support.SseIdGenerator;
+import com.example.basketballmatching.support.UserFixtures;
 import com.example.basketballmatching.user.domain.UserEntity;
 import com.example.basketballmatching.user.repository.UserRepository;
 import com.example.basketballmatching.user.type.GenderType;
@@ -73,6 +74,7 @@ class NotificationServiceUnitTest {
 
     @Mock
     private SseIdGenerator sseIdGenerator;
+
 
     private NotificationService notificationService;
 
@@ -297,7 +299,8 @@ class NotificationServiceUnitTest {
 
 
     private UserEntity createUser() {
-        UserEntity createdUser = UserEntity.builder()
+        return UserFixtures.builder()
+                .userId(USER_ID)
                 .email("notification@test.com")
                 .password("encoded-password")
                 .nickname("알림사용자")
@@ -305,20 +308,14 @@ class NotificationServiceUnitTest {
                 .birth(LocalDate.of(1997, 1, 1))
                 .phone("010-1111-1111")
                 .address("서울특별시 송파구")
+                .addressDetail("101동 503호")
+                .zipCode("12345")
                 .position(Position.GUARD)
                 .userType(UserType.USER)
                 .genderType(GenderType.MALE)
                 .loginProvider(LoginProvider.LOCAL)
                 .emailAuth(true)
                 .build();
-
-        ReflectionTestUtils.setField(
-                createdUser,
-                "userId",
-                USER_ID
-        );
-
-        return createdUser;
     }
 
     private NotificationEntity createNotification() {

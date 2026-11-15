@@ -210,11 +210,13 @@ class SecurityFlowIntegrationTest {
                 LocalDate.of(1995, 1, 1),
                 "010-1234-5678",
                 "서울특별시",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
         );
 
-        user.setEmailAuth();
+        user.verifiedEmail();
 
         return userRepository.saveAndFlush(user);
     }

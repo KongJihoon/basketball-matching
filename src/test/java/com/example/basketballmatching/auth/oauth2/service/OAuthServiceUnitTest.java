@@ -336,6 +336,8 @@ class OAuthServiceUnitTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1234-5678",
                 "서울특별시 강남구",
+                "101동 301호",
+                "04524",
                 Position.GUARD,
                 GenderType.MALE
         );

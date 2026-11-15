@@ -260,6 +260,8 @@ public class OAuthServiceIntegrationTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1234-5678",
                 "서울특별시 강남구",
+                "상세주소",
+                "21098",
                 Position.GUARD,
                 GenderType.MALE
         );
@@ -273,6 +275,8 @@ public class OAuthServiceIntegrationTest {
                 LocalDate.of(1997, 1, 1),
                 "010-1234-5678",
                 "서울특별시 강남구",
+                "상세주소",
+                "21098",
                 Position.GUARD,
                 GenderType.MALE,
                 LoginProvider.KAKAO

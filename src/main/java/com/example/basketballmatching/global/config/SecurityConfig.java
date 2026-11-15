@@ -4,6 +4,7 @@ import com.example.basketballmatching.global.security.AuthenticationFilter;
 import com.example.basketballmatching.global.security.RestAccessDeniedHandler;
 import com.example.basketballmatching.global.security.RestAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,9 @@ import org.springframework.security.config.annotation.web.configurers.CsrfConfig
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +37,27 @@ public class SecurityConfig {
      * JWT 인증 필터의 실행 위치를 설정한다.
      */
     @Bean
-    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
+    protected SecurityFilterChain configure(
+            HttpSecurity httpSecurity,
+            @Value("${AUTH_COOKIE_SECURE:true}") boolean secureCookies
+    ) throws Exception {
+
+        CookieCsrfTokenRepository csrfTokenRepository = new CookieCsrfTokenRepository();
+
+        csrfTokenRepository.setCookieCustomizer(cookie -> cookie
+                .path("/api/v1/auth")
+                .httpOnly(true)
+                .secure(secureCookies)
+                .sameSite("Lax"));
+
+        OrRequestMatcher csrfProtectedRequests = new OrRequestMatcher(
+                new AntPathRequestMatcher("/api/v1/auth/login", "POST"),
+                new AntPathRequestMatcher("/api/v1/auth/token/refresh", "POST"),
+                new AntPathRequestMatcher("/api/v1/auth/logout", "POST"),
+                new AntPathRequestMatcher("/api/v1/auth/oauth2/token", "POST"),
+                new AntPathRequestMatcher("/api/v1/auth/oauth2/signup", "POST")
+        );
+
 
         httpSecurity
                 /*
@@ -46,7 +70,9 @@ public class SecurityConfig {
                  * 현재 인증 토큰을 Cookie가 아니라 Authorization 헤더로 전달하므로
                  * CSRF 보호 기능을 비활성화 한다.
                  */
-                .csrf(CsrfConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
+                        .requireCsrfProtectionMatcher(csrfProtectedRequests))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .requestCache(AbstractHttpConfigurer::disable)
@@ -69,6 +95,7 @@ public class SecurityConfig {
                                         "/api/v1/auth/token/refresh"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET,
+                                        "/api/v1/auth/csrf",
                                         "/api/v1/users/availability/email",
                                         "/api/v1/users/availability/nickname",
                                         "/api/v1/games",
