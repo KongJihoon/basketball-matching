@@ -5,6 +5,7 @@ import { GameDetailPage } from '../pages/games/GameDetailPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { SignupPage } from '../pages/auth/SignupPage';
 import { KakaoCompletePage } from '../pages/auth/KakaoCompletePage';
+import { MyGamesPage } from '../pages/games/MyGamePage';
 
 export function AppRouter() {
   return (
@@ -13,6 +14,7 @@ export function AppRouter() {
 
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/games" replace />} />
+        <Route path="mypage/games" element={<MyGamesPage />} />
         <Route path="games" element={<GameListPage />} />
         <Route path="games/:gameId" element={<GameDetailPage />} />
         <Route path="login" element={<Navigate to="/games?login=1" replace />} />

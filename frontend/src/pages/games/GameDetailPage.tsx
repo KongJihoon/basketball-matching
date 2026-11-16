@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useOutletContext, useParams, useSearchParams } from 'react-router';
+import { Link, useOutletContext, useParams, useSearchParams, useLocation } from 'react-router';
 import type { AppOutletContext } from '../../app/layouts/AppLayout';
 import { GameVenueMap } from '../../features/games/GameVenueMap';
 import { getGameDetail } from '../../features/games/game-detail.api';
@@ -104,6 +104,7 @@ function MemberParticipationActions({
         queryClient.invalidateQueries({ queryKey: participationKey }),
         queryClient.invalidateQueries({ queryKey: ['game-detail', gameId] }),
         queryClient.invalidateQueries({ queryKey: ['games'] }),
+        queryClient.invalidateQueries({ queryKey: ['my-games', userId] }),
       ]);
     },
   });
@@ -446,6 +447,13 @@ export function GameDetailPage() {
   const [searchParams] = useSearchParams();
   const listParams = new URLSearchParams(searchParams);
   listParams.delete('login');
+  const { state } = useLocation();
+  const myGamesSearch = (state as { myGamesSearch?: unknown } | null)?.myGamesSearch;
+  const cameFromMyGames = typeof myGamesSearch === 'string';
+
+  const backTo = cameFromMyGames
+    ? { pathname: '/mypage/games', search: myGamesSearch }
+    : { pathname: '/games', search: listParams.toString() };
 
   const validGameId =
     gameId && /^[1-9]\d{0,18}$/.test(gameId) && BigInt(gameId) <= 9_223_372_036_854_775_807n
@@ -454,8 +462,8 @@ export function GameDetailPage() {
 
   return (
     <div className="space-y-4">
-      <Link to={{ pathname: '/games', search: listParams.toString() }} className={actionClassName}>
-        경기 목록
+      <Link to={backTo} className={actionClassName}>
+        {cameFromMyGames ? '내 경기로' : '경기 목록'}
       </Link>
 
       {validGameId ? (
