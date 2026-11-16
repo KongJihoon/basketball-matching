@@ -148,6 +148,16 @@ export function AppLayout() {
             >
               경기 찾기
             </NavLink>
+            {session?.user.userType === 'USER' && (
+              <NavLink
+                to="/mypage/games"
+                className={({ isActive }) =>
+                  isActive ? `${menuClassName} bg-brand-soft text-brand-ink` : menuClassName
+                }
+              >
+                내 경기
+              </NavLink>
+            )}
 
             {restoring ? (
               <span role="status" className="px-3 text-sm text-muted">

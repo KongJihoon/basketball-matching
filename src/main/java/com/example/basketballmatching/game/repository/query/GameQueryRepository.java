@@ -77,7 +77,8 @@ public class GameQueryRepository {
 
         condition.and(game.deletedDateTime.isNull());
 
-        condition.and(game.startDateTime.gt(now));
+        condition.and(game.endDateTime.gt(now));
+
 
         List<ParticipantGameEntity> content = jpaQueryFactory
                 .selectFrom(participation)
